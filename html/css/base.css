@@ -1,0 +1,33 @@
+.panel {
+	border: 0;
+}
+
+
+::-webkit-scrollbar {
+	max-width: 10px;
+	min-width: 4px;
+	width: 1%;
+	height: 4px;
+	transition: all 0.1s linear;
+	border-radius: 50%;
+}
+
+
+::-webkit-scrollbar-track {
+	background: rgba(0, 0, 0, 0);
+}
+
+
+::-webkit-scrollbar-track:hover {
+	background: rgba(0, 0, 0, .2);
+}
+
+
+::-webkit-scrollbar-thumb {
+	background: #a5abb1;
+}
+
+
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+	display: none !important;
+}

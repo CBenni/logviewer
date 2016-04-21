@@ -1,0 +1,172 @@
+/* layout */
+
+html {
+	overflow: -moz-scrollbars-vertical; 
+	overflow-y: scroll;
+}
+
+div { outline-style:none; }
+
+#main {
+	float: left;
+	width: 80%;
+	height:100%;
+}
+
+#content {
+	float: right;
+	width: 85%;
+	margin-bottom: 20px;
+}
+
+#chat {
+	width: 20%;
+	height: 100%;
+	position: fixed;
+	right: 0;
+	padding: 5px;
+	box-sizing: border-box;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+@media (max-width:960px) {
+
+	#main {
+		width: 100%;
+	}
+	
+	#chat {
+		display: none;
+	}
+}
+
+@media (max-width:1200px) {
+	#content {
+		float: none;
+		width: 90%;
+		margin: auto;
+	}
+}
+
+/* user view */
+
+.userlogsview
+{
+	margin: 15px 0;
+}
+
+.logview .username
+{
+	font-size: large;
+	font-weight: bold;
+}
+
+
+.logview .userstats
+{
+	max-width: 200px;
+}
+
+
+.logview
+{
+	border: 1px rgba(#c2c2c2;, 0.4) solid;
+	box-shadow: 0 1px 10px 0px rgba(0, 0, 0, 0.14);
+}
+
+.btn-close {
+	font-size: 30px;
+	color: #666;
+	transition: 250ms;
+	cursor: pointer;
+	float: right;
+	margin: 0 10px;
+}
+
+.btn-close:hover {
+	color: #999;
+}
+
+
+/* Add animation */
+.logview.ng-enter.ng-enter-active, 
+.logview.ng-leave {
+    opacity: 1;
+    -webkit-transition: opacity 100ms linear;
+    -moz-transition: opacity 100ms linear;
+    transition: opacity 100ms linear;
+}
+
+/* Remove animation */
+.logview.ng-leave.ng-leave-active, 
+.logview.ng-enter {
+    opacity: 0;
+    -webkit-transition: all 100ms linear;
+    -moz-transition: all 100ms linear;
+    transition: all 100ms linear;
+}
+
+/* chat messages */
+
+/* more messages buttons */
+.logviewer-round-button {
+	padding: 0px 20px;
+	border-radius: 20px;
+}
+
+div.logviewer-more-messages md-button {
+	margin-top: 0;
+}
+
+div.logviewer-more-messages .md-primary:hover, div.logviewer-more-messages .md-primary:focus {
+	background-color: #2674F2 !important;
+}
+
+/* "More above/below" */
+/* chat messages */
+
+.logview .logviewer-message {
+	font-size: 15px;
+}
+
+span.logviewer-time {
+	font-size: 0.9em;
+	color: #666;
+	margin-right: 2px;
+}
+
+span.logviewer-chat-action {
+	font-style: italic;
+}
+
+span.logviewer-colon {
+	padding-right: 5px;
+}
+
+img.logviewer-badge {
+	margin-right: 2px;
+	height: 1em;
+}
+
+.logviewer-message {
+	word-break: break-word;
+}
+
+img.emote {
+	height: 1.5em;
+	margin-top: -0.25em;
+	margin-bottom: -0.25em;
+}
+
+.logviewer-disabled-message {
+	opacity: 0.3;
+}
+
+.logviewer-selected-message {
+	background-color: rgba(105,105,105,0.25);
+}
+
+.logviewer-clickable-message {
+	cursor: pointer;
+}

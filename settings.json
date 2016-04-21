@@ -1,0 +1,18 @@
+{
+	"database": {
+		"type": "mysql",
+		"host": "localhost",
+		"user": "root",
+		"database": "logviewer",
+		"password": "cBa$uAfxF!a5wtKpm3j%qQ7"
+	},
+	"channels": {
+		"#cbenni": {
+			
+		},
+		"#kbenni": {
+		},
+		"#fuzzyfreaks": {
+		}
+	}
+}

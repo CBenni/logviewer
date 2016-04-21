@@ -1,0 +1,88 @@
+
+<div id="main" ng-click="unselect($event,this)">
+<div id="content" ng-cloak>
+	<h2>Log info for channel {{channel}}</h2>
+	<div id="adduserform">
+		<form ng-submit="submitAddUserForm()" class="navbar-form">
+			<div class="form-group">
+				<input class="form-control" type="text" placeholder="User name" style="min-width: 20em" ng-model="username">
+				<md-button class="btn md-raised md-primary" type="submit">ADD</md-button>
+				<md-button class="btn md-raised md-primary" type="button" ng-click="addUser('twitchnotify')">RECENT SUBSCRIBERS</md-button>
+				<md-button class="btn md-raised md-primary" type="button" ng-click="clearUsers()">CLEAR ALL</md-button>
+			</div>
+		</form>
+	</div>
+	<div class="userlogsview layout-padding">
+		<div ng-repeat="user in users | orderObjectBy:'id':true" class="panel panel-default logview z-depth-1">
+			<div class="panel-heading" layout="column">
+				<div flex="none">
+					<span class="glyphicon glyphicon-remove btn-close" ng-click="delUser(user.data.nick)"></span>
+					<span class="username">{{user.data.nick}}</span>
+				</div>
+				<div flex="none">
+					<span class="userstats">Timeouts: {{user.data.timeouts}}</span>
+					<span class="userstats">Messages: {{user.data.messages}}</span>
+				</div>
+			</div>
+			<div class="panel-body">
+				<div ng-if="user.messages.length > 0">
+					<div class="logviewer-more-messages" ng-class="{true:'logviewer-loading', false:''}[user.isloading]" align="center" ng-if="user.allloaded == false">
+						<md-button class="btn md-raised md-primary logviewer-spin-icon logviewer-round-button" ng-click="moreUser(user.data.nick)">
+							<md-icon class="md-primary">loop</md-icon> Load more
+						</md-button>
+					</div>
+					<div class="logviewer-chat-message-block" ng-repeat="message in user.messages" data-messageid="{{message.id}}">
+						<!-- button to load more before -->
+						<div class="logviewer-more-context" ng-show="selectedID === message.id" ng-class="{'logviewer-loading': user.isloadingContext.before}" ng-click="moreContext(user.data.nick,'before',10)">
+							<md-button class="btn md-raised md-primary logviewer-arrows-up logviewer-round-button">
+								<md-icon class="md-primary">keyboard_arrow_up</md-icon>
+								Load more
+							</md-button>
+						</div>
+						<!-- context before -->
+						<div class="logviewer-chat-message logviewer-context-message" ng-show="selectedID === message.id" ng-repeat="messageBefore in message.before">
+							<span class="logviewer-time">{{messageBefore.time | secondsTimestamp | date : 'short'}}</span>
+							<span class="logviewer-message" ng-bind-html='messageBefore.text | chatLine'></span>
+						</div>
+						<!-- the message -->
+						<div class="logviewer-chat-message" 
+							ng-class="{
+								'logviewer-clickable-message': selectedID === null, 
+								'logviewer-disabled-message':(selectedID !== null) && (selectedID !== message.id), 
+								'logviewer-selected-message': selectedID === message.id
+							}" 
+							ng-click="selectMessage(message.id)">
+							<span class="logviewer-time">{{message.time | secondsTimestamp | date : 'short'}}</span>
+							<span class="logviewer-message" ng-bind-html='message.text | chatLine'></span>
+						</div>
+						<!-- context after -->
+						<div class="logviewer-chat-message logviewer-context-message" ng-show="selectedID === message.id" ng-repeat="messageAfter in message.after">
+							<span class="logviewer-time">{{messageAfter.time | secondsTimestamp | date : 'short'}}</span>
+							<span class="logviewer-message" ng-bind-html='messageAfter.text | chatLine'></span>
+						</div>
+						<!-- button to load more after -->
+						<div class="logviewer-more-context" ng-show="selectedID === message.id" ng-class="{'logviewer-loading': user.isloadingContext.after}">
+							<md-button class="btn md-raised md-primary logviewer-arrows-down logviewer-round-button" ng-click="moreContext(user.data.nick,'after',10)">
+								<md-icon class="md-primary">keyboard_arrow_down</md-icon>
+								Load more
+							</md-button>
+						</div>
+					</div>
+				</div>
+				<div ng-if="user.messages.length == 0">None found.</div>
+				<div ng-if="user.isloading">Loading...</div>
+			</div>
+		</div>
+	</div>
+</div>
+</div>
+<div ng-controller="ChatController as chatCtrl" id="chat" scroll-to-bottom>
+	<!-- chat messages -->
+	<div class="logviewer-chat-message-block" ng-repeat="message in chatCtrl.messages">
+		<div class="logviewer-chat-message" ng-click="chatCtrl.selectMessage(message)">
+			<span class="logviewer-time">{{message.time | date : 'shortTime'}}</span>
+			<span class="logviewer-message" ng-bind-html='message.message | chatLine'></span>
+		</div>
+	</div>
+</div>
+</div>

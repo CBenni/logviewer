@@ -1,0 +1,32 @@
+{
+  "name": "logviewer",
+  "version": "1.0.0",
+  "description": "Tool for keeping and retrieving logs of individuals in twitch chat",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CBenni/logviewer.git"
+  },
+  "keywords": [
+    "twitch",
+    "chat"
+  ],
+  "author": "CBenni",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/CBenni/logviewer/issues"
+  },
+  "homepage": "https://github.com/CBenni/logviewer#readme",
+  "dependencies": {
+    "compression": "^1.6.0",
+    "express": "^4.13.3",
+    "http": "0.0.0",
+    "jsonfile": "^2.2.3",
+    "mysql": "^2.10.0",
+    "socket.io": "^1.4.4",
+    "tls": "0.0.1"
+  }
+}
