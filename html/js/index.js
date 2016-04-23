@@ -9,15 +9,15 @@ app.config(function($stateProvider, $urlRouterProvider, $urlMatcherFactoryProvid
 			title: 'index',
 			templateUrl: "/static/index.html"
 		})
-		.state("login", {
-			url: "/login",
-			title: 'login',
-			templateUrl: "/static/login.html"
-		})
 		.state("channel", {
 			url: "/:channel",
 			templateUrl: "/static/channel.html",
 			controller: "ChannelController"
+		})
+		.state("settings", {
+			url: "/:channel/settings",
+			templateUrl: "/static/settings.html",
+			controller: "SettingsController"
 		})
 });
 

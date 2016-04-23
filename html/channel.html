@@ -1,4 +1,3 @@
-
 <div id="main" ng-click="unselect($event,this)">
 <div id="content" ng-cloak>
 	<h2>Log info for channel {{channel}}</h2>
@@ -16,7 +15,9 @@
 		<div ng-repeat="user in users | orderObjectBy:'id':true" class="panel panel-default logview z-depth-1">
 			<div class="panel-heading" layout="column">
 				<div flex="none">
-					<span class="glyphicon glyphicon-remove btn-close" ng-click="delUser(user.data.nick)"></span>
+					<md-button class="btn-close md-primary md-icon-button" ng-click="delUser(user.data.nick)">
+						<md-icon class="md-primary">close</md-icon>
+					</md-button>
 					<span class="username">{{user.data.nick}}</span>
 				</div>
 				<div flex="none">

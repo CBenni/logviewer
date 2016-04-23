@@ -93,7 +93,23 @@ app.get('/:channel', function(req, res) {
 		next(err);
 	}
 });
+app.get('/:channel/settings', function(req, res) {
+	try {
+		res.sendFile(__dirname + '/html/index.html');
+	} 
+	catch(err) {
+		next(err);
+	}
+});
 
+app.get('/api/login', function(req, res, next) {
+	try {
+		res.jsonp(Object.keys(settings.channels));
+	} 
+	catch(err) {
+		next(err);
+	}
+});
 
 app.get('/api/channels', function(req, res, next) {
 	try {
