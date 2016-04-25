@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html ng-app="mainapp">
+<html ng-app="mainapp" ng-controller="mainctrl">
 
 <head>
 	<meta charset="utf-8">
@@ -18,7 +18,14 @@
 </head>
 
 <body>
-
+<div class="header" layout="row" layout-align="end center">
+	<div ng-show="login.name" flex="none">
+		<md-button class="md-raised twitch-button" ng-click="logout()">Log out ({{login.name}})</md-button>
+	</div>
+	<div ng-hide="login.name" flex="none">
+		<md-button ng-click="login()" class="md-raised twitch-button">Login with twitch</md-button>
+	</div>
+</div>
 <ui-view></ui-view>
 
 <script src="/static/bower_components/jquery/dist/jquery.min.js"></script>
@@ -29,6 +36,7 @@
 <script src="/static/bower_components/angular-messages/angular-messages.min.js"></script>
 <script src="/static/bower_components/angular-ui-router/release/angular-ui-router.min.js"></script>
 <script src="/static/bower_components/angular-material/angular-material.min.js"></script>
+<script src="/static/bower_components/angular-cookies/angular-cookies.min.js"></script>
 
 <script src="/static/js/logviewer.js"></script>
 <script src="/static/js/settings.js"></script>

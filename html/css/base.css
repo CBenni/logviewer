@@ -31,3 +31,18 @@
 [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
 	display: none !important;
 }
+
+
+
+.md-button.md-raised.twitch-button {
+	background-color: #6441a5;
+	color: white;
+}
+
+.md-button.md-raised:not([disabled]):hover.twitch-button {
+	background-color: #B9A3E3;
+}
+
+.header {
+	width: 100%;
+}

@@ -1,0 +1,14 @@
+{
+	"database": {
+		"type": "mysql",
+		"host": "localhost",
+		"user": "root",
+		"database": "logviewer",
+		"password": ""
+	},
+	"twitch_auth": {
+		"client_id": "",
+		"client_secret": "",
+		"base_url": ""
+	}
+}

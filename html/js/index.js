@@ -1,4 +1,4 @@
-var app = angular.module("mainapp",["ui.router","logviewerApp","ngMaterial"]);
+var app = angular.module("mainapp",["ui.router","logviewerApp","ngMaterial","ngCookies"]);
 
 app.config(function($stateProvider, $urlRouterProvider, $urlMatcherFactoryProvider, $locationProvider) {
 	$urlMatcherFactoryProvider.strictMode(false);
@@ -25,4 +25,10 @@ app.run(function($rootScope) {
 	var stateChange = $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams, options) {
 		$rootScope.title = toParams.channel || toState.title;
 	});
+});
+
+app.controller("mainctrl", function($scope,$http,$cookies){
+	$scope.auth = { name: $cookies.get("login"), token: $cookies.get("tk") };
+	
+	$scope.
 });
