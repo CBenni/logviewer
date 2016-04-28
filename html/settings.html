@@ -1,5 +1,9 @@
 <div id="main">
 <div id="content" ng-cloak>
+	<h3>Settings</h3>
+	<ul>
+		<li><md-checkbox ng-model="settings.active">Enable the logviewer</md-checkbox></li>
+	</ul>
 	<h3>Permissions</h3>
 	<ul>
 		<li><md-select ng-model="settings.viewlogs" ng-change="onchange()" class="inlineselect">
@@ -24,8 +28,7 @@
 		</md-select> can delete comments</li>
 		<li>Editors:<br>
 		<md-input-container>
-			<textarea rows="5" ng-model="settings.editors">
-			</textarea>
+			<table-input ng-model="settings.editors" ng-change="onchangelevels()"></table-input>
 		</md-input-container>
 		</li>
 	</ul>

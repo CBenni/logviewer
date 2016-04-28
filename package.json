@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/CBenni/logviewer#readme",
   "dependencies": {
+    "body-parser": "^1.15.0",
     "compression": "^1.6.0",
     "cookie-parser": "^1.4.1",
     "express": "^4.13.3",

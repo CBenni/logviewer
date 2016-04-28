@@ -49,20 +49,26 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		});
 	}
 	
-	self.getChannel = function(channel, callback) {
+	self.getActiveChannel = function(channel, callback) {
 		self.connection.query("SELECT * FROM channels WHERE name=? AND active=1",[channel],function(error, results, fields){
+			callback(results[0]);
+		});
+	}
+	
+	self.getChannel = function(channel, callback) {
+		self.connection.query("SELECT * FROM channels WHERE name=?",[channel],function(error, results, fields){
 			callback(results[0]);
 		});
 	}
 	
 	self.addLine = function(channel, nick, message, count) {
 		self.connection.query("INSERT INTO ?? (time,nick,text) VALUES (?,?,?)",["chat_"+channel, Math.floor(Date.now()/1000), nick, message]);
-		if(count !== false) self.connection.query("INSERT INTO ?? (nick,messages) VALUES (?,1) ON DUPLICATE KEY UPDATE messages = messages + 1",["users_"+channel, nick]);
+		if(count !== false) self.connection.query("INSERT INTO ?? (nick,messages) VALUES (?,1) ON DUPLICATE KEY UPDATE messages = messages + 1 WHERE nick=?",["users_"+channel, nick,nick]);
 	}
 	
 	self.addTimeout = function(channel, nick, message) {
 		self.connection.query("INSERT INTO ?? (time,nick,text) VALUES (?,?,?)",["chat_"+channel, Math.floor(Date.now()/1000), nick, message]);
-		self.connection.query("INSERT INTO ?? (nick,timeouts) VALUES (?,1) ON DUPLICATE KEY UPDATE timeouts = timeouts + 1",["users_"+channel, nick]);
+		self.connection.query("INSERT INTO ?? (nick,timeouts) VALUES (?,1) ON DUPLICATE KEY UPDATE timeouts = timeouts + 1 WHERE nick=?",["users_"+channel, nick, nick]);
 	}
 	
 	self.getLogsByNick = function(channel, nick, limit, callback) {
@@ -113,7 +119,8 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	
 	self.getAuthUser = function(token, callback) {
 		self.connection.query("SELECT name FROM auth WHERE token=? AND expires > ?",[token,~~(Date.now()/1000)], function(error, results, fields) {
-			callback(results[0].name);
+			if(results.length>0) callback(results[0].name);
+			else return null;
 		});
 	}
 	
@@ -124,7 +131,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	}
 	
 	self.setUserLevel = function(channel, nick, level) {
-		if(count !== false) self.connection.query("INSERT INTO ?? (nick,level) VALUES (?,?) ON DUPLICATE KEY UPDATE level = ?",["users_"+channel, nick, level, level]);
+		if(count !== false) self.connection.query("INSERT INTO ?? (nick,level) VALUES (?,?) ON DUPLICATE KEY UPDATE level = ? WHERE nick=?",["users_"+channel, nick, level, level, nick]);
 	}
 	
 	self.storeToken = function(user, token, expires) {
@@ -135,6 +142,10 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		self.connection.query("UPDATE auth SET expires=? WHERE name=? AND token=? AND expires > ?",[expires,user,token,~~(Date.now()/1000)], function(error, result) {
 			callback(result.affectedRows > 0);
 		});
+	}
+	
+	self.setSetting = function(channel, key, val) {
+		self.connection.query("UPDATE channels SET ??=? WHERE name=?",[key,val,channel]);
 	}
 }
 

@@ -6,6 +6,7 @@ var url = require('url');
 var express = require('express');
 var compression = require('compression');
 var cookieParser = require('cookie-parser');
+var bodyParser = require('body-parser')
 var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
@@ -27,38 +28,52 @@ app.use(compression());
 app.set('view engine', 'jade');
 app.use('/static', express.static("./html"));
 app.use(cookieParser());
+app.use(bodyParser.json()); // for parsing application/json
+app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 // no need for a database for settings, its all direct accesses anyways.
 var settings = require('./settings.json');
-
 var databaseconnector = require("./db/"+settings.database.type);
 var db = new databaseconnector(settings.database);
 
 function joinChannel(channel) {
-	settings.channels[channel] = settings.channels[channel] || {};
+	userlevels[channel] = userlevels[channel] || {};
 	bot.send("JOIN "+channel);
 	db.ensureTablesExist(channel.slice(1));
 }
-var userlevels = {};
+
+function absMax(){
+	var best=0;
+	for(var i=0;i<arguments.length;++i){
+		if(Math.abs(best) < Math.abs(arguments[i])) best = arguments[i];
+	}
+	return best;
+}
+
+var userlevels = {}; // temporary user levels (mod etc)
+function getUserLevel(channel,name,callback) {
+	var reslvl = null;
+	var templvl = 0;
+	if(userlevels[channel]) templvl = userlevels[channel];
+	db.getLevel(channel, name, function(lv){
+		if(minlvl === null) {
+			minlvl = lv;
+		} else {
+			callback(absMax(reslvl,lv,templvl));
+		}
+	});
+	db.getLevel("logviewer", name, function(lv){
+		if(minlvl === null) {
+			minlvl = lv;
+		} else {
+			callback(absMax(reslvl,lv,templvl));
+		}
+	});
+}	
+
 function setUserLevel(channel, user, level, save) {
 	if(userlevels[channel] === undefined) userlevels[channel] = {};
 	userlevels[channel][user] = level;
 	if(save) db.setUserLevel(channel, user, level);
-}
-
-function absMax(x,y){return Math.abs(x)>=Math.abs(y)?x:y}
-function getUserLevel(channel, user, callback) {
-	var reslevel = 0;
-	if(userlevels[channel] && userlevels[channel][user] !== undefined) {
-		reslevel = userlevels[channel][user];
-	}
-	db.getUserLevel(channel,user,function(lv){
-		if(channel == "logviewer") callback(absMax(reslevel,lv));
-		else {
-			getUserLevel("logviewer",user,function(lv2){
-				callback(absMax(absMax(reslevel,lv2),lv1));
-			});
-		}
-	});
 }
 
 bot.on("connect", function(){
@@ -123,16 +138,13 @@ function checkAuth(req, res, callback) {
 
 function getLevel(channel, token, callback) {
 	db.getAuthUser(token, function(name){
-		db.getLevel(channel, name, callback);
+		if(name) {
+			getUserLevel(channel,name,function(level){
+				callback(level,name);
+			});
+		} else callback(0,null);
 	});
 }
-
-// Returns true if the user (as specified by the token) can perform a certain action
-/*function canPerform(channel, token, action, callback) {
-	getLevel(channel, token, function(){
-		
-	});
-}*/
 
 function generateToken(res, username) {
 	require('crypto').randomBytes(48, function(err, buffer) {
@@ -166,6 +178,22 @@ app.get('/:channel/settings', function(req, res, next) {
 		checkAuth(req, res);
 		res.sendFile(__dirname + '/html/index.html');
 	} 
+	catch(err) {
+		next(err);
+	}
+});
+
+app.get('/api',function(req,res,next) {
+	try {
+		if(req.query.token){
+			db.getAuthUser(token, function(name){
+				if(name) res.jsonp({name:name, valid: true});
+				else res.status(404).jsonp({name: null, valid: false});
+			});
+		} else {
+			res.status(400).jsonp({"error":"Missing authentification token"});
+		}
+	}
 	catch(err) {
 		next(err);
 	}
@@ -206,11 +234,18 @@ app.get('/api/login', function(req, res, next) {
 app.get('/api/channel/:channel', function(req, res, next) {
 	try {
 		db.getChannel(req.params.channel, function(channelObj) {
-			if(channelObj.viewlogs > 0) {
-				getLevel(req.params.channel, )
-			} else {
-				res.jsonp(channelObj);
+			if(!channelObj)
+			{
+				res.status(404).jsonp({"error":"Channel "+channel+" not found."});
+				return;
 			}
+			getLevel(req.params.channel, req.query.token, function(level, user){
+				if(level >= channelObj.viewlogs) {
+					res.jsonp({"channel":channelObj,"me":{name:user, level:level, valid: true}});
+				} else {
+					res.status(403).end();
+				}
+			});
 		});
 	} 
 	catch(err) {
@@ -235,53 +270,123 @@ function isNormalInteger(str) {
 	return String(n) === str && n >= 0;
 }
 
+function getLogs(channel, query) {
+	if(query.id) { 
+		var id = parseInt(query.id);
+		db.getLogsById(channel, id, query.nick, parseInt(query.before || 10), parseInt(query.after || 10), function(before, after){
+			for(var i=0;i<before.length;++i) {
+				before[i].text = messagecompressor.decompressMessage("#"+channel, before[i].nick, before[i].text);
+			}
+			for(var i=0;i<after.length;++i) {
+				after[i].text = messagecompressor.decompressMessage("#"+channel, after[i].nick, after[i].text);
+			}
+			if(query.nick) {
+				db.getUserStats(channel, query.nick, function(userobj) {
+					return {id:id, user: userobj, before: before, after: after};
+				});
+			}
+			else {
+				return {id:id, before: before, after: after};
+			}
+		});
+	}
+	else if(query.nick) {
+		db.getLogsByNick(channel, query.nick, parseInt(query.before) || 10, function(before){
+			for(var i=0;i<before.length;++i) {
+				before[i].text = messagecompressor.decompressMessage("#"+channel, before[i].nick, before[i].text);
+			}
+			db.getUserStats(channel, query.nick, function(userobj) {
+				return {id:id, user: userobj, before: before, after: []};
+			});
+		});
+	}
+	else 
+	{
+		return {"error":"Missing both parameters nick and id."};
+	}
+}
+
 app.get('/api/logs/:channel', function(req, res, next) {
 	try {
 		var channel = req.params.channel;
-		db.getChannel(channel,function(channelObject){
-			if(!channelObject)
+		db.getActiveChannel(channel, function(channelObj) {
+			if(!channelObj)
 			{
-				res.jsonp({"error":"Channel "+channel+" not found."});
+				res.status(404).jsonp({"error":"Channel "+channel+" not found."});
 				return;
 			}
-			if(req.query.id) {
-				var id = parseInt(req.query.id);
-				db.getLogsById(channel, id, req.query.nick, parseInt(req.query.before || 10), parseInt(req.query.after || 10), function(before, after){
-					for(var i=0;i<before.length;++i) {
-						before[i].text = messagecompressor.decompressMessage("#"+channel, before[i].nick, before[i].text);
-					}
-					for(var i=0;i<after.length;++i) {
-						after[i].text = messagecompressor.decompressMessage("#"+channel, after[i].nick, after[i].text);
-					}
-					if(req.query.nick) {
-						db.getUserStats(channel, req.query.nick, function(userobj) {
-							res.jsonp({id:id, user: userobj, before: before, after: after});
-						});
-					}
-					else {
-						res.jsonp({id:id, before: before, after: after});
+			if(channelObj.viewlogs > 0) {
+				getLevel(req.params.channel, req.query.token, function(level){
+					if(level >= channelObj.viewlogs) {
+						res.jsonp(getLogs(channel, req.query));
+					} else {
+						res.status(403).end();
 					}
 				});
-			}
-			else if(req.query.nick) {
-				db.getLogsByNick(channel, req.query.nick, parseInt(req.query.before) || 10, function(before){
-					for(var i=0;i<before.length;++i) {
-						before[i].text = messagecompressor.decompressMessage("#"+channel, before[i].nick, before[i].text);
-					}
-					db.getUserStats(channel, req.query.nick, function(userobj) {
-						res.jsonp({id:id, user: userobj, before: before, after: []});
-					});
-				});
-			}
-			else 
-			{
-				res.jsonp({"error":"Missing both parameters nick and id."});
+			} else {
+				res.jsonp(getLogs(channel, req.query));
 			}
 		});
 	} 
 	catch(err) {
 		next(err);
 	}
+});
+var allowedsettings = ["active","viewlogs","viewcomments","writecomments","deletecomments"];
+app.post('/api/settings/:channel', function(req, res, next) {
+	try {
+		var channel = req.params.channel;
+		db.getChannel(channel, function(channelObj) {
+			if(!channelObj)
+			{
+				res.status(404).jsonp({"error":"Channel "+channel+" not found."});
+				return;
+			}
+			getLevel(req.params.channel, req.query.token, function(level){
+				if(level >= channelObj.settings) {
+					var newsettings = req.body;
+					for(var i=0;i<allowedsettings.length;++i) {
+						var key = allowedsettings[i];
+						if(!isNaN(parseInt(newsettings[key]))) {
+							db.setSetting(channel, key, newsettings[key]);
+						}
+						res.status(200).end();
+					}
+				} else {
+					res.status(403).end();
+				}
+			});
+		});
+	} 
+	catch(err) {
+		next(err);
+	}
+});
+
+app.post('/api/levels/:channel',function(req,res,next){
+	try {
+		var channel = req.params.channel;
+		db.getChannel(channel, function(channelObj) {
+			if(!channelObj)
+			{
+				res.status(404).jsonp({"error":"Channel "+channel+" not found."});
+				return;
+			}
+			getLevel(req.params.channel, req.query.token, function(level){
+				if(level >= channelObj.settings) {
+					var newsettings = req.body;
+					var users = Object.keys(newsettings);
+					for(var i=0;i<users.length;++i) {
+						db.setLevel(channel,users[i],newsettings[users[i]]);
+					}
+				}
+			});
+		});
+	}
+	catch(err) {
+		next(err);
+	}
+	
 });
 
 app.use(function(err, req, res, next) {
