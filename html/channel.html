@@ -14,16 +14,15 @@
 	<div class="userlogsview layout-padding">
 		<div ng-repeat="user in users | orderObjectBy:'id':true" class="panel panel-default logview z-depth-1">
 			<div class="panel-heading" layout="column">
-				<div flex="none" layout="row" layout-align="space-between start">
-					<div></div>
-					<div layout="column" layout-align="center center">
-						<span class="username" flex="none">{{user.data.nick}} </span>
-						<span class="userstats" flex="none">Timeouts: {{user.data.timeouts}} Messages: {{user.data.messages}}</span>
+				<md-button class="btn-close md-primary md-icon-button" ng-click="delUser(user.data.nick)">
+					<md-icon class="md-primary">close</md-icon>
+				</md-button>
+				<div flex="none" layout="column" layout-align="center center">
+					<span class="username" flex="none">{{user.data.nick}} </span>
+					<div layout="row" layout-align="center center" flex="1">
+						<span class="userstats" flex="none" style="text-align: right;">Messages: {{user.data.messages}}</span>
+						<span class="userstats" flex="none">Timeouts: {{user.data.timeouts}}</span>
 					</div>
-					
-					<md-button class="btn-close md-primary md-icon-button" ng-click="delUser(user.data.nick)">
-						<md-icon class="md-primary">close</md-icon>
-					</md-button>
 				</div>
 			</div>
 			<div class="panel-body">
@@ -43,7 +42,7 @@
 						</div>
 						<!-- context before -->
 						<div class="logviewer-chat-message logviewer-context-message" ng-show="selectedID === message.id" ng-repeat="messageBefore in message.before">
-							<span class="logviewer-time">{{messageBefore.time | secondsTimestamp | date : 'short'}}</span>
+							<span class="logviewer-time">{{messageBefore.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}</span>
 							<span class="logviewer-message" ng-bind-html='messageBefore.text | chatLine'></span>
 						</div>
 						<!-- the message -->
@@ -54,12 +53,12 @@
 								'logviewer-selected-message': selectedID === message.id
 							}" 
 							ng-click="selectMessage(message.id)">
-							<span class="logviewer-time">{{message.time | secondsTimestamp | date : 'short'}}</span>
+							<span class="logviewer-time">{{message.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}</span>
 							<span class="logviewer-message" ng-bind-html='message.text | chatLine'></span>
 						</div>
 						<!-- context after -->
 						<div class="logviewer-chat-message logviewer-context-message" ng-show="selectedID === message.id" ng-repeat="messageAfter in message.after">
-							<span class="logviewer-time">{{messageAfter.time | secondsTimestamp | date : 'short'}}</span>
+							<span class="logviewer-time">{{messageAfter.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}</span>
 							<span class="logviewer-message" ng-bind-html='messageAfter.text | chatLine'></span>
 						</div>
 						<!-- button to load more after -->

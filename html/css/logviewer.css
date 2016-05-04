@@ -63,12 +63,6 @@ div { outline-style:none; }
 }
 
 
-.logview .userstats
-{
-	max-width: 200px;
-}
-
-
 .logview
 {
 	border: 1px rgba(194,194,194, 0.4) solid;
@@ -78,6 +72,20 @@ div { outline-style:none; }
 
 .btn-close:hover {
 	color: #999;
+}
+
+.btn-close {
+    position: absolute;
+	right: 0;
+}
+
+.panel-heading {
+	position: relative;
+}
+
+.userstats {
+	width: 200px;
+    margin: 0 5px;
 }
 
 
