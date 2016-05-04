@@ -5,3 +5,11 @@ md-select.inlineselect {
 	margin: 0;
 	display: inline-block;
 }
+
+.md-errors-spacer {
+	display: none;
+}
+
+md-input-container {
+    margin: 0;
+}

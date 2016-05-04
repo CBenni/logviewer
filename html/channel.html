@@ -14,15 +14,16 @@
 	<div class="userlogsview layout-padding">
 		<div ng-repeat="user in users | orderObjectBy:'id':true" class="panel panel-default logview z-depth-1">
 			<div class="panel-heading" layout="column">
-				<div flex="none">
+				<div flex="none" layout="row" layout-align="space-between start">
+					<div></div>
+					<div layout="column" layout-align="center center">
+						<span class="username" flex="none">{{user.data.nick}} </span>
+						<span class="userstats" flex="none">Timeouts: {{user.data.timeouts}} Messages: {{user.data.messages}}</span>
+					</div>
+					
 					<md-button class="btn-close md-primary md-icon-button" ng-click="delUser(user.data.nick)">
 						<md-icon class="md-primary">close</md-icon>
 					</md-button>
-					<span class="username">{{user.data.nick}}</span>
-				</div>
-				<div flex="none">
-					<span class="userstats">Timeouts: {{user.data.timeouts}}</span>
-					<span class="userstats">Messages: {{user.data.messages}}</span>
 				</div>
 			</div>
 			<div class="panel-body">
@@ -72,6 +73,17 @@
 				</div>
 				<div ng-if="user.messages.length == 0">None found.</div>
 				<div ng-if="user.isloading">Loading...</div>
+				<div ng-repeat="comment in user.comments" layout="row" class="logviewer-comment">
+					<div flex="none">
+						<img ng-src="{{profilePics[comment.author]}}">
+					</div>
+					<div flex="1">
+						<div>
+							<span class="author">{{comment.author}}</span> <span class="age">{{comment|commentAge}}</span>
+						</div>
+						<div class="text">{{comment.text}}</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>

@@ -71,17 +71,9 @@ div { outline-style:none; }
 
 .logview
 {
-	border: 1px rgba(#c2c2c2;, 0.4) solid;
+	border: 1px rgba(194,194,194, 0.4) solid;
 	box-shadow: 0 1px 10px 0px rgba(0, 0, 0, 0.14);
-}
-
-.btn-close {
-	font-size: 30px;
-	color: #666;
-	transition: 250ms;
-	cursor: pointer;
-	float: right;
-	margin: 0 10px;
+	margin-bottom: 10px;
 }
 
 .btn-close:hover {
@@ -169,4 +161,39 @@ img.emote {
 
 .logviewer-clickable-message {
 	cursor: pointer;
+}
+
+/* comments */
+.logviewer-comment {
+  background-color: #eee;
+  border-radius:5px;
+  margin: 20px;
+  padding: 5px;
+  max-width:500px;
+  position: relative;
+}
+
+.logviewer-comment img {
+  height: 34px;
+  width: 34px;
+  border-radius: 25px;
+  margin: 0 5px 0 0;
+}
+
+.logviewer-comment:before {
+    content: "";
+    position: absolute;
+    top: 15px;
+    left: -20px;
+    border: 10px solid transparent;
+    border-right-color: #eee;
+    display: block;
+}
+
+.logviewer-comment .author {
+  font-weight: bold;
+}
+
+.logviewer-comment .age {
+  font-size: 12px;
 }

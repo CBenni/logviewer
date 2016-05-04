@@ -6,9 +6,9 @@
 		"database": "logviewer",
 		"password": ""
 	},
-	"twitch_auth": {
+	"auth": {
 		"client_id": "",
 		"client_secret": "",
-		"base_url": ""
+		"baseurl": "http://127.0.0.1:8080/"
 	}
 }

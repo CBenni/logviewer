@@ -1,4 +1,3 @@
-var BASEURL = ""
 var _badges = {
 	"global_mod": {
 		"alpha": "http://chat-badges.s3.amazonaws.com/globalmod-alpha.png",
@@ -34,10 +33,18 @@ var _badges = {
 };
 
 var logviewerApp = angular.module("logviewerApp", ['ngSanitize','ngAnimate']);
-logviewerApp.controller("ChannelController", function($scope, $http, $stateParams){
+logviewerApp.controller("ChannelController", function($scope, $http, $stateParams,$rootScope){
 	$scope.channel = $stateParams.channel;
+	$scope.channelsettings = null;
+	$scope.userObject = null;
 	$http.jsonp("https://api.twitch.tv/kraken/chat/"+$scope.channel+"/badges?callback=JSON_CALLBACK").then(function(response){
 		_badges = response.data;
+	}, function(response){
+		// nothing to do here.
+	});
+	$http.jsonp(settings.auth.baseurl + "/api/channel/"+$scope.channel+"/?token="+$rootScope.auth.token+"&callback=JSON_CALLBACK").then(function(response){
+		$scope.channelsettings = response.data.channel;
+		$scope.userObject = response.data.me;
 	}, function(response){
 		// nothing to do here.
 	});
@@ -59,6 +66,26 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	
 	$scope.userid = 0;
 	
+	$scope.profilePics = {};
+	var getProfilePic = function(nick) {
+		if($scope.profilePics[nick] === undefined) {
+			$http.jsonp("https://api.twitch.tv/kraken/channels/"+nick+"/?callback=JSON_CALLBACK").then(function(response) {
+				$scope.profilePics[nick] = response.data.logo;
+			});
+		}
+	}
+	
+	var getComments = function(user) {
+		if($rootScope.auth.token) {
+			$http.jsonp(settings.auth.baseurl + "/api/comments/" + $scope.channel + "/?token="+$rootScope.auth.token+"&topic="+user+"&callback=JSON_CALLBACK").then(function(response) {
+				$scope.users[user].comments = response.data;
+				for(var i=0;i<response.data.length;++i) {
+					getProfilePic(response.data[i].author);
+				}
+			});
+		}
+	}
+	
 	$scope.addUser = function(nick)
 	{
 		nick = nick.toLowerCase();
@@ -77,7 +104,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 				}
 			};
 		}
-		$http.jsonp(BASEURL + "/api/logs/" + $scope.channel + "/?nick=" + nick 
+		$http.jsonp(settings.auth.baseurl + "/api/logs/" + $scope.channel + "/?nick=" + nick 
 				+ "&callback=JSON_CALLBACK").then(function(response){
 			$scope.users[nick].data = response.data.user;
 			let messagesToAdd = response.data.before || [];
@@ -97,13 +124,14 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 		},function(response){
 			console.log(response);
 		});
+		getComments(nick);
 	}
 	// TODO: remove
 	$scope.addUser("cbenni");
 	$scope.moreUser = function(nick)
 	{
 		$scope.users[nick].isloading = true;
-		$http.jsonp(BASEURL + "/api/logs/" + $scope.channel + "/?nick=" + nick 
+		$http.jsonp(settings.auth.baseurl + "/api/logs/" + $scope.channel + "/?nick=" + nick 
 				+ "&id=" + $scope.users[nick].messages[0].id + "&after=0&callback=JSON_CALLBACK").then(function(response){
 			$scope.users[nick].data = response.data.user;
 			let messagesToAdd = response.data.before;
@@ -144,7 +172,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 			$scope.selectedID = id;
 			if($scope.messages[id].before.length == 0 && $scope.messages[id].after.length == 0) {
 				// populate if empty
-				$http.jsonp(BASEURL + "/api/logs/" + $scope.channel + "/?id=" + id 
+				$http.jsonp(settings.auth.baseurl + "/api/logs/" + $scope.channel + "/?id=" + id 
 						+ "&callback=JSON_CALLBACK&before=10&after=10").then(function(response){
 					$scope.messages[id].before = response.data.before;
 					$scope.messages[id].after = response.data.after;
@@ -178,8 +206,8 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 		else {
 			user.isloadingContext[position] = true;
 			//?id=" + newestID + "/?callback=JSON_CALLBACK&" + position + "=" + count
-			$http.jsonp(BASEURL + "/api/logs/" + $scope.channel,{params:
-				{
+			$http.jsonp(settings.auth.baseurl + "/api/logs/" + $scope.channel,{
+				params: {
 					id: newestID, 
 					before: (position=="before")?10:0, 
 					after: (position=="after")?10:0,
@@ -227,6 +255,28 @@ logviewerApp.filter('chatLine', function($sce) {
 		} else if(parsedmessage[STATE_COMMAND]=="NOTICE") {
 			
 		}
+	}
+});
+
+logviewerApp.filter('commentAge', function($sce) {
+	return function(input, defaultValue) {
+		var d = Date.now()/1000;
+		var age = d-input.edited;
+		var res = "";
+		if(age < 60) {
+			res = "less than a minute ago";
+		} else if(age < 3600) {
+			var mins = Math.round(age/60);
+			if(mins == 1) res = "a minute ago";
+			else res = mins+" minutes ago";
+		} else if(age < 3600*24*7) {
+			var days = Math.round(age/(3600*24));
+			if(days == 1) res = "yesterday";
+			else res = days+" days ago";
+		} else {
+			res = $filter('date')(input.edited*1000);
+		}
+		return (input.edited == input.added?"":"edited ")+res;
 	}
 });
 

@@ -1,5 +1,4 @@
 var app = angular.module("mainapp",["ui.router","logviewerApp","ngMaterial","ngCookies"]);
-
 app.config(function($stateProvider, $urlRouterProvider, $urlMatcherFactoryProvider, $locationProvider) {
 	$urlMatcherFactoryProvider.strictMode(false);
 	$locationProvider.html5Mode(true);
@@ -27,8 +26,21 @@ app.run(function($rootScope) {
 	});
 });
 
-app.controller("mainctrl", function($scope,$http,$cookies){
-	$scope.auth = { name: $cookies.get("login"), token: $cookies.get("tk") };
+app.controller("mainctrl", function($rootScope,$scope,$http,$cookies){
+	$rootScope.auth = { name: $cookies.get("login")||"", token: $cookies.get("token")||"" };
 	
-	$scope.
+	$scope.login = function() {
+		window.location.href = "https://api.twitch.tv/kraken/oauth2/authorize"
+			+"?response_type=code"
+			+"&client_id="+settings.auth.client_id
+			+"&redirect_uri="+settings.auth.baseurl+"/api/login"
+			+"&scope="
+			+"&state="+window.location.pathname;
+	}
+	
+	$scope.logout = function() {
+		$http.get("/api/logout/?token="+$rootScope.auth.token).then(function(result) {
+			window.location.reload();
+		});
+	}
 });

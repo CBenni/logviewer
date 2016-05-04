@@ -19,10 +19,10 @@
 
 <body>
 <div class="header" layout="row" layout-align="end center">
-	<div ng-show="login.name" flex="none">
-		<md-button class="md-raised twitch-button" ng-click="logout()">Log out ({{login.name}})</md-button>
+	<div ng-show="auth.name" flex="none">
+		<md-button class="md-raised twitch-button" ng-click="logout()">Log out ({{auth.name}})</md-button>
 	</div>
-	<div ng-hide="login.name" flex="none">
+	<div ng-hide="auth.name" flex="none">
 		<md-button ng-click="login()" class="md-raised twitch-button">Login with twitch</md-button>
 	</div>
 </div>
@@ -37,6 +37,14 @@
 <script src="/static/bower_components/angular-ui-router/release/angular-ui-router.min.js"></script>
 <script src="/static/bower_components/angular-material/angular-material.min.js"></script>
 <script src="/static/bower_components/angular-cookies/angular-cookies.min.js"></script>
+
+<script>
+var settings = null;
+function getGlobalSettings(data) {
+	settings = data;
+}
+</script>
+<script src="/api/?callback=getGlobalSettings"></script>
 
 <script src="/static/js/logviewer.js"></script>
 <script src="/static/js/settings.js"></script>
