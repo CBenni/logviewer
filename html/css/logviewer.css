@@ -75,7 +75,7 @@ div { outline-style:none; }
 }
 
 .btn-close {
-    position: absolute;
+	position: absolute;
 	right: 0;
 }
 
@@ -85,26 +85,26 @@ div { outline-style:none; }
 
 .userstats {
 	width: 200px;
-    margin: 0 5px;
+	margin: 0 5px;
 }
 
 
 /* Add animation */
 .logview.ng-enter.ng-enter-active, 
 .logview.ng-leave {
-    opacity: 1;
-    -webkit-transition: opacity 100ms linear;
-    -moz-transition: opacity 100ms linear;
-    transition: opacity 100ms linear;
+	opacity: 1;
+	-webkit-transition: opacity 100ms linear;
+	-moz-transition: opacity 100ms linear;
+	transition: opacity 100ms linear;
 }
 
 /* Remove animation */
 .logview.ng-leave.ng-leave-active, 
 .logview.ng-enter {
-    opacity: 0;
-    -webkit-transition: all 100ms linear;
-    -moz-transition: all 100ms linear;
-    transition: all 100ms linear;
+	opacity: 0;
+	-webkit-transition: all 100ms linear;
+	-moz-transition: all 100ms linear;
+	transition: all 100ms linear;
 }
 
 /* chat messages */
@@ -189,13 +189,13 @@ img.emote {
 }
 
 .logviewer-comment:before {
-    content: "";
-    position: absolute;
-    top: 15px;
-    left: -20px;
-    border: 10px solid transparent;
-    border-right-color: #eee;
-    display: block;
+	content: "";
+	position: absolute;
+	top: 15px;
+	left: -20px;
+	border: 10px solid transparent;
+	border-right-color: #eee;
+	display: block;
 }
 
 .logviewer-comment .author {
