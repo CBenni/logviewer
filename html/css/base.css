@@ -47,3 +47,15 @@
 	width: 100%;
 	background-color: #19191F;
 }
+
+
+.nobottom .md-errors-spacer {
+	display: none;
+}
+
+md-input-container.nobottom {
+	margin-bottom: 0;
+}
+md-input-container.notop {
+	margin-top: 0;
+}

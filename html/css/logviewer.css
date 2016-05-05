@@ -88,6 +88,41 @@ div { outline-style:none; }
 	margin: 0 5px;
 }
 
+.logviewer-comment .text {
+	white-space: pre-wrap;
+}
+
+.writecomment {
+	margin-top: 20px;
+}
+
+.writecomment md-input-container {
+	width: 50%;
+	min-width: 200px;
+}
+
+.comment-editing-buttons .editing-button {
+    margin: 0;
+    min-height: 0;
+    height: 20px;
+    min-width: 0;
+    width: 20px;
+    padding: 0;
+}
+
+.comment-editing-buttons .editing-button md-icon {
+    font-size: 16px;
+    height: 20px;
+    width: 20px;
+}
+
+.comment-editing md-input-container {
+	width: 100%;
+}
+
+.comment-editing .md-button {
+	float: right;
+}
 
 /* Add animation */
 .logview.ng-enter.ng-enter-active, 

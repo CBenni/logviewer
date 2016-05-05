@@ -128,8 +128,8 @@ function checkAuth(req, res, callback) {
 	if(user !== undefined && token !== undefined) {
 		db.checkAndRefreshToken(user, token, ~~(Date.now()/1000)+32*24*3600, function(ok){
 			if(ok) {
-				res.cookie('token',token,{ maxAge: 2500000 });
-				res.cookie('login',user,{ maxAge: 2500000 });
+				res.cookie('token',token,{ maxAge: 32*24*3600000 });
+				res.cookie('login',user,{ maxAge: 32*24*3600000 });
 			} else {
 				res.clearCookie('token');
 				res.clearCookie('login');
@@ -155,8 +155,8 @@ function generateToken(res, username, callback) {
 	require('crypto').randomBytes(32, function(err, buffer) {
 		var token = buffer.toString("hex");
 		db.storeToken(username, token, ~~(Date.now()/1000)+32*24*3600);
-		res.cookie('token',token,{ maxAge: 2500000 });
-		res.cookie('login',username,{ maxAge: 2500000 });
+		res.cookie('token',token,{ maxAge: 32*24*3600000 });
+		res.cookie('login',username,{ maxAge: 32*24*3600000 });
 		callback();
 	});
 }
@@ -232,8 +232,32 @@ app.get('/:channel/settings', function(req, res, next) {
 	}
 });
 
+
+
 app.get('/api/login', function(req, res, next) {
 	try {
+		var getToken = function(err,httpResponse,body) {
+			console.log(body);
+			var token = JSON.parse(body).access_token;
+			request.get({
+				url: "https://api.twitch.tv/kraken/?oauth_token="+token
+			},function(e,r,body2){
+				console.log("Token response: "+body2);
+				if(body2 === undefined) {
+					console.log("Error: "+httpResponse.statusCode);
+					getToken(err,httpResponse,body);
+				} else {
+					var auth = JSON.parse(body2).token;
+					if(auth.valid) {
+						generateToken(res, auth.user_name, function(){
+							res.redirect(url.parse(req.query.state).path);
+						});
+					} else {
+						res.status(500).end("Invalid token");
+					}
+				}
+			});
+		}
 		request.post({
 				url: 'https://api.twitch.tv/kraken/oauth2/token',
 				form: {
@@ -245,23 +269,7 @@ app.get('/api/login', function(req, res, next) {
 					state: req.query.state
 				}
 			},
-			function(err,httpResponse,body) {
-				console.log(body);
-				var token = JSON.parse(body).access_token;
-				request.get({
-					url: "https://api.twitch.tv/kraken/?oauth_token="+token
-				},function(e,r,body2){
-					console.log(body2);
-					var auth = JSON.parse(body2).token;
-					if(auth.valid) {
-						generateToken(res, auth.user_name, function(){
-							res.redirect(url.parse(req.query.state).path);
-						});
-					} else {
-						res.status(500).end("Invalid token");
-					}
-				});
-			}
+			getToken
 		);
 	} 
 	catch(err) {
@@ -561,19 +569,18 @@ app.delete('/api/comments/:channel',function(req,res,next){
 				res.status(404).jsonp({"error":"Channel "+channel+" not found."});
 				return;
 			}
-			var newsettings = req.body;
-			if(newsettings.id === undefined) {
+			if(req.query.id === undefined) {
 				res.status(400).jsonp({"error":"Missing parameter id."});
 			} else {
-				getLevel(req.params.channel, newsettings.token, function(level, nick){
-					db.getComment(req.params.channel, newsettings.id, function(comment){
+				getLevel(req.params.channel, req.query.token, function(level, nick){
+					db.getComment(req.params.channel, req.query.id, function(comment){
 						if(!comment) {
 							res.status(404).jsonp({"error":"Comment not found"});
 							return;
 						}
 						// only people with the deletion permission can delete other peoples comments
 						if(level >= channelObj.deletecomments || comment.author == nick) { 
-							db.deleteComment(req.params.channel, newsettings.id);
+							db.deleteComment(req.params.channel, req.query.id);
 							res.status(200).end();
 							return;
 						} else {

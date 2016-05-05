@@ -30,19 +30,19 @@
 		</md-select> can delete comments</li>
 	</ul>
 	<h3>Editors</h3>
-	<table>
+	<table class="settingstable">
 		<tr>
 			<th>Username</th>
 			<th>Level</th>
 		</tr>
 		<tr ng-repeat="user in levels">
 			<td>
-				<md-input-container>
+				<md-input-container class="nobottom">
 					<input ng-model="user.nick"></input>
 				</md-input-container>
 			</td>
 			<td>
-				<md-input-container>
+				<md-input-container class="nobottom">
 					<md-select ng-model="user.level" class="inlineselect">
 						<md-option value="0">default</md-option>
 						<md-option value="2">regular</md-option>
@@ -54,12 +54,12 @@
 		</tr>
 		<tr>
 			<td>
-				<md-input-container>
+				<md-input-container class="nobottom">
 					<input ng-model="newuser" ng-blur="addNewUser()"></input>
 				</md-input-container>
 			</td>
 			<td>
-				<md-input-container>
+				<md-input-container class="nobottom">
 					<md-select ng-model="newlevel" class="inlineselect">
 						<md-option value="0">default</md-option>
 						<md-option value="2">regular</md-option>

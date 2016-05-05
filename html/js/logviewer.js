@@ -37,6 +37,8 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	$scope.channel = $stateParams.channel;
 	$scope.channelsettings = null;
 	$scope.userObject = null;
+	$scope.newcomments = {};
+	$scope.editingComment = {id:-1};
 	$http.jsonp("https://api.twitch.tv/kraken/chat/"+$scope.channel+"/badges?callback=JSON_CALLBACK").then(function(response){
 		_badges = response.data;
 	}, function(response){
@@ -83,8 +85,16 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 					getProfilePic(response.data[i].author);
 				}
 			});
+		} else {
+			$http.jsonp(settings.auth.baseurl + "/api/comments/" + $scope.channel + "/?topic="+user+"&callback=JSON_CALLBACK").then(function(response) {
+				$scope.users[user].comments = response.data;
+				for(var i=0;i<response.data.length;++i) {
+					getProfilePic(response.data[i].author);
+				}
+			});
 		}
 	}
+	
 	
 	$scope.addUser = function(nick)
 	{
@@ -227,6 +237,38 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	$scope.unselect = function($event,that) {
 		if($event.target.id == "main") $scope.selectedID = null;
 	}
+	
+	$scope.editComment = function(comment) {
+		if($scope.editingComment >= 0) {
+			$scope.cancelUpdate(comment);
+		}
+		$scope.editingComment = comment.id;
+	}
+	
+	$scope.cancelUpdate = function(comment) {
+		getComments(comment.topic);
+		$scope.editingComment = -1;
+	}
+	
+	$scope.addComment = function(nick) {
+		$http.post("/api/comments/"+$scope.channel,{token: $rootScope.auth.token, topic: nick, text: $scope.newcomments[nick]}).then(function(response){
+			$scope.newcomments[nick] = "";
+			getComments(nick);
+		});
+	}
+	
+	$scope.updateComment = function(comment) {
+		$http.post("/api/comments/"+$scope.channel,{token: $rootScope.auth.token, id: comment.id, text: comment.text}).then(function(response){
+			$scope.editingComment = -1;
+			getComments(comment.topic);
+		});
+	}
+	
+	$scope.deleteComment = function(comment) {
+		$http.delete("/api/comments/"+$scope.channel+"/?token="+$rootScope.auth.token+"&id="+comment.id).then(function(response){
+			getComments(comment.topic);
+		});
+	}
 });
 
 logviewerApp.filter('ifEmpty', function() {
@@ -269,6 +311,10 @@ logviewerApp.filter('commentAge', function($sce) {
 			var mins = Math.round(age/60);
 			if(mins == 1) res = "a minute ago";
 			else res = mins+" minutes ago";
+		} else if(age < 3600*24) {
+			var hrs = Math.round(age/3600);
+			if(hrs == 1) res = "an hour ago";
+			else res = hrs+" hours ago";
 		} else if(age < 3600*24*7) {
 			var days = Math.round(age/(3600*24));
 			if(days == 1) res = "yesterday";

@@ -4,7 +4,9 @@
 	<div id="adduserform">
 		<form ng-submit="submitAddUserForm()" class="navbar-form">
 			<div class="form-group">
-				<input class="form-control" type="text" placeholder="User name" style="min-width: 20em" ng-model="username">
+				<md-input-container class="nobottom">
+					<input class="form-control" type="text" placeholder="User name" style="min-width: 10em" ng-model="username">
+				</md-input-container>
 				<md-button class="btn md-raised md-primary" type="submit">ADD</md-button>
 				<md-button class="btn md-raised md-primary" type="button" ng-click="addUser('twitchnotify')">RECENT SUBSCRIBERS</md-button>
 				<md-button class="btn md-raised md-primary" type="button" ng-click="clearUsers()">CLEAR ALL</md-button>
@@ -70,18 +72,42 @@
 						</div>
 					</div>
 				</div>
-				<div ng-if="user.messages.length == 0">None found.</div>
+				<div ng-if="user.messages.length == 0">No recorded chat messages found.</div>
 				<div ng-if="user.isloading">Loading...</div>
 				<div ng-repeat="comment in user.comments" layout="row" class="logviewer-comment">
 					<div flex="none">
 						<img ng-src="{{profilePics[comment.author]}}">
 					</div>
-					<div flex="1">
-						<div>
-							<span class="author">{{comment.author}}</span> <span class="age">{{comment|commentAge}}</span>
+					<div flex="1" layout="column">
+						<div flex="1" layout="row" layout-align="space-between start">
+							<div flex="none">
+								<span class="author">{{comment.author}}</span> <span class="age">{{comment|commentAge}}</span>
+							</div>
+							<div flex="none" class="comment-editing-buttons">
+								<md-button class="editing-button md-icon-button" ng-show="userObject.level >= channelsettings.writecomments || userObject.name == comment.author" ng-click="editComment(comment)">
+									<md-icon>mode_edit</md-icon>
+								</md-button>
+								<md-button class="editing-button md-icon-button" ng-click="deleteComment(comment)" ng-show="userObject.level >= channelsettings.deletecomments || userObject.name == comment.author">
+									<md-icon>delete</md-icon>
+								</md-button>
+							</div>
 						</div>
-						<div class="text">{{comment.text}}</div>
+						<div class="text" flex="none" ng-hide="editingComment == comment.id">{{comment.text}}</div>
+						<div class="comment-editing" flex="none" ng-if="editingComment == comment.id">
+							<md-input-container class="nobottom notop">
+								<textarea ng-model="comment.text"></textarea>
+							</md-input-container>
+							<md-button ng-click="cancelUpdate(comment)" class="md-raised md-primary">CANCEL</md-button>
+							<md-button ng-click="updateComment(comment)" class="md-raised md-primary">SAVE</md-button>
+						</div>
 					</div>
+				</div>
+				<div class="writecomment" ng-if="userObject.level >= channelsettings.writecomments">
+					<md-input-container class="nobottom">
+						<label>Write a comment about {{user.data.nick}}</label>
+						<textarea ng-model="newcomments[user.data.nick]"></textarea>
+					</md-input-container>
+					<md-button ng-click="addComment(user.data.nick)" class="md-raised md-primary">SEND</md-button>
 				</div>
 			</div>
 		</div>
