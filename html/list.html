@@ -1,0 +1,7 @@
+<div id="main" ng-click="unselect($event,this)">
+<div class="content" ng-cloak>
+<h2>Channels using the logviewer</h2>
+<div ng-repeat="channel in channels">
+	<span ng-class="{live: streams[channel], 'channel-live-indicator':true}"><a ui-sref="channel({channel: channel})">{{channel}}</a></span>
+</div>
+</div>

@@ -11,6 +11,13 @@ var STATE_PARAM = 4
 var STATE_TRAILING = 5
 function parseIRCMessage(message) {
 	var data = rx.exec(message);
+	if(data == null) {
+		console.log("==================== ERROR ====================");
+		console.log("Couldnt parse message");
+		console.log("'"+message+"'");
+		console.log("===============================================");
+		return null;
+	}
 	var tagdata = data[STATE_V3];
 	if (tagdata) {
 		var tags = {};
@@ -60,10 +67,12 @@ function IRCBot(host, port, onconnect) {
 		}
 
 		lines.forEach(function(line) {
-			var parsed = parseIRCMessage(line);
-			parsed[STATE_COMMAND] == "PING" && self.send("PONG");
-			self.emit('raw', parsed);
-			self.emit(parsed[STATE_COMMAND], parsed);
+			if(line.length>0) {
+				var parsed = parseIRCMessage(line);
+				parsed[STATE_COMMAND] == "PING" && self.send("PONG");
+				self.emit('raw', parsed);
+				self.emit(parsed[STATE_COMMAND], parsed);
+			}
 		});
 	});
 

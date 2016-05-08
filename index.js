@@ -11,17 +11,8 @@ var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
 var messagecompressor = require('./messagecompressor');
-var ircbot = require('./ircbot');
-var bot = new ircbot("irc.chat.twitch.tv", 80);
 server.listen(8080);
 
-
-
-var TAGS = 1
-var PREFIX = 2
-var COMMAND = 3
-var PARAM = 4
-var TRAILING = 5
 
 // Middleware
 app.use(compression());
@@ -34,14 +25,8 @@ app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x
 var settings = require('./settings.json');
 var databaseconnector = require("./db/"+settings.database.type);
 var db = new databaseconnector(settings.database);
-
-var userlevels = {}; // temporary user levels (mod etc)
-function joinChannel(channel) {
-	userlevels[channel] = userlevels[channel] || {};
-	bot.send("JOIN #"+channel);
-	db.ensureTablesExist(channel);
-}
-
+var lvbot = require("./bot");
+var bot = new lvbot(settings, db);
 function absMax(){
 	var best=0;
 	for(var i=0;i<arguments.length;++i){
@@ -53,7 +38,7 @@ function absMax(){
 function getUserLevel(channel,name,callback) {
 	var reslvl = null;
 	var templvl = 0;
-	if(userlevels[channel] && userlevels[channel][name]) templvl = userlevels[channel][name];
+	if(bot.userlevels[channel] && bot.userlevels[channel][name]) templvl = bot.userlevels[channel][name];
 	if(channel == name) templvl = 10;
 	db.getUserLevel(channel, name, function(lv){
 		if(reslvl === null) {
@@ -71,54 +56,12 @@ function getUserLevel(channel,name,callback) {
 	});
 }	
 
+// currently unused
 function setUserLevel(channel, user, level, save) {
 	if(userlevels[channel] === undefined) userlevels[channel] = {};
-	userlevels[channel][user] = level;
+	bot.userlevels[channel][user] = level;
 	if(save) db.setUserLevel(channel, user, level);
 }
-
-bot.on("connect", function(){
-	bot.send("CAP REQ :twitch.tv/tags twitch.tv/commands");
-	bot.send("NICK justinfan1");
-	db.getChannels(function(channels){
-		for(var i=0;i<channels.length;++i) {
-			joinChannel(channels[i].name);
-		}
-	});
-	console.log("Connected!");
-});
-
-bot.on("raw", function(data){
-	if(data[COMMAND] != "PRIVMSG") {
-		console.log(data[0]);
-	}
-});
-
-var newsubregex = new RegExp("(\\w+) just subscribed!");
-var resubregex = new RegExp("(\\w+) subscribed for (\\d+) months in a row!");
-bot.on("PRIVMSG", function(data){
-	var user = /\w+/.exec(data[PREFIX])[0];
-	var channel = data[PARAM];
-	var text = data[TRAILING];
-	console.log(channel + " <" + user +"> " + text);
-	
-	db.addLine(channel.slice(1), user, messagecompressor.compressMessage(user, data));
-	if(user === "twitchnotify" || user === "gdqsubs") {
-		var m = newsubregex.exec(text) || resubregex.exec(text);
-		if(m) {
-			db.addLine(channel.slice(1), m[1].toLowerCase(), "dtwitchnotify "+text);
-		}
-	}
-});
-
-bot.on("CLEARCHAT", function(data){
-	var user = data[TRAILING];
-	var channel = data[PARAM];
-	console.log(channel + " <" + user +" has been timed out>");
-	db.addTimeout(channel.slice(1), user, "djtv <" + user +" has been timed out>");
-});
-
-bot.connect();
 
 
 // HTTP server routes 'n shit
@@ -240,7 +183,7 @@ app.get('/api/login', function(req, res, next) {
 			console.log(body);
 			var token = JSON.parse(body).access_token;
 			request.get({
-				url: "https://api.twitch.tv/kraken/?oauth_token="+token
+				url: "https://api.twitch.tv/kraken/?oauth_token="+token+"&client_id="+settings.auth.client_id
 			},function(e,r,body2){
 				console.log("Token response: "+body2);
 				if(body2 === undefined) {
@@ -303,11 +246,7 @@ app.get('/api/channel/:channel', function(req, res, next) {
 				return;
 			}
 			getLevel(channel, req.query.token, function(level, user){
-				if(level >= channelObj.viewlogs) {
-					res.jsonp({"channel":channelObj,"me":{name:user, level:level, valid: !!user}});
-				} else {
-					res.status(403).end();
-				}
+				res.jsonp({"channel":channelObj,"me":{name:user, level:level, valid: !!user}});
 			});
 		});
 	} 
@@ -336,7 +275,7 @@ function isNormalInteger(str) {
 function getLogs(channel, query, callback) {
 	if(query.id) { 
 		var id = parseInt(query.id);
-		db.getLogsById(channel, id, query.nick, parseInt(query.before || 10), parseInt(query.after || 10), function(before, after){
+		db.getLogsById(channel, id, query.nick, Math.min(parseInt(query.before || 10),100), Math.min(parseInt(query.after || 10),100), function(before, after){
 			for(var i=0;i<before.length;++i) {
 				before[i].text = messagecompressor.decompressMessage("#"+channel, before[i].nick, before[i].text);
 			}
@@ -354,7 +293,7 @@ function getLogs(channel, query, callback) {
 		});
 	}
 	else if(query.nick) {
-		db.getLogsByNick(channel, query.nick, parseInt(query.before) || 10, function(before){
+		db.getLogsByNick(channel, query.nick, Math.min(parseInt(query.before || 10), 100), function(before){
 			for(var i=0;i<before.length;++i) {
 				before[i].text = messagecompressor.decompressMessage("#"+channel, before[i].nick, before[i].text);
 			}
@@ -470,7 +409,9 @@ app.post('/api/levels/:channel',function(req,res,next){
 					var newlevels = req.body.levels;
 					for(var i=0;i<newlevels.length;++i) {
 						var userObject = newlevels[i];
-						if(userObject.level > 0 && userObject.level <= level) db.setLevel(channel,userObject.nick,userObject.level);
+						if(userObject.level > 0 && userObject.level <= level && /^\w+$/.test(userObject.nick)) {
+							db.setLevel(channel,userObject.nick.toLowerCase(),userObject.level);
+						}
 					}
 					res.status(200).end();
 				} else {

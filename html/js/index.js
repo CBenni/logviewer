@@ -6,7 +6,8 @@ app.config(function($stateProvider, $urlRouterProvider, $urlMatcherFactoryProvid
 		.state("index", {
 			url: "/",
 			title: 'index',
-			templateUrl: "/static/index.html"
+			templateUrl: "/static/list.html",
+			controller: "ChannelListController"
 		})
 		.state("channel", {
 			url: "/:channel",
@@ -26,9 +27,9 @@ app.run(function($rootScope) {
 	});
 });
 
-app.controller("mainctrl", function($rootScope,$scope,$http,$cookies){
+app.controller("mainctrl", function($rootScope,$scope,$http,$cookies,$stateParams){
 	$rootScope.auth = { name: $cookies.get("login")||"", token: $cookies.get("token")||"" };
-	
+	$scope.$stateParams = $stateParams;
 	$scope.login = function() {
 		window.location.href = "https://api.twitch.tv/kraken/oauth2/authorize"
 			+"?response_type=code"

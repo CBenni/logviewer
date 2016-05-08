@@ -1,5 +1,17 @@
 <div id="main" ng-click="unselect($event,this)">
-<div id="content" ng-cloak>
+<div class="content" ng-cloak ng-if="!loaded" layout="row" layout-align="center center">
+	<md-progress-circular md-mode="indeterminate"></md-progress-circular> loading...
+</div>
+<div class="content" ng-cloak ng-if="loaded && userObject.level < channelsettings.viewlogs" layout="row" layout-align="center center">
+	<div flex="none" class="big-error-icon">
+		<md-icon>error</md-icon>
+	</div>
+	<div style="font-size: 20px;" flex="none">
+		 You currently do not have access to view logs of the channel {{channel}}.<br>
+		<span ng-if="userObject.valid == false">If you have {{channelsettings.viewlogs | aAnAccountType}} account, then you can <md-button ng-click="login()" class="md-raised twitch-button small-button">Login with twitch</md-button></span>
+	</div>
+</div>
+<div class="content" ng-cloak ng-if="loaded && userObject.level >= channelsettings.viewlogs">
 	<h2>Log info for channel {{channel}}</h2>
 	<div id="adduserform">
 		<form ng-submit="submitAddUserForm()" class="navbar-form">
@@ -102,12 +114,12 @@
 						</div>
 					</div>
 				</div>
-				<div class="writecomment" ng-if="userObject.level >= channelsettings.writecomments">
-					<md-input-container class="nobottom">
+				<div class="writecomment" ng-if="userObject.level >= channelsettings.writecomments" layout="row" layout-align="start end">
+					<md-input-container class="nobottom" flex="none">
 						<label>Write a comment about {{user.data.nick}}</label>
 						<textarea ng-model="newcomments[user.data.nick]"></textarea>
 					</md-input-container>
-					<md-button ng-click="addComment(user.data.nick)" class="md-raised md-primary">SEND</md-button>
+					<md-button ng-click="addComment(user.data.nick)" class="md-raised md-primary md-small" flex="none">SEND</md-button>
 				</div>
 			</div>
 		</div>

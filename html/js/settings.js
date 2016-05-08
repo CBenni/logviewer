@@ -12,6 +12,7 @@ function getChanges(obj1,obj2) {
 function getListChanges(l1,l2) {
 	var res = [];
 	for(var i=0;i<l2.length;++i) {
+		if(/^\w+$/.test(l2[i].nick) == false) continue;
 		var inlist = false;
 		for(var j=0;j<l1.length;++j) {
 			if(l2[i].nick == l1[j].nick && l2[i].level == l1[j].level) {
@@ -34,19 +35,23 @@ logviewerApp.controller("SettingsController", function($rootScope, $scope, $http
 		writecomments: 5,
 		deletecomments: 10
 	}
-	
+	$scope.loaded = false;
 	$scope.levels = [];
-	
+	$scope.userObject = null;
+	$scope.channel = $stateParams.channel;
 	var oldsettings = jQuery.extend({},$scope.settings);
 	var oldlevels = jQuery.extend([],$scope.levels);
 	
 	$http.jsonp("/api/channel/"+$stateParams.channel+"/?token="+$rootScope.auth.token+"&callback=JSON_CALLBACK").then(function(response){
 		$scope.settings = response.data.channel;
+		$scope.userObject = response.data.me;
 		oldsettings = jQuery.extend({},$scope.settings);
+		$scope.loaded = true;
 	});
 	
 	$http.jsonp("/api/levels/"+$stateParams.channel+"/?token="+$rootScope.auth.token+"&callback=JSON_CALLBACK").then(function(response){
 		$scope.levels = response.data;
+		$scope.addEmptyRow();
 		oldlevels = jQuery.extend(true,[],$scope.levels);
 	});
 	
@@ -62,13 +67,15 @@ logviewerApp.controller("SettingsController", function($rootScope, $scope, $http
 		if(changedlevels.length!=0) $http.post("/api/levels/"+$stateParams.channel, {token: $rootScope.auth.token, levels: changedlevels});
 	}
 	
-	$scope.newuser = "";
-	$scope.newlevel = 0;
-	$scope.addNewUser = function() {
-		if($scope.newuser !== "") {
-			$scope.levels.push({nick: $scope.newuser, level: $scope.newlevel});
-			$scope.newuser = "";
-			$scope.newlevel = 0;
+	$scope.addEmptyRow = function() {
+		if($scope.levels.length > 0) {
+			var lastrow = $scope.levels[$scope.levels.length - 1];
+			if(lastrow.nick != "") {
+				$scope.levels.push({nick: "", level: 0});
+			}
+		}
+		else {
+			$scope.levels.push({nick: "", level: 0});
 		}
 	}
 });

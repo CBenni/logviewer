@@ -30,7 +30,7 @@ function splitWithTail(str,delim,count){
 }
 
 function getPrivmsgInfo(parsedmessage) {
-	var tags = parsedmessage[STATE_V3];
+	var tags = parsedmessage[STATE_V3] || {};
 	var nick = parsedmessage[STATE_PREFIX].match(/(\w+)/)[1];
 	var channel = parsedmessage[STATE_PARAM];
 	var badges = []

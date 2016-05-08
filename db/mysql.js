@@ -2,7 +2,8 @@ var mysql = require('mysql');
 
 module.exports = function MySQLDatabaseConnector(settings) {
 	var self = this;
-	self.connection = mysql.createConnection({
+	self.pool = mysql.createPool({
+		connectionLimit: 10,
 		host: settings.host,
 		port: settings.port || 3306,
 		user: settings.user,
@@ -10,13 +11,13 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		password: settings.password,
 		charset: "utf8mb4_unicode_ci"
 	});
-	self.connection.connect(function(err) {
+	self.pool.getConnection(function(err, connection) {
 		if(err) {
 			console.error('Error connecting to MySQL database: ' + err.stack);
 			return;
 		}
 		// create the channels table if it doesnt exist
-		self.connection.query("CREATE TABLE IF NOT EXISTS channels ("
+		connection.query("CREATE TABLE IF NOT EXISTS channels ("
 		  +"name varchar(32) COLLATE utf8_unicode_ci PRIMARY KEY,"
 		  +"active tinyint(4) unsigned NOT NULL DEFAULT '1',"
 		  +"viewlogs tinyint(4) unsigned NOT NULL DEFAULT '0',"
@@ -26,13 +27,13 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		  +"`max-age` int(10) unsigned NOT NULL DEFAULT '2678400'"
 		+")");
 		// create the auth table if it doesnt exist
-		self.connection.query("CREATE TABLE IF NOT EXISTS auth ("
+		connection.query("CREATE TABLE IF NOT EXISTS auth ("
 		  +"token varchar(64)PRIMARY KEY,"
 		  +"name varchar(32),"
 		  +"expires BIGINT unsigned"
 		+")");
 		// create the comment table if it doesnt exist
-		self.connection.query("CREATE TABLE IF NOT EXISTS comments ("
+		connection.query("CREATE TABLE IF NOT EXISTS comments ("
 			+"id INT NOT NULL AUTO_INCREMENT,"
 			+"added BIGINT UNSIGNED NOT NULL,"
 			+"edited BIGINT UNSIGNED NOT NULL,"
@@ -45,14 +46,14 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		+")");
 		
 		// create the logviewer tables if they dont exist
-		self.connection.query("CREATE TABLE IF NOT EXISTS chat_logviewer ("
+		connection.query("CREATE TABLE IF NOT EXISTS chat_logviewer ("
 			+"id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,"
 			+"time BIGINT UNSIGNED NOT NULL,"
 			+"nick VARCHAR(32) NOT NULL,"
 			+"text VARCHAR(2047) NOT NULL,"
 			+"INDEX (nick, time)"
 		+")");
-		self.connection.query("CREATE TABLE IF NOT EXISTS users_logviewer ("
+		connection.query("CREATE TABLE IF NOT EXISTS users_logviewer ("
 			+"nick VARCHAR(32) NOT NULL PRIMARY KEY,"
 			+"messages INT UNSIGNED DEFAULT '0',"
 			+"timeouts INT UNSIGNED DEFAULT '0',"
@@ -62,14 +63,14 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	});
 	
 	self.ensureTablesExist = function(channel) {
-		self.connection.query("CREATE TABLE IF NOT EXISTS chat_"+channel+" ("
+		self.pool.query("CREATE TABLE IF NOT EXISTS chat_"+channel+" ("
 			+"id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,"
 			+"time BIGINT UNSIGNED NOT NULL,"
 			+"nick VARCHAR(32) NOT NULL,"
 			+"text VARCHAR(2047) NOT NULL,"
 			+"INDEX (nick, time)"
 		+")");
-		self.connection.query("CREATE TABLE IF NOT EXISTS users_"+channel+" ("
+		self.pool.query("CREATE TABLE IF NOT EXISTS users_"+channel+" ("
 			+"nick VARCHAR(32) NOT NULL PRIMARY KEY,"
 			+"messages INT UNSIGNED DEFAULT '0',"
 			+"timeouts INT UNSIGNED DEFAULT '0',"
@@ -78,35 +79,35 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	}
 	
 	self.getChannels = function(callback) {
-		self.connection.query("SELECT name FROM channels WHERE active=1",function(error, results, fields){
+		self.pool.query("SELECT name FROM channels WHERE active=1",function(error, results, fields){
 			callback(results);
 		});
 	}
 	
 	self.getActiveChannel = function(channel, callback) {
-		self.connection.query("SELECT * FROM channels WHERE name=? AND active=1",[channel],function(error, results, fields){
+		self.pool.query("SELECT * FROM channels WHERE name=? AND active=1",[channel],function(error, results, fields){
 			callback(results[0]);
 		});
 	}
 	
 	self.getChannel = function(channel, callback) {
-		self.connection.query("SELECT * FROM channels WHERE name=?",[channel],function(error, results, fields){
+		self.pool.query("SELECT * FROM channels WHERE name=?",[channel],function(error, results, fields){
 			callback(results[0]);
 		});
 	}
 	
 	self.addLine = function(channel, nick, message, count) {
-		self.connection.query("INSERT INTO ?? (time,nick,text) VALUES (?,?,?)",["chat_"+channel, Math.floor(Date.now()/1000), nick, message]);
-		if(count !== false) self.connection.query("INSERT INTO ?? (nick,messages) VALUES (?,1) ON DUPLICATE KEY UPDATE messages = messages + 1",["users_"+channel, nick,nick]);
+		self.pool.query("INSERT INTO ?? (time,nick,text) VALUES (?,?,?)",["chat_"+channel, Math.floor(Date.now()/1000), nick, message]);
+		if(count !== false) self.pool.query("INSERT INTO ?? (nick,messages) VALUES (?,1) ON DUPLICATE KEY UPDATE messages = messages + 1",["users_"+channel, nick,nick]);
 	}
 	
 	self.addTimeout = function(channel, nick, message) {
-		self.connection.query("INSERT INTO ?? (time,nick,text) VALUES (?,?,?)",["chat_"+channel, Math.floor(Date.now()/1000), nick, message]);
-		self.connection.query("INSERT INTO ?? (nick,timeouts) VALUES (?,1) ON DUPLICATE KEY UPDATE timeouts = timeouts + 1",["users_"+channel, nick, nick]);
+		self.pool.query("INSERT INTO ?? (time,nick,text) VALUES (?,?,?)",["chat_"+channel, Math.floor(Date.now()/1000), nick, message]);
+		self.pool.query("INSERT INTO ?? (nick,timeouts) VALUES (?,1) ON DUPLICATE KEY UPDATE timeouts = timeouts + 1",["users_"+channel, nick, nick]);
 	}
 	
 	self.getLogsByNick = function(channel, nick, limit, callback) {
-		self.connection.query("SELECT id,time,nick,text FROM ?? WHERE nick=? ORDER BY time DESC LIMIT ?", ["chat_"+channel, nick, limit], function(error, results, fields) {
+		self.pool.query("SELECT id,time,nick,text FROM ?? WHERE nick=? ORDER BY time DESC LIMIT ?", ["chat_"+channel, nick, limit], function(error, results, fields) {
 			if(results) callback(results.reverse());
 			else callback([]);
 		});
@@ -118,12 +119,12 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		// before
 		if(before > 0) {
 			if(nick) {
-				self.connection.query("SELECT id,time,nick,text FROM ?? WHERE nick=? AND id < ? ORDER BY id DESC LIMIT ?", ["chat_"+channel, nick, id, before], function(error, results, fields) {
+				self.pool.query("SELECT id,time,nick,text FROM ?? WHERE nick=? AND id < ? ORDER BY id DESC LIMIT ?", ["chat_"+channel, nick, id, before], function(error, results, fields) {
 					if(results) beforeRes = results.reverse();
 					if(afterRes !== null) callback(beforeRes, afterRes);
 				});
 			} else {
-				self.connection.query("SELECT id,time,nick,text FROM ?? WHERE id < ? ORDER BY id DESC LIMIT ?", ["chat_"+channel, id, before], function(error, results, fields) {
+				self.pool.query("SELECT id,time,nick,text FROM ?? WHERE id < ? ORDER BY id DESC LIMIT ?", ["chat_"+channel, id, before], function(error, results, fields) {
 					if(results) beforeRes = results.reverse();
 					if(afterRes !== null) callback(beforeRes, afterRes);
 				});
@@ -132,12 +133,12 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		// after
 		if(after > 0) {
 			if(nick) {
-				self.connection.query("SELECT id,time,nick,text FROM ?? WHERE nick=? AND id > ? ORDER BY id ASC LIMIT ?", ["chat_"+channel, nick, id, after], function(error, results, fields) {
+				self.pool.query("SELECT id,time,nick,text FROM ?? WHERE nick=? AND id > ? ORDER BY id ASC LIMIT ?", ["chat_"+channel, nick, id, after], function(error, results, fields) {
 					if(results) afterRes = results;
 					if(beforeRes !== null) callback(beforeRes, afterRes);
 				});
 			} else {
-				self.connection.query("SELECT id,time,nick,text FROM ?? WHERE id > ? ORDER BY id ASC LIMIT ?", ["chat_"+channel, id, after], function(error, results, fields) {
+				self.pool.query("SELECT id,time,nick,text FROM ?? WHERE id > ? ORDER BY id ASC LIMIT ?", ["chat_"+channel, id, after], function(error, results, fields) {
 					if(results) afterRes = results;
 					if(beforeRes !== null) callback(beforeRes, afterRes);
 				});
@@ -146,20 +147,20 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	}
 	
 	self.getUserStats = function(channel, nick, callback) {
-		self.connection.query("SELECT nick, messages, timeouts FROM ?? WHERE nick = ?", ["users_"+channel, nick], function(error, results, fields) {
+		self.pool.query("SELECT nick, messages, timeouts FROM ?? WHERE nick = ?", ["users_"+channel, nick], function(error, results, fields) {
 			callback(results[0] || {nick: nick, timeouts:0, messages: 0});
 		});
 	}
 	
 	self.getAuthUser = function(token, callback) {
-		self.connection.query("SELECT name FROM auth WHERE token=? AND expires > ?",[token,Math.floor(Date.now()/1000)], function(error, results, fields) {
+		self.pool.query("SELECT name FROM auth WHERE token=? AND expires > ?",[token,Math.floor(Date.now()/1000)], function(error, results, fields) {
 			if(results && results.length>0) callback(results[0].name);
 			else callback(null);
 		});
 	}
 	
 	self.getUserLevel = function(channel, nick, callback) {
-		self.connection.query("SELECT level FROM ?? WHERE nick = ?", ["users_"+channel, nick], function(error, results, fields) {
+		self.pool.query("SELECT level FROM ?? WHERE nick = ?", ["users_"+channel, nick], function(error, results, fields) {
 			if(error) {
 				console.log(`Error in getUserLevel(${channel},${nick})`);
 				console.log(error);
@@ -170,56 +171,56 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	}
 	
 	self.setLevel = function(channel, nick, level) {
-		self.connection.query("INSERT INTO ?? (nick,level) VALUES (?,?) ON DUPLICATE KEY UPDATE level = ?",["users_"+channel, nick, level, level, nick]);
+		self.pool.query("INSERT INTO ?? (nick,level) VALUES (?,?) ON DUPLICATE KEY UPDATE level = ?",["users_"+channel, nick, level, level, nick]);
 	}
 	
 	self.getLevels = function(channel, callback) {
-		self.connection.query("SELECT nick,level FROM ?? WHERE level != 0", ["users_"+channel], function(error, results, fields) {
+		self.pool.query("SELECT nick,level FROM ?? WHERE level != 0", ["users_"+channel], function(error, results, fields) {
 			callback(results);
 		});
 	}
 	
 	self.storeToken = function(user, token, expires) {
-		self.connection.query("INSERT INTO auth (name, token, expires) VALUES (?,?,?)",[user,token,expires]);
+		self.pool.query("INSERT INTO auth (name, token, expires) VALUES (?,?,?)",[user,token,expires]);
 	}
 	
 	self.deleteToken = function(token) {
-		self.connection.query("DELETE FROM auth WHERE token=?",[token]);
+		self.pool.query("DELETE FROM auth WHERE token=?",[token]);
 	}
 	
 	self.checkAndRefreshToken = function(user, token, expires, callback) {
-		self.connection.query("UPDATE auth SET expires=? WHERE name=? AND token=? AND expires > ?",[expires,user,token,Math.floor(Date.now()/1000)], function(error, result) {
+		self.pool.query("UPDATE auth SET expires=? WHERE name=? AND token=? AND expires > ?",[expires,user,token,Math.floor(Date.now()/1000)], function(error, result) {
 			callback(result.affectedRows > 0);
 		});
 	}
 	
 	self.setSetting = function(channel, key, val) {
-		self.connection.query("UPDATE channels SET ??=? WHERE name=?",[key,val,channel]);
+		self.pool.query("UPDATE channels SET ??=? WHERE name=?",[key,val,channel]);
 	}
 	
 	self.getComments = function(channel,topic,callback) {
-		self.connection.query("SELECT * FROM comments WHERE channel=? AND topic=?",[channel,topic],function(error,results,fields) {
+		self.pool.query("SELECT * FROM comments WHERE channel=? AND topic=?",[channel,topic],function(error,results,fields) {
 			callback(results);
 		});
 	}
 	
 	self.getComment = function(channel,id,callback) {
-		self.connection.query("SELECT * FROM comments WHERE id=? AND channel=?",[id,channel],function(error,results,fields) {
+		self.pool.query("SELECT * FROM comments WHERE id=? AND channel=?",[id,channel],function(error,results,fields) {
 			callback(results[0]);
 		});
 	}
 	
 	self.addComment = function(channel,author,topic,text) {
 		var d = Math.floor(Date.now()/1000);
-		self.connection.query("INSERT INTO comments(added,edited,channel,author,topic,text) VALUES (?,?,?,?,?,?)", [d,d,channel,author,topic,text]);
+		self.pool.query("INSERT INTO comments(added,edited,channel,author,topic,text) VALUES (?,?,?,?,?,?)", [d,d,channel,author,topic,text]);
 	}
 	
 	self.updateComment = function(channel,id,newtext) {
-		self.connection.query("UPDATE comments SET text=?, edited=? WHERE id=? AND channel=?",[newtext,Math.floor(Date.now()/1000),id,channel]);
+		self.pool.query("UPDATE comments SET text=?, edited=? WHERE id=? AND channel=?",[newtext,Math.floor(Date.now()/1000),id,channel]);
 	}
 	
 	self.deleteComment = function(channel,id) {
-		self.connection.query("DELETE FROM comments WHERE id=? AND channel=?",[id,channel]);
+		self.pool.query("DELETE FROM comments WHERE id=? AND channel=?",[id,channel]);
 	}
 }
 

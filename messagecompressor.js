@@ -119,7 +119,6 @@ function compressMessage(user, data) {
 
 
 function decompressMessage(channel, user, data) {
-	console.log(data);
 	var index = data.indexOf(' ');
 	var tags = data.slice(0, index)
 	if(tags === "") tags = [];

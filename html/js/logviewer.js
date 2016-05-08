@@ -39,14 +39,16 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	$scope.userObject = null;
 	$scope.newcomments = {};
 	$scope.editingComment = {id:-1};
-	$http.jsonp("https://api.twitch.tv/kraken/chat/"+$scope.channel+"/badges?callback=JSON_CALLBACK").then(function(response){
+	$scope.loaded = false;
+	$http.jsonp("https://api.twitch.tv/kraken/chat/"+$scope.channel+"/badges?callback=JSON_CALLBACK&client_id="+settings.auth.client_id).then(function(response){
 		_badges = response.data;
 	}, function(response){
 		// nothing to do here.
 	});
-	$http.jsonp(settings.auth.baseurl + "/api/channel/"+$scope.channel+"/?token="+$rootScope.auth.token+"&callback=JSON_CALLBACK").then(function(response){
+	$http.jsonp("/api/channel/"+$scope.channel+"/?token="+$rootScope.auth.token+"&callback=JSON_CALLBACK").then(function(response){
 		$scope.channelsettings = response.data.channel;
 		$scope.userObject = response.data.me;
+		$scope.loaded = true;
 	}, function(response){
 		// nothing to do here.
 	});
@@ -71,7 +73,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	$scope.profilePics = {};
 	var getProfilePic = function(nick) {
 		if($scope.profilePics[nick] === undefined) {
-			$http.jsonp("https://api.twitch.tv/kraken/channels/"+nick+"/?callback=JSON_CALLBACK").then(function(response) {
+			$http.jsonp("https://api.twitch.tv/kraken/channels/"+nick+"/?callback=JSON_CALLBACK&client_id="+settings.auth.client_id).then(function(response) {
 				$scope.profilePics[nick] = response.data.logo;
 			});
 		}
@@ -79,14 +81,14 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	
 	var getComments = function(user) {
 		if($rootScope.auth.token) {
-			$http.jsonp(settings.auth.baseurl + "/api/comments/" + $scope.channel + "/?token="+$rootScope.auth.token+"&topic="+user+"&callback=JSON_CALLBACK").then(function(response) {
+			$http.jsonp("/api/comments/" + $scope.channel + "/?token="+$rootScope.auth.token+"&topic="+user+"&callback=JSON_CALLBACK").then(function(response) {
 				$scope.users[user].comments = response.data;
 				for(var i=0;i<response.data.length;++i) {
 					getProfilePic(response.data[i].author);
 				}
 			});
 		} else {
-			$http.jsonp(settings.auth.baseurl + "/api/comments/" + $scope.channel + "/?topic="+user+"&callback=JSON_CALLBACK").then(function(response) {
+			$http.jsonp("/api/comments/" + $scope.channel + "/?topic="+user+"&token="+$rootScope.auth.token+"&callback=JSON_CALLBACK").then(function(response) {
 				$scope.users[user].comments = response.data;
 				for(var i=0;i<response.data.length;++i) {
 					getProfilePic(response.data[i].author);
@@ -114,8 +116,13 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 				}
 			};
 		}
-		$http.jsonp(settings.auth.baseurl + "/api/logs/" + $scope.channel + "/?nick=" + nick 
-				+ "&callback=JSON_CALLBACK").then(function(response){
+		$http.jsonp("/api/logs/" + $scope.channel,{
+			params: {
+				nick: nick,
+				token: $rootScope.auth.token,
+				callback: "JSON_CALLBACK"
+			}
+		}).then(function(response){
 			$scope.users[nick].data = response.data.user;
 			let messagesToAdd = response.data.before || [];
 			for(let i=0;i<messagesToAdd.length;++i) {
@@ -141,8 +148,15 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	$scope.moreUser = function(nick)
 	{
 		$scope.users[nick].isloading = true;
-		$http.jsonp(settings.auth.baseurl + "/api/logs/" + $scope.channel + "/?nick=" + nick 
-				+ "&id=" + $scope.users[nick].messages[0].id + "&after=0&callback=JSON_CALLBACK").then(function(response){
+		$http.jsonp("/api/logs/" + $scope.channel,{
+			params: {
+				nick: nick,
+				id: $scope.users[nick].messages[0].id,
+				after: 0,
+				token: $rootScope.auth.token,
+				callback: "JSON_CALLBACK"
+			}
+		}).then(function(response){
 			$scope.users[nick].data = response.data.user;
 			let messagesToAdd = response.data.before;
 			for(let i=messagesToAdd.length-1;i>=0;--i) {
@@ -182,8 +196,15 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 			$scope.selectedID = id;
 			if($scope.messages[id].before.length == 0 && $scope.messages[id].after.length == 0) {
 				// populate if empty
-				$http.jsonp(settings.auth.baseurl + "/api/logs/" + $scope.channel + "/?id=" + id 
-						+ "&callback=JSON_CALLBACK&before=10&after=10").then(function(response){
+				$http.jsonp("/api/logs/" + $scope.channel,{
+					params: {
+						id: id, 
+						before: 10, 
+						after: 10,
+						token: $rootScope.auth.token,
+						callback: "JSON_CALLBACK"
+					}
+				}).then(function(response){
 					$scope.messages[id].before = response.data.before;
 					$scope.messages[id].after = response.data.after;
 				},function(response){
@@ -216,11 +237,12 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 		else {
 			user.isloadingContext[position] = true;
 			//?id=" + newestID + "/?callback=JSON_CALLBACK&" + position + "=" + count
-			$http.jsonp(settings.auth.baseurl + "/api/logs/" + $scope.channel,{
+			$http.jsonp("/api/logs/" + $scope.channel,{
 				params: {
 					id: newestID, 
 					before: (position=="before")?10:0, 
 					after: (position=="after")?10:0,
+					token: $rootScope.auth.token,
 					callback: "JSON_CALLBACK"
 				}
 			}).then(function(response){
@@ -363,6 +385,13 @@ logviewerApp.filter('orderObjectBy', function() {
 		});
 		if(reverse) filtered.reverse();
 		return filtered;
+	};
+});
+var aAnAccountTypes = {0:"an",1:"an",5:"a moderator",7:"a super-moderator",10:"an editor",50:"an admin",1337:"a super-admin"}
+logviewerApp.filter('aAnAccountType', function() {
+	return function(level) {
+		var levels = [0,1,5,7,10,50,1337];
+		return aAnAccountTypes[levels.filter(function(x){return x>=level})[0]];
 	};
 });
 

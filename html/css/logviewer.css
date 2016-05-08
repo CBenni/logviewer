@@ -1,23 +1,5 @@
 /* layout */
-
-html {
-	overflow: -moz-scrollbars-vertical; 
-	overflow-y: scroll;
-}
-
 div { outline-style:none; }
-
-#main {
-	float: left;
-	width: 80%;
-	height:100%;
-}
-
-#content {
-	float: right;
-	width: 85%;
-	margin-bottom: 20px;
-}
 
 #chat {
 	width: 20%;
@@ -31,21 +13,8 @@ div { outline-style:none; }
 }
 
 @media (max-width:960px) {
-
-	#main {
-		width: 100%;
-	}
-	
 	#chat {
 		display: none;
-	}
-}
-
-@media (max-width:1200px) {
-	#content {
-		float: none;
-		width: 90%;
-		margin: auto;
 	}
 }
 
@@ -94,6 +63,7 @@ div { outline-style:none; }
 
 .writecomment {
 	margin-top: 20px;
+	font-size: 14px;
 }
 
 .writecomment md-input-container {

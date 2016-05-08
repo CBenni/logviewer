@@ -15,15 +15,23 @@
 	<link href="/static/css/animations.css" rel="stylesheet">
 	<link href="/static/css/logviewer.css" rel="stylesheet">
 	<link href="/static/css/settings.css" rel="stylesheet">
+	<link href="/static/css/list.css" rel="stylesheet">
 </head>
 
 <body>
-<div class="header" layout="row" layout-align="end center">
-	<div ng-show="auth.name" flex="none">
-		<md-button class="md-raised twitch-button" ng-click="logout()">Log out ({{auth.name}})</md-button>
+<div class="header" layout="row" layout-align="space-between center">
+	<div layout="row" layout-align="start center" flex="none">
+		<a ui-sref="index()" ui-sref-active="active">Index</a>
+		<a ui-sref="channel({channel: $stateParams.channel})" ng-if="$stateParams.channel" ui-sref-active="active">Logs</a>
+		<a ui-sref="settings({channel: $stateParams.channel})" ng-if="$stateParams.channel" ui-sref-active="active">Settings</a>
 	</div>
-	<div ng-hide="auth.name" flex="none">
-		<md-button ng-click="login()" class="md-raised twitch-button">Login with twitch</md-button>
+	<div layout="row" layout-align="end center" flex="none">
+		<div ng-show="auth.name" flex="none">
+			<md-button class="md-raised twitch-button" ng-click="logout()">Log out ({{auth.name}})</md-button>
+		</div>
+		<div ng-hide="auth.name" flex="none">
+			<md-button ng-click="login()" class="md-raised twitch-button">Login with twitch</md-button>
+		</div>
 	</div>
 </div>
 <ui-view></ui-view>
@@ -48,6 +56,7 @@ function getGlobalSettings(data) {
 
 <script src="/static/js/logviewer.js"></script>
 <script src="/static/js/settings.js"></script>
+<script src="/static/js/list.js"></script>
 <script src="/static/js/chat.js"></script>
 <script src="/static/js/messageparser.js"></script>
 <script src="/static/js/index.js"></script>

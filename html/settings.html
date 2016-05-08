@@ -1,5 +1,17 @@
 <div id="main">
-<div id="content" ng-cloak>
+<div class="content" ng-cloak ng-if="!loaded" layout="row" layout-align="center center">
+	<md-progress-circular md-mode="indeterminate"></md-progress-circular> loading...
+</div>
+<div class="content" ng-cloak ng-if="loaded && userObject.level < 10" layout="row" layout-align="center center">
+	<div flex="none" class="big-error-icon">
+		<md-icon>error</md-icon>
+	</div>
+	<div style="font-size: 20px;" flex="none">
+		 You currently do not have access to change settings of the channel {{channel}}.<br>
+		<span ng-if="userObject.valid == false">If you have {{10 | aAnAccountType }} account, then you can <md-button ng-click="login()" class="md-raised twitch-button small-button">Login with twitch</md-button></span>
+	</div>
+</div>
+<div class="content" ng-cloak ng-if="loaded && userObject.level >= 10">
 	<h3>Settings</h3>
 	<ul>
 		<li><md-checkbox ng-model="settings.active" ng-true-value="1" ng-false-value="0">Enable the logviewer</md-checkbox></li>
@@ -9,23 +21,31 @@
 		<li><md-select ng-model="settings.viewlogs" class="inlineselect">
 			<md-option value="0">everyone</md-option>
 			<md-option value="1">logged in users</md-option>
+			<md-option value="2">regulars</md-option>
 			<md-option value="5">moderators</md-option>
+			<md-option value="7">super-moderators</md-option>
 			<md-option value="10">editors</md-option>
 		</md-select> can read logs</li>
 		<li><md-select ng-model="settings.viewcomments" class="inlineselect">
 			<md-option value="0">everyone</md-option>
 			<md-option value="1">logged in users</md-option>
+			<md-option value="2">regulars</md-option>
 			<md-option value="5">moderators</md-option>
+			<md-option value="7">super-moderators</md-option>
 			<md-option value="10">editors</md-option>
 		</md-select> can read comments</li>
 		<li><md-select ng-model="settings.writecomments" class="inlineselect">
 			<md-option value="1">logged in users</md-option>
+			<md-option value="2">regulars</md-option>
 			<md-option value="5">moderators</md-option>
+			<md-option value="7">super-moderators</md-option>
 			<md-option value="10">editors</md-option>
 		</md-select> can write comments</li>
 		<li><md-select ng-model="settings.deletecomments" class="inlineselect">
 			<md-option value="1">logged in users</md-option>
+			<md-option value="2">regulars</md-option>
 			<md-option value="5">moderators</md-option>
+			<md-option value="7">super-moderators</md-option>
 			<md-option value="10">editors</md-option>
 		</md-select> can delete comments</li>
 	</ul>
@@ -38,7 +58,7 @@
 		<tr ng-repeat="user in levels">
 			<td>
 				<md-input-container class="nobottom">
-					<input ng-model="user.nick"></input>
+					<input ng-model="user.nick" ng-change="addEmptyRow()"></input>
 				</md-input-container>
 			</td>
 			<td>
@@ -46,25 +66,11 @@
 					<md-select ng-model="user.level" class="inlineselect">
 						<md-option value="0">default</md-option>
 						<md-option value="2">regular</md-option>
-						<md-option value="5">moderators</md-option>
-						<md-option value="10">editors</md-option>
-					</md-select>
-				</md-input-container>
-			</td>
-		</tr>
-		<tr>
-			<td>
-				<md-input-container class="nobottom">
-					<input ng-model="newuser" ng-blur="addNewUser()"></input>
-				</md-input-container>
-			</td>
-			<td>
-				<md-input-container class="nobottom">
-					<md-select ng-model="newlevel" class="inlineselect">
-						<md-option value="0">default</md-option>
-						<md-option value="2">regular</md-option>
 						<md-option value="5">moderator</md-option>
+						<md-option value="7">super-moderator</md-option>
 						<md-option value="10">editor</md-option>
+						<md-option value="50" ng-if="userObject.level == 1337">admin</md-option>
+						<md-option value="1337" ng-if="userObject.level == 1337">dev</md-option>
 					</md-select>
 				</md-input-container>
 			</td>
