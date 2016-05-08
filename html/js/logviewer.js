@@ -143,8 +143,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 		});
 		getComments(nick);
 	}
-	// TODO: remove
-	$scope.addUser("cbenni");
+	
 	$scope.moreUser = function(nick)
 	{
 		$scope.users[nick].isloading = true;
