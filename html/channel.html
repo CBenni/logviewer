@@ -11,7 +11,7 @@
 		<span ng-if="userObject.valid == false">If you have {{channelsettings.viewlogs | aAnAccountType}} account, then you can <md-button ng-click="login()" class="md-raised twitch-button small-button">Login with twitch</md-button></span>
 	</div>
 </div>
-<div class="content" ng-cloak ng-if="loaded && userObject.level >= channelsettings.viewlogs">
+<div class="content" ng-cloak ng-show="loaded && userObject.level >= channelsettings.viewlogs">
 	<h2>Log info for channel {{channel}}</h2>
 	<div id="adduserform">
 		<form ng-submit="submitAddUserForm()" class="navbar-form">

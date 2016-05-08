@@ -11,7 +11,7 @@
 		<span ng-if="userObject.valid == false">If you have {{10 | aAnAccountType }} account, then you can <md-button ng-click="login()" class="md-raised twitch-button small-button">Login with twitch</md-button></span>
 	</div>
 </div>
-<div class="content" ng-cloak ng-if="loaded && userObject.level >= 10">
+<div class="content" ng-cloak ng-show="loaded && userObject.level >= 10">
 	<h3>Settings</h3>
 	<ul>
 		<li><md-checkbox ng-model="settings.active" ng-true-value="1" ng-false-value="0">Enable the logviewer</md-checkbox></li>

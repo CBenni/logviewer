@@ -322,7 +322,7 @@ logviewerApp.filter('chatLine', function($sce) {
 	}
 });
 
-logviewerApp.filter('commentAge', function($sce) {
+logviewerApp.filter('commentAge', function($sce, $filter) {
 	return function(input, defaultValue) {
 		var d = Date.now()/1000;
 		var age = d-input.edited;
