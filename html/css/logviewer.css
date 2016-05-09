@@ -3,13 +3,17 @@ div { outline-style:none; }
 
 #chat {
 	width: 20%;
-	height: 100%;
+	height: calc(100% - 50px);
 	position: fixed;
 	right: 0;
-	padding: 5px;
+	padding: 0;
 	box-sizing: border-box;
-	overflow-y: auto;
-	overflow-x: hidden;
+	overflow: hidden;
+}
+
+#chat iframe {
+	height: 100%;
+	width: 100%;
 }
 
 @media (max-width:960px) {

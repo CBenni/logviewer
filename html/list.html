@@ -1,7 +1,10 @@
 <div id="main" ng-click="unselect($event,this)">
-<div class="content" ng-cloak>
-<h2>Channels using the logviewer</h2>
-<div ng-repeat="channel in channels">
-	<span ng-class="{live: streams[channel], 'channel-live-indicator':true}"><a ui-sref="channel({channel: channel})">{{channel}}</a></span>
-</div>
+<div class="index-page-content content" ng-cloak layout="column" layout-align="center center">
+	<h1 class="bigtitle">Logviewer</h1>
+	<h5 class="bigtitle">Denying people unbans since 2014</h5>
+	<div class="channel-list">
+		<div ng-repeat="channel in channels" class="channel-list-item">
+			<md-button ng-class="{live: streams[channel], 'channel-live-indicator':true}" ui-sref="channel({channel: channel})">{{channel}}</md-button>
+		</div>
+	</div>
 </div>

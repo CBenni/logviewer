@@ -242,10 +242,12 @@ app.get('/api/channel/:channel', function(req, res, next) {
 		db.getChannel(channel, function(channelObj) {
 			if(!channelObj)
 			{
-				res.status(404).jsonp({"error":"Channel "+channel+" not found."});
+				getLevel(channel, req.query.token, function(level, user){
+					res.jsonp({"channel":null,"me":{name:user, level:level, valid: !!user}});
+				});
 				return;
 			}
-			getLevel(channel, req.query.token, function(level, user){
+			getLevel(channelObj.name, req.query.token, function(level, user){
 				res.jsonp({"channel":channelObj,"me":{name:user, level:level, valid: !!user}});
 			});
 		});
@@ -318,9 +320,9 @@ app.get('/api/logs/:channel', function(req, res, next) {
 				return;
 			}
 			if(channelObj.viewlogs > 0) {
-				getLevel(req.params.channel, req.query.token, function(level){
+				getLevel(channelObj.name, req.query.token, function(level){
 					if(level >= channelObj.viewlogs) {
-						getLogs(channel, req.query, function(logs){
+						getLogs(channelObj.name, req.query, function(logs){
 							res.jsonp(logs);
 						});
 					} else {
@@ -328,7 +330,7 @@ app.get('/api/logs/:channel', function(req, res, next) {
 					}
 				});
 			} else {
-				getLogs(channel, req.query, function(logs){
+				getLogs(channelObj.name, req.query, function(logs){
 					res.jsonp(logs);
 				});
 			}
@@ -345,24 +347,47 @@ app.post('/api/settings/:channel', function(req, res, next) {
 		db.getChannel(channel, function(channelObj) {
 			if(!channelObj)
 			{
-				res.status(404).jsonp({"error":"Channel "+channel+" not found."});
-				return;
-			}
-			getLevel(req.params.channel, req.body.token, function(level){
-				if(level >= 10) {
-					var newsettings = req.body.settings;
-					for(var i=0;i<allowedsettings.length;++i) {
-						var key = allowedsettings[i];
-						if(!isNaN(parseInt(newsettings[key]))) {
-							db.setSetting(channel, key, newsettings[key]);
-						}
-						// TODO: react to changed settings (bot etc)
-						res.status(200).end();
+				// add a new channel
+				getLevel(channel, req.body.token, function(level){
+					if(level >= 10) {
+						db.addChannel(channel, function() {
+							var newsettings = req.body.settings;
+							for(var i=0;i<allowedsettings.length;++i) {
+								var key = allowedsettings[i];
+								if(!isNaN(parseInt(newsettings[key]))) {
+									db.setSetting(channel, key, newsettings[key]);
+								}
+								res.status(200).end();
+								if(key === "active") {
+									if(newsettings.active == "1") bot.joinChannel(channel);
+									else bot.partChannel(channel);
+								}
+							}
+						});
+					} else {
+						res.status(403).end();
 					}
-				} else {
-					res.status(403).end();
-				}
-			});
+				});
+			} else {
+				getLevel(channelObj.name, req.body.token, function(level){
+					if(level >= 10) {
+						var newsettings = req.body.settings;
+						for(var i=0;i<allowedsettings.length;++i) {
+							var key = allowedsettings[i];
+							if(!isNaN(parseInt(newsettings[key]))) {
+								db.setSetting(channelObj.name, key, newsettings[key]);
+							}
+							res.status(200).end();
+							if(key === "active") {
+								if(newsettings.active == "1") bot.joinChannel(channelObj.name);
+								else bot.partChannel(channelObj.name);
+							}
+						}
+					} else {
+						res.status(403).end();
+					}
+				});
+			}
 		});
 	} 
 	catch(err) {
@@ -379,9 +404,9 @@ app.get('/api/levels/:channel',function(req,res,next){
 				res.status(404).jsonp({"error":"Channel "+channel+" not found."});
 				return;
 			}
-			getLevel(req.params.channel, req.query.token, function(level){
+			getLevel(channelObj.name, req.query.token, function(level){
 				if(level >= 10) {
-					db.getLevels(channel,function(levels) {
+					db.getLevels(channelObj.name,function(levels) {
 						res.jsonp(levels);
 					});
 				} else {
@@ -404,13 +429,13 @@ app.post('/api/levels/:channel',function(req,res,next){
 				res.status(404).jsonp({"error":"Channel "+channel+" not found."});
 				return;
 			}
-			getLevel(req.params.channel, req.body.token, function(level){
+			getLevel(channelObj.name, req.body.token, function(level){
 				if(level >= 10) {
 					var newlevels = req.body.levels;
 					for(var i=0;i<newlevels.length;++i) {
 						var userObject = newlevels[i];
 						if(userObject.level > 0 && userObject.level <= level && /^\w+$/.test(userObject.nick)) {
-							db.setLevel(channel,userObject.nick.toLowerCase(),userObject.level);
+							db.setLevel(channelObj.name,userObject.nick.toLowerCase(),userObject.level);
 						}
 					}
 					res.status(200).end();
@@ -436,9 +461,9 @@ app.get('/api/comments/:channel', function(req,res,next){
 				res.status(404).jsonp({"error":"Channel "+channel+" not found."});
 				return;
 			}
-			getLevel(req.params.channel, req.query.token, function(level){
+			getLevel(channelObj.name, req.query.token, function(level){
 				if(level >= channelObj.viewcomments) {
-					db.getComments(channel,req.query.topic,function(comments) {
+					db.getComments(channelObj.name,req.query.topic,function(comments) {
 						res.jsonp(comments || []);
 					});
 				} else {
@@ -462,14 +487,14 @@ app.post('/api/comments/:channel',function(req,res,next){
 				return;
 			}
 			var newsettings = req.body;
-			getLevel(req.params.channel, newsettings.token, function(level, nick){
+			getLevel(channelObj.name, newsettings.token, function(level, nick){
 				if(newsettings.id) {
 					// we are editing a comment
-					db.getComment(req.params.channel, newsettings.id, function(comment){
+					db.getComment(channelObj.name, newsettings.id, function(comment){
 						if(comment) {
 							// only people with the edit permission can delete other peoples comments
 							if(level >= channelObj.editcomments || comment.author == nick) {
-								db.updateComment(req.params.channel, newsettings.id, newsettings.text);
+								db.updateComment(channelObj.name, newsettings.id, newsettings.text);
 								res.status(200).end();
 							} else {
 								res.status(403).jsonp({"error":"Can only edit own comments"});
@@ -485,7 +510,7 @@ app.post('/api/comments/:channel',function(req,res,next){
 					} else if(newsettings.text === undefined) {
 						res.status(400).jsonp({"error":"Missing parameter text."});
 					} else if(level >= channelObj.writecomments) {
-						db.addComment(channel,nick,newsettings.topic, newsettings.text);
+						db.addComment(channelObj.name,nick,newsettings.topic, newsettings.text);
 						res.status(200).end();
 					} else {
 						res.status(403).jsonp({"error":"Cannot write comments for this channel"});
@@ -513,15 +538,15 @@ app.delete('/api/comments/:channel',function(req,res,next){
 			if(req.query.id === undefined) {
 				res.status(400).jsonp({"error":"Missing parameter id."});
 			} else {
-				getLevel(req.params.channel, req.query.token, function(level, nick){
-					db.getComment(req.params.channel, req.query.id, function(comment){
+				getLevel(channelObj.name, req.query.token, function(level, nick){
+					db.getComment(channelObj.name, req.query.id, function(comment){
 						if(!comment) {
 							res.status(404).jsonp({"error":"Comment not found"});
 							return;
 						}
 						// only people with the deletion permission can delete other peoples comments
 						if(level >= channelObj.deletecomments || comment.author == nick) { 
-							db.deleteComment(req.params.channel, req.query.id);
+							db.deleteComment(channelObj.name, req.query.id);
 							res.status(200).end();
 							return;
 						} else {

@@ -1,8 +1,18 @@
 <div id="main" ng-click="unselect($event,this)">
-<div class="content" ng-cloak ng-if="!loaded" layout="row" layout-align="center center">
+<div class="content" ng-cloak ng-if="loadStatus == 0" layout="row" layout-align="center center">
 	<md-progress-circular md-mode="indeterminate"></md-progress-circular> loading...
 </div>
-<div class="content" ng-cloak ng-if="loaded && userObject.level < channelsettings.viewlogs" layout="row" layout-align="center center">
+<div class="content" ng-cloak ng-if="loadStatus == -1" layout="row" layout-align="center center">
+	<div flex="none" class="big-error-icon">
+		<md-icon>error</md-icon>
+	</div>
+	<div style="font-size: 20px;" flex="none">
+		 Channel {{channel}} not found.<br>
+		<span ng-if="userObject.level >= 10">If you want to add the logviewer to the channel, then head over to the 
+		<a ui-sref="settings({channel: $stateParams.channel})" ng-if="$stateParams.channel">settings</a>.</span>
+	</div>
+</div>
+<div class="content" ng-cloak ng-show="loadStatus == 1 && userObject.level < channelsettings.viewlogs" layout="row" layout-align="center center">
 	<div flex="none" class="big-error-icon">
 		<md-icon>error</md-icon>
 	</div>
@@ -11,8 +21,8 @@
 		<span ng-if="userObject.valid == false">If you have {{channelsettings.viewlogs | aAnAccountType}} account, then you can <md-button ng-click="login()" class="md-raised twitch-button small-button">Login with twitch</md-button></span>
 	</div>
 </div>
-<div class="content" ng-cloak ng-show="loaded && userObject.level >= channelsettings.viewlogs">
-	<h2>Log info for channel {{channel}}</h2>
+<div class="content" ng-cloak ng-show="loadStatus == 1 && userObject.level >= channelsettings.viewlogs">
+	<h2>Log info for channel {{channelsettings.name}}</h2>
 	<div id="adduserform">
 		<form ng-submit="submitAddUserForm()" class="navbar-form">
 			<div class="form-group">
@@ -126,13 +136,7 @@
 	</div>
 </div>
 </div>
-<div ng-controller="ChatController as chatCtrl" id="chat" scroll-to-bottom>
-	<!-- chat messages -->
-	<div class="logviewer-chat-message-block" ng-repeat="message in chatCtrl.messages">
-		<div class="logviewer-chat-message" ng-click="chatCtrl.selectMessage(message)">
-			<span class="logviewer-time">{{message.time | date : 'shortTime'}}</span>
-			<span class="logviewer-message" ng-bind-html='message.message | chatLine'></span>
-		</div>
-	</div>
+<div id="chat">
+	<iframe ng-src="{{chatEmbedUrl()}}" frameborder="0" scrolling="no"></iframe>
 </div>
 </div>

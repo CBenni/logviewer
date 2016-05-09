@@ -33,13 +33,13 @@ var _badges = {
 };
 
 var logviewerApp = angular.module("logviewerApp", ['ngSanitize','ngAnimate']);
-logviewerApp.controller("ChannelController", function($scope, $http, $stateParams,$rootScope){
+logviewerApp.controller("ChannelController", function($scope, $http, $stateParams,$rootScope,$sce){
 	$scope.channel = $stateParams.channel;
 	$scope.channelsettings = null;
 	$scope.userObject = null;
 	$scope.newcomments = {};
 	$scope.editingComment = {id:-1};
-	$scope.loaded = false;
+	$scope.loadStatus = 0;
 	$http.jsonp("https://api.twitch.tv/kraken/chat/"+$scope.channel+"/badges?callback=JSON_CALLBACK&client_id="+settings.auth.client_id).then(function(response){
 		_badges = response.data;
 	}, function(response){
@@ -48,9 +48,9 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	$http.jsonp("/api/channel/"+$scope.channel+"/?token="+$rootScope.auth.token+"&callback=JSON_CALLBACK").then(function(response){
 		$scope.channelsettings = response.data.channel;
 		$scope.userObject = response.data.me;
-		$scope.loaded = true;
+		$scope.loadStatus = response.data.channel==null?-1:-1+2*response.data.channel.active;
 	}, function(response){
-		// nothing to do here.
+		$scope.loadStatus = -1;
 	});
 
 	$scope.users = {};
@@ -77,6 +77,11 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 				$scope.profilePics[nick] = response.data.logo;
 			});
 		}
+	}
+	
+	$scope.chatEmbedUrl = function() {
+		if($scope.channelsettings) return $sce.trustAsResourceUrl("https://www.twitch.tv/" + $scope.channelsettings.name + "/chat?popout=");
+		else return "";
 	}
 	
 	var getComments = function(user) {

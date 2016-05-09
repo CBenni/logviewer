@@ -13,6 +13,7 @@
 	},
 	"bot": {
 		"nick": "",
-		"oauth": ""
+		"oauth": "",
+		"modcheckinterval": 2
 	}
 }

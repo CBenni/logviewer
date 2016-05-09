@@ -1,5 +1,5 @@
 var app = angular.module("mainapp",["ui.router","logviewerApp","ngMaterial","ngCookies"]);
-app.config(function($stateProvider, $urlRouterProvider, $urlMatcherFactoryProvider, $locationProvider) {
+app.config(function($stateProvider, $urlRouterProvider, $urlMatcherFactoryProvider, $locationProvider, $mdThemingProvider) {
 	$urlMatcherFactoryProvider.strictMode(false);
 	$locationProvider.html5Mode(true);
 	$stateProvider
@@ -18,7 +18,7 @@ app.config(function($stateProvider, $urlRouterProvider, $urlMatcherFactoryProvid
 			url: "/:channel/settings",
 			templateUrl: "/static/settings.html",
 			controller: "SettingsController"
-		})
+		});
 });
 
 app.run(function($rootScope) {

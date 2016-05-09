@@ -3,7 +3,7 @@ var mysql = require('mysql');
 module.exports = function MySQLDatabaseConnector(settings) {
 	var self = this;
 	self.pool = mysql.createPool({
-		connectionLimit: 10,
+		connectionLimit: 100,
 		host: settings.host,
 		port: settings.port || 3306,
 		user: settings.user,
@@ -28,7 +28,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		+")");
 		// create the auth table if it doesnt exist
 		connection.query("CREATE TABLE IF NOT EXISTS auth ("
-		  +"token varchar(64)PRIMARY KEY,"
+		  +"token varchar(64) PRIMARY KEY,"
 		  +"name varchar(32),"
 		  +"expires BIGINT unsigned"
 		+")");
@@ -43,6 +43,11 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			+"text TEXT NULL,"
 			+"PRIMARY KEY (id),"
 			+"INDEX comments_by_channel_and_topic (channel ASC, topic ASC)"
+		+")");
+		// create the alias table if it doesnt exist
+		connection.query("CREATE TABLE IF NOT EXISTS aliases ("
+		  +"alias varchar(32) PRIMARY KEY,"
+		  +"name varchar(32)"
 		+")");
 		
 		// create the logviewer tables if they dont exist
@@ -86,13 +91,38 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	
 	self.getActiveChannel = function(channel, callback) {
 		self.pool.query("SELECT * FROM channels WHERE name=? AND active=1",[channel],function(error, results, fields){
-			callback(results[0]);
+			if(results.length == 0) {
+				self.pool.query("SELECT name FROM aliases WHERE alias=?",[channel],function(error, results, fields){
+					if(results.length == 0) {
+						callback(null);
+					} else {
+						self.getActiveChannel(results[0].name, callback);
+					}
+				});
+			}
+			else callback(results[0]);
 		});
 	}
 	
 	self.getChannel = function(channel, callback) {
 		self.pool.query("SELECT * FROM channels WHERE name=?",[channel],function(error, results, fields){
-			callback(results[0]);
+			if(results.length == 0) {
+				self.pool.query("SELECT name FROM aliases WHERE alias=?",[channel],function(error, results, fields){
+					if(results.length == 0) {
+						callback(null);
+					} else {
+						self.getChannel(results[0].name, callback);
+					}
+				});
+			}
+			else callback(results[0]);
+		});
+	}
+	
+	self.addChannel = function(channel, callback) {
+		self.ensureTablesExist(channel);
+		self.pool.query("INSERT INTO channels (name) VALUES (?)",[channel],function(error, results, fields){
+			callback();
 		});
 	}
 	
@@ -161,10 +191,6 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	
 	self.getUserLevel = function(channel, nick, callback) {
 		self.pool.query("SELECT level FROM ?? WHERE nick = ?", ["users_"+channel, nick], function(error, results, fields) {
-			if(error) {
-				console.log(`Error in getUserLevel(${channel},${nick})`);
-				console.log(error);
-			}
 			if(results && results.length>0) callback(results[0].level || 0);
 			else callback(0);
 		});

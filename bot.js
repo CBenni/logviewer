@@ -101,7 +101,7 @@ function logviewerBot(settings, db) {
 		self.checkMods(self.channels[currentchannel%(self.channels.length)]);
 		currentchannel++;
 	}
-	setInterval(checkNextMods,2000);
+	setInterval(checkNextMods,(settings.bot.modcheckinterval || 2) * 1000);
 	
 	bot.connect();
 }

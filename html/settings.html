@@ -1,8 +1,8 @@
 <div id="main">
-<div class="content" ng-cloak ng-if="!loaded" layout="row" layout-align="center center">
+<div class="content" ng-cloak ng-if="loadStatus == 0" layout="row" layout-align="center center">
 	<md-progress-circular md-mode="indeterminate"></md-progress-circular> loading...
 </div>
-<div class="content" ng-cloak ng-if="loaded && userObject.level < 10" layout="row" layout-align="center center">
+<div class="content" ng-cloak ng-if="loadStatus != 0 && userObject.level < 10" layout="row" layout-align="center center">
 	<div flex="none" class="big-error-icon">
 		<md-icon>error</md-icon>
 	</div>
@@ -11,7 +11,7 @@
 		<span ng-if="userObject.valid == false">If you have {{10 | aAnAccountType }} account, then you can <md-button ng-click="login()" class="md-raised twitch-button small-button">Login with twitch</md-button></span>
 	</div>
 </div>
-<div class="content" ng-cloak ng-show="loaded && userObject.level >= 10">
+<div class="content" ng-cloak ng-show="loadStatus != 0 && userObject.level >= 10">
 	<h3>Settings</h3>
 	<ul>
 		<li><md-checkbox ng-model="settings.active" ng-true-value="1" ng-false-value="0">Enable the logviewer</md-checkbox></li>
