@@ -74,8 +74,8 @@ function logviewerBot(settings, db) {
 			console.log("#"+channel + " <" + user +" has been timed out>");
 			db.addTimeout(channel, user, "djtv <" + user +" has been timed out>");
 		} else {
-			console.log("#"+channel + " <chat has been cleared>");
-			db.addTimeout(channel, "__jtv__", "djtv <" + user +" has been timed out>");
+			console.log("#"+channel + " <chat was cleared by a moderator>");
+			db.addTimeout(channel, "__jtv__", "djtv <chat was cleared by a moderator>");
 		}
 	});
 	
