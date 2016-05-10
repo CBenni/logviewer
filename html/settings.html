@@ -13,41 +13,38 @@
 </div>
 <div class="content" ng-cloak ng-show="loadStatus != 0 && userObject.level >= 10">
 	<h3>Settings</h3>
-	<ul>
-		<li><md-checkbox ng-model="settings.active" ng-true-value="1" ng-false-value="0">Enable the logviewer</md-checkbox></li>
-	</ul>
+	<md-checkbox ng-model="settings.active" ng-true-value="1" ng-false-value="0">Enable the logviewer</md-checkbox></li>
 	<h3>Permissions</h3>
-	<ul>
-		<li><md-select ng-model="settings.viewlogs" class="inlineselect">
+	<md-select ng-model="settings.viewlogs" class="inlineselect">
 			<md-option value="0">everyone</md-option>
 			<md-option value="1">logged in users</md-option>
 			<md-option value="2">regulars</md-option>
 			<md-option value="5">moderators</md-option>
 			<md-option value="7">super-moderators</md-option>
 			<md-option value="10">editors</md-option>
-		</md-select> can read logs</li>
-		<li><md-select ng-model="settings.viewcomments" class="inlineselect">
+		</md-select> can read logs<br>
+	<md-select ng-model="settings.viewcomments" class="inlineselect">
 			<md-option value="0">everyone</md-option>
 			<md-option value="1">logged in users</md-option>
 			<md-option value="2">regulars</md-option>
 			<md-option value="5">moderators</md-option>
 			<md-option value="7">super-moderators</md-option>
 			<md-option value="10">editors</md-option>
-		</md-select> can read comments</li>
-		<li><md-select ng-model="settings.writecomments" class="inlineselect">
+		</md-select> can read comments<br>
+	<md-select ng-model="settings.writecomments" class="inlineselect">
 			<md-option value="1">logged in users</md-option>
 			<md-option value="2">regulars</md-option>
 			<md-option value="5">moderators</md-option>
 			<md-option value="7">super-moderators</md-option>
 			<md-option value="10">editors</md-option>
-		</md-select> can write comments</li>
-		<li><md-select ng-model="settings.deletecomments" class="inlineselect">
+		</md-select> can write comments<br>
+	<md-select ng-model="settings.deletecomments" class="inlineselect">
 			<md-option value="1">logged in users</md-option>
 			<md-option value="2">regulars</md-option>
 			<md-option value="5">moderators</md-option>
 			<md-option value="7">super-moderators</md-option>
 			<md-option value="10">editors</md-option>
-		</md-select> can delete comments</li>
+		</md-select> can delete comments<br>
 	</ul>
 	<h3>Editors</h3>
 	<table class="settingstable">

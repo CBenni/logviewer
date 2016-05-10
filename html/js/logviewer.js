@@ -391,7 +391,7 @@ logviewerApp.filter('orderObjectBy', function() {
 		return filtered;
 	};
 });
-var aAnAccountTypes = {0:"an",1:"an",5:"a moderator",7:"a super-moderator",10:"an editor",50:"an admin",1337:"a super-admin"}
+var aAnAccountTypes = {0:"a non-banned",1:"a twitch",5:"a moderator",7:"a super-moderator",10:"an editor",50:"an admin",1337:"a super-admin"}
 logviewerApp.filter('aAnAccountType', function() {
 	return function(level) {
 		var levels = [0,1,5,7,10,50,1337];

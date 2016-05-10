@@ -21,16 +21,16 @@
 <body>
 <div class="header" layout="row" layout-align="space-between center">
 	<div layout="row" layout-align="start center" flex="none">
-		<a ui-sref="index()" ui-sref-active="active">Index</a>
+		<a ui-sref="index()" ng-if="$stateParams.channel" ui-sref-active="active">Home</a>
 		<a ui-sref="channel({channel: $stateParams.channel})" ng-if="$stateParams.channel" ui-sref-active="active">Logs</a>
 		<a ui-sref="settings({channel: $stateParams.channel})" ng-if="$stateParams.channel" ui-sref-active="active">Settings</a>
 	</div>
 	<div layout="row" layout-align="end center" flex="none">
 		<div ng-show="auth.name" flex="none">
-			<md-button class="md-raised twitch-button" ng-click="logout()">Log out ({{auth.name}})</md-button>
+			<md-button class="md-raised twitch-button md-small-xs" ng-click="logout()">Log out<span class="hide-s"> ({{auth.name}})</span></md-button>
 		</div>
 		<div ng-hide="auth.name" flex="none">
-			<md-button ng-click="login()" class="md-raised twitch-button">Login with twitch</md-button>
+			<md-button ng-click="login()" class="md-raised twitch-button md-small-xs">Login with twitch</md-button>
 		</div>
 	</div>
 </div>

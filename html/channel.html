@@ -22,16 +22,19 @@
 	</div>
 </div>
 <div class="content" ng-cloak ng-show="loadStatus == 1 && userObject.level >= channelsettings.viewlogs">
-	<h2>Log info for channel {{channelsettings.name}}</h2>
+	<h2 class="hide-s">Chat logs for channel {{channelsettings.name}}</h2>
+	<h2 class="hide-gt-s">Logs for channel {{channelsettings.name}}</h2>
 	<div id="adduserform">
 		<form ng-submit="submitAddUserForm()" class="navbar-form">
 			<div class="form-group">
 				<md-input-container class="nobottom">
 					<input class="form-control" type="text" placeholder="User name" style="min-width: 10em" ng-model="username">
 				</md-input-container>
-				<md-button class="btn md-raised md-primary" type="submit">ADD</md-button>
-				<md-button class="btn md-raised md-primary" type="button" ng-click="addUser('twitchnotify')">RECENT SUBSCRIBERS</md-button>
-				<md-button class="btn md-raised md-primary" type="button" ng-click="clearUsers()">CLEAR ALL</md-button>
+				<div class="button-row">
+					<md-button class="btn md-raised md-primary md-small-xs" type="submit">ADD</md-button>
+					<md-button class="btn md-raised md-primary md-small-xs" type="button" ng-click="addUser('twitchnotify')">RECENT SUBS<span class="hide-s">CRIBERS</span></md-button>
+					<md-button class="btn md-raised md-primary md-small-xs" type="button" ng-click="clearUsers()">CLEAR ALL</md-button>
+				</div>
 			</div>
 		</form>
 	</div>

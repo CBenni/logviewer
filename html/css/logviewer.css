@@ -43,6 +43,10 @@ div { outline-style:none; }
 	margin-bottom: 10px;
 }
 
+.button-row {
+	display: inline-block;
+}
+
 .btn-close:hover {
 	color: #999;
 }
