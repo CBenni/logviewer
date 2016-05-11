@@ -34,6 +34,7 @@ var _badges = {
 
 var logviewerApp = angular.module("logviewerApp", ['ngSanitize','ngAnimate']);
 logviewerApp.controller("ChannelController", function($scope, $http, $stateParams,$rootScope,$sce){
+	console.log($stateParams.user);
 	$scope.channel = $stateParams.channel;
 	$scope.channelsettings = null;
 	$scope.userObject = null;
@@ -49,6 +50,10 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 		$scope.channelsettings = response.data.channel;
 		$scope.userObject = response.data.me;
 		$scope.loadStatus = response.data.channel==null?-1:-1+2*response.data.channel.active;
+		
+		if($stateParams.user) {
+			$scope.addUser($stateParams.user);
+		}
 	}, function(response){
 		$scope.loadStatus = -1;
 	});

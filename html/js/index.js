@@ -10,7 +10,7 @@ app.config(function($stateProvider, $urlRouterProvider, $urlMatcherFactoryProvid
 			controller: "ChannelListController"
 		})
 		.state("channel", {
-			url: "/:channel",
+			url: "/:channel?user",
 			templateUrl: "/static/channel.html",
 			controller: "ChannelController"
 		})
