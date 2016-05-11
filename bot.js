@@ -7,7 +7,19 @@ var PARAM = 4
 var TRAILING = 5
 function logviewerBot(settings, db) {
 	var self = this;
-	var bot = new ircbot("irc.chat.twitch.tv", 80);
+	
+	var host = "irc.chat.twitch.tv";
+	var port = 6667;
+	var hostandport = /([^:^\/]+)(?:[:/](\d+))?/.exec(settings.bot.server);
+	if(hostandport) {
+		if(hostandport[1]) {
+			host = hostandport[1];
+		}
+		if(hostandport[2]) {
+			port = parseInt(hostandport[2]);
+		}
+	}
+	var bot = new ircbot(host, port);
 	self.userlevels = {}; // temporary user levels (mod etc)
 	self.channels = [];
 	

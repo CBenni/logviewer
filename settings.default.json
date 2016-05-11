@@ -12,6 +12,7 @@
 		"baseurl": "http://127.0.0.1:8080/"
 	},
 	"bot": {
+		"server": "irc.chat.twitch.tv:80",
 		"nick": "",
 		"oauth": "",
 		"modcheckinterval": 2
