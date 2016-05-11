@@ -18,7 +18,7 @@
 	</div>
 	<div style="font-size: 20px;" flex="none">
 		 You currently do not have access to view logs of the channel {{channel}}.<br>
-		<span ng-if="userObject.valid == false">If you have {{channelsettings.viewlogs | aAnAccountType}} account, then you can <md-button ng-click="login()" class="md-raised twitch-button small-button">Login with twitch</md-button></span>
+		<span ng-if="userObject.valid == false">If you have {{channelsettings.viewlogs | aAnAccountType}} account, then you can <md-button ng-click="login()" class="md-raised twitch-button md-small">Login with twitch</md-button></span>
 	</div>
 </div>
 <div class="content" ng-cloak ng-show="loadStatus == 1 && userObject.level >= channelsettings.viewlogs">
