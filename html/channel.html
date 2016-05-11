@@ -69,7 +69,7 @@
 						</div>
 						<!-- context before -->
 						<div class="logviewer-chat-message logviewer-context-message" ng-show="selectedID === message.id" ng-repeat="messageBefore in message.before">
-							<span class="logviewer-time">{{messageBefore.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}</span>
+							<span class="logviewer-time hide-s">{{messageBefore.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}</span>
 							<span class="logviewer-message" ng-bind-html='messageBefore.text | chatLine'></span>
 						</div>
 						<!-- the message -->
@@ -80,12 +80,12 @@
 								'logviewer-selected-message': selectedID === message.id
 							}" 
 							ng-click="selectMessage(message.id)">
-							<span class="logviewer-time">{{message.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}</span>
+							<span class="logviewer-time hide-s">{{message.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}</span>
 							<span class="logviewer-message" ng-bind-html='message.text | chatLine'></span>
 						</div>
 						<!-- context after -->
 						<div class="logviewer-chat-message logviewer-context-message" ng-show="selectedID === message.id" ng-repeat="messageAfter in message.after">
-							<span class="logviewer-time">{{messageAfter.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}</span>
+							<span class="logviewer-time hide-s">{{messageAfter.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}</span>
 							<span class="logviewer-message" ng-bind-html='messageAfter.text | chatLine'></span>
 						</div>
 						<!-- button to load more after -->
