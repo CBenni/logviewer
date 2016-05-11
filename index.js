@@ -238,7 +238,7 @@ app.get('/api/logout',function(req,res,next) {
 
 app.get('/api/channel/:channel', function(req, res, next) {
 	try {
-		var channel = req.params.channel;
+		var channel = req.params.channel.toLowerCase();
 		db.getChannel(channel, function(channelObj) {
 			if(!channelObj)
 			{
@@ -312,7 +312,7 @@ function getLogs(channel, query, callback) {
 
 app.get('/api/logs/:channel', function(req, res, next) {
 	try {
-		var channel = req.params.channel;
+		var channel = req.params.channel.toLowerCase();
 		db.getActiveChannel(channel, function(channelObj) {
 			if(!channelObj)
 			{
@@ -343,7 +343,7 @@ app.get('/api/logs/:channel', function(req, res, next) {
 var allowedsettings = ["active","viewlogs","viewcomments","writecomments","deletecomments"];
 app.post('/api/settings/:channel', function(req, res, next) {
 	try {
-		var channel = req.params.channel;
+		var channel = req.params.channel.toLowerCase();
 		db.getChannel(channel, function(channelObj) {
 			if(!channelObj)
 			{
@@ -397,7 +397,7 @@ app.post('/api/settings/:channel', function(req, res, next) {
 
 app.get('/api/levels/:channel',function(req,res,next){
 	try {
-		var channel = req.params.channel;
+		var channel = req.params.channel.toLowerCase();
 		db.getActiveChannel(channel, function(channelObj) {
 			if(!channelObj)
 			{
@@ -422,7 +422,7 @@ app.get('/api/levels/:channel',function(req,res,next){
 
 app.post('/api/levels/:channel',function(req,res,next){
 	try {
-		var channel = req.params.channel;
+		var channel = req.params.channel.toLowerCase();
 		db.getChannel(channel, function(channelObj) {
 			if(!channelObj)
 			{
@@ -454,7 +454,7 @@ app.post('/api/levels/:channel',function(req,res,next){
 // comments
 app.get('/api/comments/:channel', function(req,res,next){
 	try {
-		var channel = req.params.channel;
+		var channel = req.params.channel.toLowerCase();
 		db.getActiveChannel(channel, function(channelObj) {
 			if(!channelObj)
 			{
@@ -479,7 +479,7 @@ app.get('/api/comments/:channel', function(req,res,next){
 
 app.post('/api/comments/:channel',function(req,res,next){
 	try {
-		var channel = req.params.channel;
+		var channel = req.params.channel.toLowerCase();
 		db.getChannel(channel, function(channelObj) {
 			if(!channelObj)
 			{
@@ -528,7 +528,7 @@ app.post('/api/comments/:channel',function(req,res,next){
 
 app.delete('/api/comments/:channel',function(req,res,next){
 	try {
-		var channel = req.params.channel;
+		var channel = req.params.channel.toLowerCase();
 		db.getChannel(channel, function(channelObj) {
 			if(!channelObj)
 			{
