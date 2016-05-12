@@ -24,7 +24,7 @@ app.config(function($stateProvider, $urlRouterProvider, $urlMatcherFactoryProvid
 app.run(function($rootScope, $state) {
 	var stateChange = $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams, options) {
 		$rootScope.title = toParams.channel || toState.title;
-		ga('set', 'page', $state.href(toState, toParams, {absolute: true}));
+		ga('set', 'page', $state.href(toState, toParams));
 		ga('send', 'pageview');
 	});
 });
