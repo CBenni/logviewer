@@ -89,6 +89,12 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		});
 	}
 	
+	self.getAliases = function(callback) {
+		self.pool.query("SELECT name, alias FROM aliases",function(error, results, fields){
+			callback(results);
+		});
+	}
+	
 	self.getActiveChannel = function(channel, callback) {
 		self.pool.query("SELECT * FROM channels WHERE name=? AND active=1",[channel],function(error, results, fields){
 			if(results.length == 0) {

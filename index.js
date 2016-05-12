@@ -398,7 +398,7 @@ app.post('/api/settings/:channel', function(req, res, next) {
 app.get('/api/levels/:channel',function(req,res,next){
 	try {
 		var channel = req.params.channel.toLowerCase();
-		db.getActiveChannel(channel, function(channelObj) {
+		db.getChannel(channel, function(channelObj) {
 			if(!channelObj)
 			{
 				res.status(404).jsonp({"error":"Channel "+channel+" not found."});
