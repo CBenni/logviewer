@@ -87,7 +87,7 @@ function logviewerBot(settings, db) {
 			console.log(data[TAGS]);
 			if(data[TAGS]) {
 				if(data[TAGS]["ban-duration"]) duration = data[TAGS]["ban-duration"];
-				if(data[TAGS]["ban-reason"]) reason = data[TAGS]["ban-reason"].replace(/\\s/," ");
+				if(data[TAGS]["ban-reason"]) reason = data[TAGS]["ban-reason"].replace(/\\s/g," ");
 			}
 			if(duration) {
 				if(reason) {
