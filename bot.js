@@ -94,8 +94,8 @@ function logviewerBot(settings, db) {
 					console.log("#"+channel + " <" + user +" has been timed out for "+formatTimespan(duration)+" with reason: "+reason+">");
 					db.addTimeout(channel, user, "djtv <" + user +" has been timed out for "+formatTimespan(duration)+" with reason: "+reason+">");
 				} else {
-					console.log("#"+channel + " <" + user +" has been timed out>");
-					db.addTimeout(channel, user, "djtv <" + user +" has been timed out>");
+					console.log("#"+channel + " <" + user +" has been timed out for "+formatTimespan(duration)+">");
+					db.addTimeout(channel, user, "djtv <" + user +" has been timed out for "+formatTimespan(duration)+">");
 				}
 			} else {
 				if(reason) {
