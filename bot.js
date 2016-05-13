@@ -242,7 +242,7 @@ function logviewerBot(settings, db) {
 								if(messages !== undefined) {
 									replied = true;
 									if(messages.length == 0) {
-										bot.send("PRIVMSG #jtv :/w@a "+user+" No logs for "+copyofnick+" found.");
+										bot.send("PRIVMSG #jtv :/w "+user+" No logs for "+copyofnick+" found.");
 									} else {
 										for(var j=0;j<messages.length;++j) {
 											var message = messages[j];
@@ -252,13 +252,13 @@ function logviewerBot(settings, db) {
 												dname = data[TAGS]["display-name"];
 											}
 											var d = Date.now()/1000;
-											bot.send("PRIVMSG #jtv@a :/w "+user+" ["+formatTimespan(d-message.time)+" ago] "+dname+": "+data[TRAILING]);
+											bot.send("PRIVMSG #jtv :/w "+user+" ["+formatTimespan(d-message.time)+" ago] "+dname+": "+data[TRAILING]);
 										}
-										bot.send("PRIVMSG #jtv@a :/w "+user+" See http://beta.cbenni.com/"+channel+"/?user="+message.nick);
+										bot.send("PRIVMSG #jtv :/w "+user+" See http://beta.cbenni.com/"+channel+"/?user="+message.nick);
 									}
 								} else if(done >= matches.length) {
 									replied = true;
-									bot.send("PRIVMSG #jtv@a :/w "+user+" Channel "+channel+" not found or invalid access level.");
+									bot.send("PRIVMSG #jtv :/w "+user+" Channel "+channel+" not found or invalid access level.");
 								}
 							});
 						} else {
@@ -266,7 +266,7 @@ function logviewerBot(settings, db) {
 							if(replied) return;
 							if(done >= matches.length) {
 								replied = true;
-								bot.send("PRIVMSG #jtv@a :/w "+user+" Channel "+channel+" not found.");
+								bot.send("PRIVMSG #jtv :/w "+user+" Channel "+channel+" not found.");
 							}
 						}
 					}
