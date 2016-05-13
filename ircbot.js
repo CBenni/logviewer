@@ -16,7 +16,6 @@ function IRCBot(host, port) {
 	self.client = new net.Socket();
 	
 	self.send = function(data) {
-		console.log("--> "+data);
 		self.client.write(data+'\n');
 	}
 	
