@@ -1,4 +1,3 @@
-var BASEURL = ""
 var _badges = {
 	"global_mod": {
 		"alpha": "http://chat-badges.s3.amazonaws.com/globalmod-alpha.png",
@@ -34,12 +33,29 @@ var _badges = {
 };
 
 var logviewerApp = angular.module("logviewerApp", ['ngSanitize','ngAnimate']);
-logviewerApp.controller("ChannelController", function($scope, $http, $stateParams){
+logviewerApp.controller("ChannelController", function($scope, $http, $stateParams,$rootScope,$sce){
+	console.log($stateParams.user);
 	$scope.channel = $stateParams.channel;
-	$http.jsonp("https://api.twitch.tv/kraken/chat/"+$scope.channel+"/badges?callback=JSON_CALLBACK").then(function(response){
+	$scope.channelsettings = null;
+	$scope.userObject = null;
+	$scope.newcomments = {};
+	$scope.editingComment = {id:-1};
+	$scope.loadStatus = 0;
+	$http.jsonp("https://api.twitch.tv/kraken/chat/"+$scope.channel+"/badges?callback=JSON_CALLBACK&client_id="+settings.auth.client_id).then(function(response){
 		_badges = response.data;
 	}, function(response){
 		// nothing to do here.
+	});
+	$http.jsonp("/api/channel/"+$scope.channel+"/?token="+$rootScope.auth.token+"&callback=JSON_CALLBACK").then(function(response){
+		$scope.channelsettings = response.data.channel;
+		$scope.userObject = response.data.me;
+		$scope.loadStatus = response.data.channel==null?-1:-1+2*response.data.channel.active;
+		
+		if($stateParams.user) {
+			$scope.addUser($stateParams.user);
+		}
+	}, function(response){
+		$scope.loadStatus = -1;
 	});
 
 	$scope.users = {};
@@ -59,6 +75,39 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	
 	$scope.userid = 0;
 	
+	$scope.profilePics = {};
+	var getProfilePic = function(nick) {
+		if($scope.profilePics[nick] === undefined) {
+			$http.jsonp("https://api.twitch.tv/kraken/channels/"+nick+"/?callback=JSON_CALLBACK&client_id="+settings.auth.client_id).then(function(response) {
+				$scope.profilePics[nick] = response.data.logo;
+			});
+		}
+	}
+	
+	$scope.chatEmbedUrl = function() {
+		if($scope.channelsettings) return $sce.trustAsResourceUrl("https://www.twitch.tv/" + $scope.channelsettings.name + "/chat?popout=");
+		else return "";
+	}
+	
+	var getComments = function(user) {
+		if($rootScope.auth.token) {
+			$http.jsonp("/api/comments/" + $scope.channel + "/?token="+$rootScope.auth.token+"&topic="+user+"&callback=JSON_CALLBACK").then(function(response) {
+				$scope.users[user].comments = response.data;
+				for(var i=0;i<response.data.length;++i) {
+					getProfilePic(response.data[i].author);
+				}
+			});
+		} else {
+			$http.jsonp("/api/comments/" + $scope.channel + "/?topic="+user+"&token="+$rootScope.auth.token+"&callback=JSON_CALLBACK").then(function(response) {
+				$scope.users[user].comments = response.data;
+				for(var i=0;i<response.data.length;++i) {
+					getProfilePic(response.data[i].author);
+				}
+			});
+		}
+	}
+	
+	
 	$scope.addUser = function(nick)
 	{
 		nick = nick.toLowerCase();
@@ -77,8 +126,13 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 				}
 			};
 		}
-		$http.jsonp(BASEURL + "/api/logs/" + $scope.channel + "/?nick=" + nick 
-				+ "&callback=JSON_CALLBACK").then(function(response){
+		$http.jsonp("/api/logs/" + $scope.channel,{
+			params: {
+				nick: nick,
+				token: $rootScope.auth.token,
+				callback: "JSON_CALLBACK"
+			}
+		}).then(function(response){
 			$scope.users[nick].data = response.data.user;
 			var messagesToAdd = response.data.before || [];
 			for(var i=0;i<messagesToAdd.length;++i) {
@@ -97,14 +151,21 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 		},function(response){
 			console.log(response);
 		});
+		getComments(nick);
 	}
-	// TODO: remove
-	$scope.addUser("cbenni");
+	
 	$scope.moreUser = function(nick)
 	{
 		$scope.users[nick].isloading = true;
-		$http.jsonp(BASEURL + "/api/logs/" + $scope.channel + "/?nick=" + nick 
-				+ "&id=" + $scope.users[nick].messages[0].id + "&after=0&callback=JSON_CALLBACK").then(function(response){
+		$http.jsonp("/api/logs/" + $scope.channel,{
+			params: {
+				nick: nick,
+				id: $scope.users[nick].messages[0].id,
+				after: 0,
+				token: $rootScope.auth.token,
+				callback: "JSON_CALLBACK"
+			}
+		}).then(function(response){
 			$scope.users[nick].data = response.data.user;
 			var messagesToAdd = response.data.before;
 			for(var i=messagesToAdd.length-1;i>=0;--i) {
@@ -144,8 +205,15 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 			$scope.selectedID = id;
 			if($scope.messages[id].before.length == 0 && $scope.messages[id].after.length == 0) {
 				// populate if empty
-				$http.jsonp(BASEURL + "/api/logs/" + $scope.channel + "/?id=" + id 
-						+ "&callback=JSON_CALLBACK&before=10&after=10").then(function(response){
+				$http.jsonp("/api/logs/" + $scope.channel,{
+					params: {
+						id: id, 
+						before: 10, 
+						after: 10,
+						token: $rootScope.auth.token,
+						callback: "JSON_CALLBACK"
+					}
+				}).then(function(response){
 					$scope.messages[id].before = response.data.before;
 					$scope.messages[id].after = response.data.after;
 				},function(response){
@@ -178,11 +246,12 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 		else {
 			user.isloadingContext[position] = true;
 			//?id=" + newestID + "/?callback=JSON_CALLBACK&" + position + "=" + count
-			$http.jsonp(BASEURL + "/api/logs/" + $scope.channel,{params:
-				{
+			$http.jsonp("/api/logs/" + $scope.channel,{
+				params: {
 					id: newestID, 
 					before: (position=="before")?10:0, 
 					after: (position=="after")?10:0,
+					token: $rootScope.auth.token,
 					callback: "JSON_CALLBACK"
 				}
 			}).then(function(response){
@@ -198,6 +267,38 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	}
 	$scope.unselect = function($event,that) {
 		if($event.target.id == "main") $scope.selectedID = null;
+	}
+	
+	$scope.editComment = function(comment) {
+		if($scope.editingComment >= 0) {
+			$scope.cancelUpdate(comment);
+		}
+		$scope.editingComment = comment.id;
+	}
+	
+	$scope.cancelUpdate = function(comment) {
+		getComments(comment.topic);
+		$scope.editingComment = -1;
+	}
+	
+	$scope.addComment = function(nick) {
+		$http.post("/api/comments/"+$scope.channel,{token: $rootScope.auth.token, topic: nick, text: $scope.newcomments[nick]}).then(function(response){
+			$scope.newcomments[nick] = "";
+			getComments(nick);
+		});
+	}
+	
+	$scope.updateComment = function(comment) {
+		$http.post("/api/comments/"+$scope.channel,{token: $rootScope.auth.token, id: comment.id, text: comment.text}).then(function(response){
+			$scope.editingComment = -1;
+			getComments(comment.topic);
+		});
+	}
+	
+	$scope.deleteComment = function(comment) {
+		$http.delete("/api/comments/"+$scope.channel+"/?token="+$rootScope.auth.token+"&id="+comment.id).then(function(response){
+			getComments(comment.topic);
+		});
 	}
 });
 
@@ -227,6 +328,32 @@ logviewerApp.filter('chatLine', function($sce) {
 		} else if(parsedmessage[STATE_COMMAND]=="NOTICE") {
 			
 		}
+	}
+});
+
+logviewerApp.filter('commentAge', function($sce, $filter) {
+	return function(input, defaultValue) {
+		var d = Date.now()/1000;
+		var age = d-input.edited;
+		var res = "";
+		if(age < 60) {
+			res = "less than a minute ago";
+		} else if(age < 3600) {
+			var mins = Math.round(age/60);
+			if(mins == 1) res = "a minute ago";
+			else res = mins+" minutes ago";
+		} else if(age < 3600*24) {
+			var hrs = Math.round(age/3600);
+			if(hrs == 1) res = "an hour ago";
+			else res = hrs+" hours ago";
+		} else if(age < 3600*24*7) {
+			var days = Math.round(age/(3600*24));
+			if(days == 1) res = "yesterday";
+			else res = days+" days ago";
+		} else {
+			res = $filter('date')(input.edited*1000);
+		}
+		return (input.edited == input.added?"":"edited ")+res;
 	}
 });
 
@@ -267,6 +394,13 @@ logviewerApp.filter('orderObjectBy', function() {
 		});
 		if(reverse) filtered.reverse();
 		return filtered;
+	};
+});
+var aAnAccountTypes = {0:"a non-banned",1:"a twitch",5:"a moderator",7:"a super-moderator",10:"an editor",50:"an admin",1337:"a super-admin"}
+logviewerApp.filter('aAnAccountType', function() {
+	return function(level) {
+		var levels = [0,1,5,7,10,50,1337];
+		return aAnAccountTypes[levels.filter(function(x){return x>=level})[0]];
 	};
 });
 

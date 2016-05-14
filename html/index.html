@@ -5,7 +5,7 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>{{title}} - logviewer</title>
+	<title ng-bind="title + ' - logviewer'">logviewer</title>
 	<base href="/">
 	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 	<link href='https://fonts.googleapis.com/css?family=Roboto:400,100,300,500,700' rel='stylesheet' type='text/css'>
@@ -15,15 +15,33 @@
 	<link href="/static/css/animations.css" rel="stylesheet">
 	<link href="/static/css/logviewer.css" rel="stylesheet">
 	<link href="/static/css/settings.css" rel="stylesheet">
+	<link href="/static/css/list.css" rel="stylesheet">
+	<link rel="icon" type="image/x-icon" href="/static/img/icon.png"/>
+	<script>
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-54058329-1', 'auto');
+		//ga('send', 'pageview');
+	</script>
 </head>
 
 <body>
-<div class="header" layout="row" layout-align="end center">
-	<div ng-show="login.name" flex="none">
-		<md-button class="md-raised twitch-button" ng-click="logout()">Log out ({{login.name}})</md-button>
+<div class="header" layout="row" layout-align="space-between center">
+	<div layout="row" layout-align="start center" flex="none">
+		<a ui-sref="index()" ng-if="$stateParams.channel" ui-sref-active="active">Home</a>
+		<a ui-sref="channel({channel: $stateParams.channel})" ng-if="$stateParams.channel" ui-sref-active="active">Logs</a>
+		<a ui-sref="settings({channel: $stateParams.channel})" ng-if="$stateParams.channel" ui-sref-active="active">Settings</a>
 	</div>
-	<div ng-hide="login.name" flex="none">
-		<md-button ng-click="login()" class="md-raised twitch-button">Login with twitch</md-button>
+	<div layout="row" layout-align="end center" flex="none">
+		<div ng-show="auth.name" flex="none">
+			<md-button class="md-raised twitch-button md-small-xs" ng-click="logout()">Log out<span class="hide-s"> ({{auth.name}})</span></md-button>
+		</div>
+		<div ng-hide="auth.name" flex="none">
+			<md-button ng-click="login()" class="md-raised twitch-button md-small-xs">Login with twitch</md-button>
+		</div>
 	</div>
 </div>
 <ui-view></ui-view>
@@ -38,8 +56,17 @@
 <script src="/static/bower_components/angular-material/angular-material.min.js"></script>
 <script src="/static/bower_components/angular-cookies/angular-cookies.min.js"></script>
 
+<script>
+var settings = null;
+function getGlobalSettings(data) {
+	settings = data;
+}
+</script>
+<script src="/api/?callback=getGlobalSettings"></script>
+
 <script src="/static/js/logviewer.js"></script>
 <script src="/static/js/settings.js"></script>
+<script src="/static/js/list.js"></script>
 <script src="/static/js/chat.js"></script>
 <script src="/static/js/messageparser.js"></script>
 <script src="/static/js/index.js"></script>

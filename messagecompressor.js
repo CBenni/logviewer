@@ -119,7 +119,6 @@ function compressMessage(user, data) {
 
 
 function decompressMessage(channel, user, data) {
-	console.log(data);
 	var index = data.indexOf(' ');
 	var tags = data.slice(0, index)
 	if(tags === "") tags = [];
@@ -177,14 +176,3 @@ function parseIRCMessage(message) {
 	}
 	return data;
 }
-var __raw = "@color=;display-name=Logviewer;emotes=;subscriber=0;turbo=0;mod=1;user-id=93914621;user-type= :logviewer!logviewer@logviewer.tmi.twitch.tv PRIVMSG #cbenni :test2";
-console.log(__raw);
-var __parsed = parseIRCMessage(__raw);
-var __user = /\w+/.exec(__parsed[PREFIX])[0];
-var __channel = __parsed[PARAM];
-var __comp = compressMessage(__user, __parsed);
-console.log(__comp);
-var __roundtrip = decompressMessage(__channel, __user, __comp);
-console.log(__roundtrip);
-var __roundtrip2 = compressMessage(__user, parseIRCMessage(__roundtrip));
-console.log("Roundtrip ",__roundtrip2 == __comp ? "successful": "failed");

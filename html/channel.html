@@ -1,28 +1,55 @@
 <div id="main" ng-click="unselect($event,this)">
-<div id="content" ng-cloak>
-	<h2>Log info for channel {{channel}}</h2>
+<div class="content" ng-cloak ng-if="loadStatus == 0" layout="row" layout-align="center center">
+	<md-progress-circular md-mode="indeterminate"></md-progress-circular> loading...
+</div>
+<div class="content" ng-cloak ng-if="loadStatus == -1" layout="row" layout-align="center center" layout-xs="column">
+	<div flex="none" class="big-error-icon">
+		<md-icon>error</md-icon>
+	</div>
+	<div style="font-size: 20px;" flex="none">
+		 Channel {{channel}} not found.<br>
+		<span ng-if="userObject.level >= 10">If you want to add the logviewer to the channel, then head over to the 
+		<a ui-sref="settings({channel: $stateParams.channel})" ng-if="$stateParams.channel">settings</a>.</span>
+	</div>
+</div>
+<div class="content" ng-cloak ng-show="loadStatus == 1 && userObject.level < channelsettings.viewlogs" layout="row" layout-align="center center" layout-xs="column">
+	<div flex="none" class="big-error-icon" flex="none">
+		<md-icon>error</md-icon>
+	</div>
+	<div style="font-size: 20px;" flex="none">
+		 You currently do not have access to view logs of the channel {{channel}}.<br>
+		<span ng-if="userObject.valid == false">If you have {{channelsettings.viewlogs | aAnAccountType}} account, then you can <md-button ng-click="login()" class="md-raised twitch-button md-small">Login with twitch</md-button></span>
+	</div>
+</div>
+<div class="content" ng-cloak ng-show="loadStatus == 1 && userObject.level >= channelsettings.viewlogs">
+	<h2 class="hide-s">Chat logs for channel {{channelsettings.name}}</h2>
+	<h2 class="hide-gt-s">Logs for channel {{channelsettings.name}}</h2>
 	<div id="adduserform">
 		<form ng-submit="submitAddUserForm()" class="navbar-form">
 			<div class="form-group">
-				<input class="form-control" type="text" placeholder="User name" style="min-width: 20em" ng-model="username">
-				<md-button class="btn md-raised md-primary" type="submit">ADD</md-button>
-				<md-button class="btn md-raised md-primary" type="button" ng-click="addUser('twitchnotify')">RECENT SUBSCRIBERS</md-button>
-				<md-button class="btn md-raised md-primary" type="button" ng-click="clearUsers()">CLEAR ALL</md-button>
+				<md-input-container class="nobottom">
+					<input class="form-control" type="text" placeholder="User name" style="min-width: 10em" ng-model="username">
+				</md-input-container>
+				<div class="button-row">
+					<md-button class="btn md-raised md-primary md-small-xs" type="submit">ADD</md-button>
+					<md-button class="btn md-raised md-primary md-small-xs" type="button" ng-click="addUser('twitchnotify')">RECENT SUBS<span class="hide-s">CRIBERS</span></md-button>
+					<md-button class="btn md-raised md-primary md-small-xs" type="button" ng-click="clearUsers()">CLEAR ALL</md-button>
+				</div>
 			</div>
 		</form>
 	</div>
 	<div class="userlogsview layout-padding">
 		<div ng-repeat="user in users | orderObjectBy:'id':true" class="panel panel-default logview z-depth-1">
 			<div class="panel-heading" layout="column">
-				<div flex="none">
-					<md-button class="btn-close md-primary md-icon-button" ng-click="delUser(user.data.nick)">
-						<md-icon class="md-primary">close</md-icon>
-					</md-button>
-					<span class="username">{{user.data.nick}}</span>
-				</div>
-				<div flex="none">
-					<span class="userstats">Timeouts: {{user.data.timeouts}}</span>
-					<span class="userstats">Messages: {{user.data.messages}}</span>
+				<md-button class="btn-close md-primary md-icon-button" ng-click="delUser(user.data.nick)">
+					<md-icon class="md-primary">close</md-icon>
+				</md-button>
+				<div flex="none" layout="column" layout-align="center center">
+					<span class="username" flex="none">{{user.data.nick}} </span>
+					<div layout="row" layout-align="center center" flex="1">
+						<span class="userstats" flex="none" style="text-align: right;">Messages: {{user.data.messages}}</span>
+						<span class="userstats" flex="none">Timeouts: {{user.data.timeouts}}</span>
+					</div>
 				</div>
 			</div>
 			<div class="panel-body">
@@ -42,7 +69,7 @@
 						</div>
 						<!-- context before -->
 						<div class="logviewer-chat-message logviewer-context-message" ng-show="selectedID === message.id" ng-repeat="messageBefore in message.before">
-							<span class="logviewer-time">{{messageBefore.time | secondsTimestamp | date : 'short'}}</span>
+							<span class="logviewer-time hide-s">{{messageBefore.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}</span>
 							<span class="logviewer-message" ng-bind-html='messageBefore.text | chatLine'></span>
 						</div>
 						<!-- the message -->
@@ -53,12 +80,12 @@
 								'logviewer-selected-message': selectedID === message.id
 							}" 
 							ng-click="selectMessage(message.id)">
-							<span class="logviewer-time">{{message.time | secondsTimestamp | date : 'short'}}</span>
+							<span class="logviewer-time hide-s">{{message.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}</span>
 							<span class="logviewer-message" ng-bind-html='message.text | chatLine'></span>
 						</div>
 						<!-- context after -->
 						<div class="logviewer-chat-message logviewer-context-message" ng-show="selectedID === message.id" ng-repeat="messageAfter in message.after">
-							<span class="logviewer-time">{{messageAfter.time | secondsTimestamp | date : 'short'}}</span>
+							<span class="logviewer-time hide-s">{{messageAfter.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}</span>
 							<span class="logviewer-message" ng-bind-html='messageAfter.text | chatLine'></span>
 						</div>
 						<!-- button to load more after -->
@@ -70,20 +97,49 @@
 						</div>
 					</div>
 				</div>
-				<div ng-if="user.messages.length == 0">None found.</div>
+				<div ng-if="user.messages.length == 0">No recorded chat messages found.</div>
 				<div ng-if="user.isloading">Loading...</div>
+				<div ng-repeat="comment in user.comments" layout="row" class="logviewer-comment">
+					<div flex="none">
+						<img ng-src="{{profilePics[comment.author]}}">
+					</div>
+					<div flex="1" layout="column">
+						<div flex="1" layout="row" layout-align="space-between start">
+							<div flex="none">
+								<span class="author">{{comment.author}}</span> <span class="age">{{comment|commentAge}}</span>
+							</div>
+							<div flex="none" class="comment-editing-buttons">
+								<md-button class="editing-button md-icon-button" ng-show="userObject.level >= channelsettings.writecomments || userObject.name == comment.author" ng-click="editComment(comment)">
+									<md-icon>mode_edit</md-icon>
+								</md-button>
+								<md-button class="editing-button md-icon-button" ng-click="deleteComment(comment)" ng-show="userObject.level >= channelsettings.deletecomments || userObject.name == comment.author">
+									<md-icon>delete</md-icon>
+								</md-button>
+							</div>
+						</div>
+						<div class="text" flex="none" ng-hide="editingComment == comment.id">{{comment.text}}</div>
+						<div class="comment-editing" flex="none" ng-if="editingComment == comment.id">
+							<md-input-container class="nobottom notop">
+								<textarea ng-model="comment.text"></textarea>
+							</md-input-container>
+							<md-button ng-click="cancelUpdate(comment)" class="md-raised md-primary">CANCEL</md-button>
+							<md-button ng-click="updateComment(comment)" class="md-raised md-primary">SAVE</md-button>
+						</div>
+					</div>
+				</div>
+				<div class="writecomment" ng-if="userObject.level >= channelsettings.writecomments" layout="row" layout-align="start end">
+					<md-input-container class="nobottom" flex="none">
+						<label>Write a comment about {{user.data.nick}}</label>
+						<textarea ng-model="newcomments[user.data.nick]"></textarea>
+					</md-input-container>
+					<md-button ng-click="addComment(user.data.nick)" class="md-raised md-primary md-small" flex="none">SEND</md-button>
+				</div>
 			</div>
 		</div>
 	</div>
 </div>
 </div>
-<div ng-controller="ChatController as chatCtrl" id="chat" scroll-to-bottom>
-	<!-- chat messages -->
-	<div class="logviewer-chat-message-block" ng-repeat="message in chatCtrl.messages">
-		<div class="logviewer-chat-message" ng-click="chatCtrl.selectMessage(message)">
-			<span class="logviewer-time">{{message.time | date : 'shortTime'}}</span>
-			<span class="logviewer-message" ng-bind-html='message.message | chatLine'></span>
-		</div>
-	</div>
+<div id="chat">
+	<iframe ng-src="{{chatEmbedUrl()}}" frameborder="0" scrolling="no"></iframe>
 </div>
 </div>

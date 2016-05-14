@@ -1,0 +1,39 @@
+.content.index-page-content {
+	width: 75%;
+}
+
+
+.channel-list-item {
+	display: inline-block;
+}
+
+.channel-live-indicator::before {
+	content: "";
+	display: inline-block;
+	width:1em;
+	height:1em;
+	margin-right: 0.25em;
+	margin-bottom: -0.25em;
+	background-color: grey;
+	border-radius: 1em;
+}
+
+.channel-live-indicator.live::before {
+  background-color: red;
+}
+
+h1.bigtitle {
+	font-weight: 100;
+	font-size: 72px;
+	margin-bottom: 0;
+}
+
+h5.bigtitle {
+	margin-top: 0;
+}
+
+@media (max-width:599px) {
+	h1.bigtitle {
+		font-size: 50px;
+	}
+}

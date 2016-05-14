@@ -9,27 +9,14 @@ var STATE_PREFIX = 2
 var STATE_COMMAND = 3
 var STATE_PARAM = 4
 var STATE_TRAILING = 5
-function parseIRCMessage(message) {
-	var data = rx.exec(message);
-	var tagdata = data[STATE_V3];
-	if (tagdata) {
-		var tags = {};
-		do {
-			m = rx2.exec(tagdata);
-			if (m) {
-				tags[m[1]] = m[2];
-			}
-		} while (m);
-		data[STATE_V3] = tags;
-	}
-	return data;
-}
 
-function IRCBot(host, port, onconnect) {
+
+function IRCBot(host, port) {
 	var self = this;
 	self.client = new net.Socket();
 	
 	self.send = function(data) {
+		console.log("--> "+data);
 		self.client.write(data+'\n');
 	}
 	
@@ -38,6 +25,29 @@ function IRCBot(host, port, onconnect) {
 		self.client.connect(port, host, function() {
 			self.emit('connect');
 		});
+	}
+	
+	self.parseIRCMessage = function(message) {
+		var data = rx.exec(message);
+		if(data == null) {
+			console.log("==================== ERROR ====================");
+			console.log("Couldnt parse message");
+			console.log("'"+message+"'");
+			console.log("===============================================");
+			return null;
+		}
+		var tagdata = data[STATE_V3];
+		if (tagdata) {
+			var tags = {};
+			do {
+				m = rx2.exec(tagdata);
+				if (m) {
+					tags[m[1]] = m[2];
+				}
+			} while (m);
+			data[STATE_V3] = tags;
+		}
+		return data;
 	}
 
 	
@@ -60,10 +70,12 @@ function IRCBot(host, port, onconnect) {
 		}
 
 		lines.forEach(function(line) {
-			var parsed = parseIRCMessage(line);
-			parsed[STATE_COMMAND] == "PING" && self.send("PONG");
-			self.emit('raw', parsed);
-			self.emit(parsed[STATE_COMMAND], parsed);
+			if(line.length>0) {
+				var parsed = self.parseIRCMessage(line);
+				parsed[STATE_COMMAND] == "PING" && self.send("PONG");
+				self.emit('raw', parsed);
+				self.emit(parsed[STATE_COMMAND], parsed);
+			}
 		});
 	});
 
