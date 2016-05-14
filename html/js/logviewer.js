@@ -80,9 +80,9 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 		$http.jsonp(BASEURL + "/api/logs/" + $scope.channel + "/?nick=" + nick 
 				+ "&callback=JSON_CALLBACK").then(function(response){
 			$scope.users[nick].data = response.data.user;
-			let messagesToAdd = response.data.before || [];
-			for(let i=0;i<messagesToAdd.length;++i) {
-				let message = messagesToAdd[i];
+			var messagesToAdd = response.data.before || [];
+			for(var i=0;i<messagesToAdd.length;++i) {
+				var message = messagesToAdd[i];
 				if($scope.messages[message.id] === undefined) {
 					message.before = [];
 					message.after = [];
@@ -106,9 +106,9 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 		$http.jsonp(BASEURL + "/api/logs/" + $scope.channel + "/?nick=" + nick 
 				+ "&id=" + $scope.users[nick].messages[0].id + "&after=0&callback=JSON_CALLBACK").then(function(response){
 			$scope.users[nick].data = response.data.user;
-			let messagesToAdd = response.data.before;
-			for(let i=messagesToAdd.length-1;i>=0;--i) {
-				let message = messagesToAdd[i];
+			var messagesToAdd = response.data.before;
+			for(var i=messagesToAdd.length-1;i>=0;--i) {
+				var message = messagesToAdd[i];
 				if($scope.messages[message.id] === undefined) {
 					message.before = [];
 					message.after = [];
