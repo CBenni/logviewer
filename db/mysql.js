@@ -137,9 +137,15 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		if(count !== false) self.pool.query("INSERT INTO ?? (nick,messages) VALUES (?,1) ON DUPLICATE KEY UPDATE messages = messages + 1",["users_"+channel, nick,nick]);
 	}
 	
-	self.addTimeout = function(channel, nick, message) {
-		self.pool.query("INSERT INTO ?? (time,nick,text) VALUES (?,?,?)",["chat_"+channel, Math.floor(Date.now()/1000), nick, message]);
+	self.addTimeout = function(channel, nick, time, message, callback) {
+		self.pool.query("INSERT INTO ?? (time,nick,text) VALUES (?,?,?)",["chat_"+channel, Math.floor(time/1000), nick, message], function(error, result){
+			
+		});
 		self.pool.query("INSERT INTO ?? (nick,timeouts) VALUES (?,1) ON DUPLICATE KEY UPDATE timeouts = timeouts + 1",["users_"+channel, nick, nick]);
+	}
+	
+	self.updateTimeout = function(channel, nick, id, time, message) {
+		self.pool.query("UPDATE ?? SET time=?, text=? WHERE nick=? AND id=?",["chat_"+channel, Math.floor(time/1000), message, nick, id]);
 	}
 	
 	self.getLogsByNick = function(channel, nick, limit, callback) {

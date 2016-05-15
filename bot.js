@@ -79,6 +79,121 @@ function logviewerBot(settings, db) {
 		}
 	});
 
+	// Everything having to do with timeouts/bans
+	var ROTATECYCLE = 30000;
+	var MAXDIFF = 5000;
+
+	timeouts = {};
+	oldtimeouts = {};
+
+	function rotateTimeouts(){
+		oldtimeouts = timeouts;
+		timeouts = {};
+	}
+	setInterval(rotateTimeouts, ROTATECYCLE);
+
+	var formatTimespan = function(timespan) {
+		var age = Math.round(timespan);
+		var periods = [
+			{abbr:"y", len: 3600*24*365},
+			{abbr:"m", len: 3600*24*30},
+			{abbr:"d", len: 3600*24},
+			{abbr:" hrs", len: 3600},
+			{abbr:" min", len: 60},
+			{abbr:" sec", len: 1},
+		];
+		var res = "";
+		var count = 0;
+		for(var i=0;i<periods.length;++i) {
+			if(age >= periods[i].len) {
+				var pval = Math.floor(age / periods[i].len);
+				age = age % periods[i].len;
+				res += (res?" ":"")+pval+periods[i].abbr;
+				count ++;
+				if(count >= 2) break;
+			}
+		}
+		return res;
+	}
+
+	function formatCount(i) {
+		return i<=1?"":" ("+i+" times)"; 
+	}
+
+	function formatTimeout(channel, user, timeout) {
+		if(isFinite(timeout.duration)){
+			// timeout
+			if(timeout.reasons.length==0)
+				return "djtv <"+user+" has been timed out for "+formatTimespan(timeout.duration)+formatCount(timeout.count)+">"
+			else if(timeout.reasons.length==1)
+				return "djtv <"+user+" has been timed out for "+formatTimespan(timeout.duration)+". Reason: "+timeout.reasons.join(", ")+formatCount(timeout.count)+">"
+			else
+				return "djtv <"+user+" has been timed out for "+formatTimespan(timeout.duration)+". Reasons: "+timeout.reasons.join(", ")+formatCount(timeout.count)+">"
+		} else {
+			// banned
+			if(timeout.reasons.length==0)
+				return "djtv <"+user+" has been banned>"
+			else if(timeout.reasons.length==1)
+				return "djtv <"+user+" has been banned. Reason: "+timeout.reasons.join(", ")+">"
+			else
+				return "djtv <"+user+" has been banned. Reasons: "+timeout.reasons.join(", ")+">"
+		}
+	}
+	
+	function doTimeout(channel, user, duration, reason) {
+		// search for the user in the recent timeouts
+		var oldtimeout = (timeouts[channel] && timeouts[channel][user]) || (oldtimeouts[channel] && oldtimeouts[channel][user]);
+		var now = new Date();
+		if(timeouts[channel] === undefined) timeouts[channel] = {};
+		if(oldtimeout) {
+			var reasons = oldtimeout.reasons;
+			// if a reason is specified and its new, we add it
+			if(reason && reasons.indexOf(reason)<0) {
+				reasons.push(reason);
+			}
+			if(duration) {
+				var oldends = oldtimeout.time.getTime()+oldtimeout.duration*1000;
+				var newends = now.getTime()+duration*1000;
+				// only completely update significant changes in the end of the timeout
+				if(Math.abs(oldends-newends) > MAXDIFF && oldends<Infinity) {
+					timeouts[channel][user] = {time: now, duration: duration, id: oldtimeout.id, reasons: reasons, count: oldtimeout.count+1};
+					db.updateTimeout(channel, user, oldtimeout.id, now.getTime(), formatTimeout(channel, user, timeouts[channel][user]));
+					
+				} else {
+					// otherwise, just add the reason if it was new and update the counter, keeping the duration and time constant
+					timeouts[channel][user] = {time: oldtimeout.time, duration: oldtimeout.duration, id: oldtimeout.id, reasons: reasons, count: oldtimeout.count+1};
+					db.updateTimeout(channel, user, oldtimeout.id, oldtimeout.time.getTime(), formatTimeout(channel, user, timeouts[channel][user]));
+				}
+			} else {
+				timeouts[channel][user] = {time: now, duration: Infinity, id: oldtimeout.id, reasons: reasons, count: 1};
+				db.updateTimeout(channel, user, oldtimeout.id, now.getTime(), formatTimeout(channel, user, timeouts[channel][user]));
+			}
+		} else {
+			if(duration) {
+				var timeout;
+				if(reason)
+					timeout = {time: now, duration: duration, reasons: [reason], count: 1};
+				else
+					timeout = {time: now, duration: duration, reasons: [], count: 1};
+				db.addTimeout(channel, user, now.getTime(), formatTimeout(channel, user, timeout), function(id){
+					timeout.id = id;
+					timeouts[channel][user] = timeout;
+				});
+			} else {
+				var timeout;
+				if(reason)
+					timeout = {time: now, duration: Infinity, reasons: [reason], count: 1};
+				else
+					timeout = {time: now, duration: Infinity, reasons: [], count: 1};
+				db.addTimeout(channel, user, now.getTime(), formatTimeout(channel, user, timeout), function(id){
+					timeout.id = id;
+					timeouts[channel][user] = timeout;
+				});
+			}
+		}
+	}
+
+	
 	bot.on("CLEARCHAT", function(data){
 		var user = data[TRAILING];
 		var channel = data[PARAM].slice(1);
@@ -89,23 +204,7 @@ function logviewerBot(settings, db) {
 				if(data[TAGS]["ban-duration"]) duration = data[TAGS]["ban-duration"];
 				if(data[TAGS]["ban-reason"]) reason = data[TAGS]["ban-reason"].replace(/\\s/g," ");
 			}
-			if(duration) {
-				if(reason) {
-					console.log("#"+channel + " <" + user +" has been timed out for "+formatTimespan(duration)+" with reason: "+reason+">");
-					db.addTimeout(channel, user, "djtv <" + user +" has been timed out for "+formatTimespan(duration)+" with reason: "+reason+">");
-				} else {
-					console.log("#"+channel + " <" + user +" has been timed out for "+formatTimespan(duration)+">");
-					db.addTimeout(channel, user, "djtv <" + user +" has been timed out for "+formatTimespan(duration)+">");
-				}
-			} else {
-				if(reason) {
-					console.log("#"+channel + " <" + user +" has been banned with reason: "+reason+">");
-					db.addTimeout(channel, user, "djtv <" + user +" has been banned with reason: "+reason+">");
-				} else {
-					console.log("#"+channel + " <" + user +" has been banned>");
-					db.addTimeout(channel, user, "djtv <" + user +" has been banned>");
-				}
-			}
+			doTimeout(channel, user, duration, reason);
 		} else {
 			console.log("#"+channel + " <chat was cleared by a moderator>");
 			db.addTimeout(channel, "__jtv__", "djtv <chat was cleared by a moderator>");
@@ -169,30 +268,6 @@ function logviewerBot(settings, db) {
 				});
 			}
 		});
-	}
-	
-	var formatTimespan = function(timespan) {
-		var age = Math.round(timespan);
-		var periods = [
-			{abbr:"y", len: 3600*24*365},
-			{abbr:"m", len: 3600*24*30},
-			{abbr:"d", len: 3600*24},
-			{abbr:" hrs", len: 3600},
-			{abbr:" min", len: 60},
-			{abbr:" sec", len: 1},
-		];
-		var res = "";
-		var count = 0;
-		for(var i=0;i<periods.length;++i) {
-			if(age >= periods[i].len) {
-				var pval = Math.floor(age / periods[i].len);
-				age = age % periods[i].len;
-				res += (res?" ":"")+pval+periods[i].abbr;
-				count ++;
-				if(count >= 2) break;
-			}
-		}
-		return res;
 	}
 	
 	
