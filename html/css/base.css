@@ -11,17 +11,14 @@
 }
 
 .content {
-	float: right;
 	width: 85%;
 	margin-bottom: 20px;
-	min-height: calc(100% - 50px);
 }
 
 @media (max-width:1200px) {
 	.content {
 		float: none;
 		width: 90%;
-		margin: auto;
 	}
 }
 

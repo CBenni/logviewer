@@ -23,6 +23,7 @@
     "angular-sanitize": "^1.5.5",
     "angular-animate": "^1.5.5",
     "angular-material": "^1.0.7",
-    "angular-cookies": "^1.5.5"
+    "angular-cookies": "^1.5.5",
+    "prefixfree": "prefix-free#gh-pages"
   }
 }
