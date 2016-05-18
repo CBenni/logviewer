@@ -1,0 +1,52 @@
+<md-dialog layout-padding>
+	<md-dialog-content>
+		<h2>
+			About
+		</h2>
+		The logviewer is a tool, created by CBenni, that allows users to check the chat logs of individuals in twitch chat of certain channels.
+		
+		<h3>How to use it</h3>
+		Simply go to the channel page you wish to check logs for, enter a name in the username box and press the "ADD" button, which adds a log view for this user.
+		
+		Alternatively, you can whisper the logviewer account from any twitch chat or the whisper menu to check for logs, with the following:
+		<code>/w logviewer #channel username</code>
+		where <code>#channel</code> is the channel name (for example, #nl_kripp) and username is the username you want to check. It will respond with the newest logs of this users and a direct link
+		
+		<h3>FAQ</h3>
+		<ul>
+			<li><h4>I want my channel to be logged, can you add me?</h4>
+				You can add your channel yourself:
+				<span ng-show="$parent.auth.name" flex="none">Go to <a ui-sref="settings({channel: $parent.auth.name})">your settings</a> and enable it!</span>
+				<span ng-hide="$parent.auth.name" flex="none">Log in, go to your settings and enable it!</span>
+			</li>
+			<li><h4>I want another channel to be logged, can you add it?</h4>
+				I do not log channels without explicit permission by the broadcaster or someone entitled to give permission (this includes official channel managers, group members for shared channels, but usually excludes moderators)
+				If you fulfill this condition but do not have access to the channel account (in which case you can add it yourself), you can contact me.
+			</li>
+			<li><h4>How long are logs saved?</h4>
+				For most channels, the logs will be stored for at least 1 month. If you want a specific channel's logs to be stored for a longer period than that, contact me.
+			</li>
+			<li><h4>A certain users logs dont show up, what happened?</h4>
+				There is multiple things that can result in this:
+				<ul>
+					<li>The user hasnt talked in chat while the logviewer was enabled in the channel.</li>
+					<li>The user hasnt talked for more than a month and his logs have been deleted.</li>
+					<li>A downtime has caused certain messages not to be recorded.</li>
+					<li>Twitch chat has been known to "drop" messages, albeit this has become very rare in recent times.</li>
+				</ul>
+			</li>
+			<li><h4>Can you add/improve a feature?</h4>
+				I am always happy to listen to feedback, requests and suggestions, so please contact me!
+			</li>
+			<li><h4>Can you remove a feature?</h4>
+				The feature set of the logviewer has been carefully designed and chosen, and in most cases, features are built-in for good. If you feel strongly about something, contact me and I might add a toggle for it.
+			</li>
+			<li><h4>Why is the user "logviewer" in my channel? Do I need to mod it?</h4>
+				The chat logger connects via twitch chat using the account "logviewer" (and no other username or variation of it). It currently does NOT need moderator permissions and will never talk in chat. It is there to collect logs and receive and store your moderator list as well as notify you of its presence in the user list.
+			</li>
+		</ul>
+
+	</md-dialog-content>
+	
+	<md-button class="closedialog" ng-click="hide()" flex="none">Let's Kappa!</md-button>
+</md-dialog>

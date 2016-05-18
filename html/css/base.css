@@ -146,3 +146,52 @@ div.big-error-icon {
 	height: 60px;
 	margin: 10px;
 }
+
+/* footer */
+div[ng-include] {
+	width: 100%;
+}
+
+.footer {
+	width: 100%;
+	background-color: white;
+}
+
+.footer img {
+	padding: 0;
+	height: 20px;
+	vertical-align: middle;
+}
+
+.footer a, .footer a:visited, .footer a:hover, .footer a:active {
+	text-decoration: none;
+	color: #66757f;
+	font-weight: bold;
+	font-family: 'Open Sans', sans-serif;
+}
+
+.contacts a, .contacts a:visited, .contacts a:hover, .contacts a:active {
+	text-decoration: none;
+	color: #66757f;
+	font-weight: bold;
+	font-family: 'Open Sans', sans-serif;
+}
+
+.rightbutton {
+	float: right;
+	margin: 0;
+	padding 0;
+}
+
+.closedialog {
+	display: block;
+	order: 2;
+}
+
+div.inline {
+	display: inline-block;
+}
+
+img.logo {
+	width: 20px;
+}
