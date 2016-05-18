@@ -175,6 +175,8 @@ function logviewerBot(settings, db) {
 				timeout = {time: now, duration: duration, reasons: [], count: 1};
 			db.addTimeout(channel, user, now.getTime(), formatTimeout(channel, user, timeout), function(id){
 				timeout.id = id;
+				// for the off-chance that rotation happened within this one millisecond (has happened before...)
+				if(self.timeouts[channel] === undefined) self.timeouts[channel] = {};
 				self.timeouts[channel][user] = timeout;
 			});
 		}
