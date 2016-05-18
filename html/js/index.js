@@ -29,7 +29,7 @@ app.run(function($rootScope, $state) {
 	});
 });
 
-app.controller("mainctrl", function($rootScope,$scope,$http,$cookies,$stateParams){
+app.controller("mainctrl", function($rootScope,$scope,$http,$cookies,$stateParams,$mdDialog){
 	$rootScope.auth = { name: $cookies.get("login")||"", token: $cookies.get("token")||"" };
 	$scope.$stateParams = $stateParams;
 	$scope.login = function() {
@@ -46,4 +46,30 @@ app.controller("mainctrl", function($rootScope,$scope,$http,$cookies,$stateParam
 			window.location.reload();
 		});
 	}
+	
+	
+	$scope.showDialog = function(ev, tpl) {
+		$mdDialog.show({
+			controller: DialogController,
+			templateUrl: tpl,
+			parent: angular.element(document.body),
+			targetEvent: ev,
+			clickOutsideToClose: true
+		});
+	}
+	// preload this
+	$http.get("https://api.twitch.tv/kraken/chat/emoticon_images?emotesets=0,33,457", {cache: true});
 });
+
+
+function DialogController($scope, $mdDialog) {
+	$scope.hide = function() {
+		$mdDialog.hide();
+	};
+	$scope.cancel = function() {
+		$mdDialog.cancel();
+	};
+	$scope.answer = function(answer) {
+		$mdDialog.hide(answer);
+	};
+}
