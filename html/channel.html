@@ -7,7 +7,7 @@
 		<md-icon>error</md-icon>
 	</div>
 	<div style="font-size: 20px;" flex="none">
-		 Channel {{channel}} not found.<br>
+		 Channel {{::channel}} not found.<br>
 		<span ng-if="userObject.level >= 10">If you want to add the logviewer to the channel, then head over to the 
 		<a ui-sref="settings({channel: $stateParams.channel})" ng-if="$stateParams.channel">settings</a>.</span>
 	</div>
@@ -17,13 +17,13 @@
 		<md-icon>error</md-icon>
 	</div>
 	<div style="font-size: 20px;" flex="none">
-		 You currently do not have access to view logs of the channel {{channel}}.<br>
-		<span ng-if="userObject.valid == false">If you have {{channelsettings.viewlogs | aAnAccountType}} account, then you can <md-button ng-click="login()" class="md-raised twitch-button md-small">Login with twitch</md-button></span>
+		 You currently do not have access to view logs of the channel {{::channel}}.<br>
+		<span ng-if="userObject.valid == false">If you have {{::channelsettings.viewlogs | aAnAccountType}} account, then you can <md-button ng-click="login()" class="md-raised twitch-button md-small">Login with twitch</md-button></span>
 	</div>
 </div>
 <div class="content" ng-cloak ng-show="loadStatus == 1 && userObject.level >= channelsettings.viewlogs">
-	<h2 class="hide-s">Chat logs for channel {{channelsettings.name}}</h2>
-	<h2 class="hide-gt-s">Logs for channel {{channelsettings.name}}</h2>
+	<h2 class="hide-s">Chat logs for channel {{::channelsettings.name}}</h2>
+	<h2 class="hide-gt-s">Logs for channel {{::channelsettings.name}}</h2>
 	<div id="adduserform">
 		<form ng-submit="submitAddUserForm()" class="navbar-form">
 			<div class="form-group">
@@ -59,7 +59,7 @@
 							<md-icon class="md-primary">loop</md-icon> Load more
 						</md-button>
 					</div>
-					<div class="logviewer-chat-message-block" ng-repeat="message in user.messages" data-messageid="{{message.id}}">
+					<div class="logviewer-chat-message-block" ng-repeat="message in user.messages">
 						<!-- button to load more before -->
 						<div class="logviewer-more-context" ng-show="selectedID === message.id" ng-class="{'logviewer-loading': user.isloadingContext.before}" ng-click="moreContext(user.data.nick,'before',10)">
 							<md-button class="btn md-raised md-primary logviewer-arrows-up logviewer-round-button">
@@ -101,12 +101,12 @@
 				<div ng-if="user.isloading">Loading...</div>
 				<div ng-repeat="comment in user.comments" layout="row" class="logviewer-comment">
 					<div flex="none">
-						<img ng-src="{{profilePics[comment.author]}}">
+						<img ng-src="{{::profilePics[comment.author]}}">
 					</div>
 					<div flex="1" layout="column">
 						<div flex="1" layout="row" layout-align="space-between start">
 							<div flex="none">
-								<span class="author">{{comment.author}}</span> <span class="age">{{comment|commentAge}}</span>
+								<span class="author">{{::comment.author}}</span> <span class="age">{{::comment|commentAge}}</span>
 							</div>
 							<div flex="none" class="comment-editing-buttons">
 								<md-button class="editing-button md-icon-button" ng-show="userObject.level >= channelsettings.writecomments || userObject.name == comment.author" ng-click="editComment(comment)">
@@ -117,7 +117,7 @@
 								</md-button>
 							</div>
 						</div>
-						<div class="text" flex="none" ng-hide="editingComment == comment.id">{{comment.text}}</div>
+						<div class="text" flex="none" ng-hide="editingComment == comment.id">{{::comment.text}}</div>
 						<div class="comment-editing" flex="none" ng-if="editingComment == comment.id">
 							<md-input-container class="nobottom notop">
 								<textarea ng-model="comment.text"></textarea>
@@ -129,7 +129,7 @@
 				</div>
 				<div class="writecomment" ng-if="userObject.level >= channelsettings.writecomments" layout="row" layout-align="start end">
 					<md-input-container class="nobottom" flex="none">
-						<label>Write a comment about {{user.data.nick}}</label>
+						<label>Write a comment about {{::user.data.nick}}</label>
 						<textarea ng-model="newcomments[user.data.nick]"></textarea>
 					</md-input-container>
 					<md-button ng-click="addComment(user.data.nick)" class="md-raised md-primary md-small" flex="none">SEND</md-button>
@@ -140,6 +140,6 @@
 </div>
 </div>
 <div id="chat">
-	<iframe ng-src="{{chatEmbedUrl()}}" frameborder="0" scrolling="no"></iframe>
+	<iframe ng-src="{{::chatEmbedUrl()}}" frameborder="0" scrolling="no"></iframe>
 </div>
 </div>

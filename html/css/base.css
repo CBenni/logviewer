@@ -4,6 +4,10 @@
 	height: calc(100% - 50px);
 }
 
+#main.fullwidth {
+	width: 100%;
+}
+
 @media (max-width:960px) {
 	#main {
 		width: 100%;

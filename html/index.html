@@ -37,7 +37,7 @@
 	</div>
 	<div layout="row" layout-align="end center" flex="none">
 		<div ng-show="auth.name" flex="none">
-			<md-button class="md-raised twitch-button md-small-xs" ng-click="logout()">Log out<span class="hide-s"> ({{auth.name}})</span></md-button>
+			<md-button class="md-raised twitch-button md-small-xs" ng-click="logout()">Log out<span class="hide-s"> ({{::auth.name}})</span></md-button>
 		</div>
 		<div ng-hide="auth.name" flex="none">
 			<md-button ng-click="login()" class="md-raised twitch-button md-small-xs">Login with twitch</md-button>

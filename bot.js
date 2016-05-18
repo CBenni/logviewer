@@ -70,6 +70,10 @@ function logviewerBot(settings, db) {
 		// if the user is a mod, set his level to 5
 		if(data[TAGS] && data[TAGS]["mod"] === "1") self.userlevels[channel][user] = 5;
 		
+		// remove the user from the revent timeouts
+		if(self.timeouts[channel] && self.timeouts[channel][user]) self.timeouts[channel][user] = undefined;
+		if(self.oldtimeouts[channel] && self.oldtimeouts[channel][user]) self.oldtimeouts[channel][user] = undefined;
+		
 		db.addLine(channel, user, messagecompressor.compressMessage(user, data));
 		if(user === "twitchnotify" || user === "gdqsubs") {
 			var m = newsubregex.exec(text) || resubregex.exec(text);
@@ -83,12 +87,12 @@ function logviewerBot(settings, db) {
 	var ROTATECYCLE = 30000;
 	var MAXDIFF = 5000;
 
-	timeouts = {};
-	oldtimeouts = {};
+	self.timeouts = {};
+	self.oldtimeouts = {};
 
 	function rotateTimeouts(){
-		oldtimeouts = timeouts;
-		timeouts = {};
+		self.oldtimeouts = self.timeouts;
+		self.timeouts = {};
 	}
 	setInterval(rotateTimeouts, ROTATECYCLE);
 
@@ -142,54 +146,37 @@ function logviewerBot(settings, db) {
 	
 	function doTimeout(channel, user, duration, reason) {
 		// search for the user in the recent timeouts
-		var oldtimeout = (timeouts[channel] && timeouts[channel][user]) || (oldtimeouts[channel] && oldtimeouts[channel][user]);
+		var oldtimeout = (self.timeouts[channel] && self.timeouts[channel][user]) || (self.oldtimeouts[channel] && self.oldtimeouts[channel][user]);
 		var now = new Date();
-		if(timeouts[channel] === undefined) timeouts[channel] = {};
+		if(self.timeouts[channel] === undefined) self.timeouts[channel] = {};
+		duration = duration || Infinity;
 		if(oldtimeout) {
 			var reasons = oldtimeout.reasons;
 			// if a reason is specified and its new, we add it
 			if(reason && reasons.indexOf(reason)<0) {
 				reasons.push(reason);
 			}
-			if(duration) {
-				var oldends = oldtimeout.time.getTime()+oldtimeout.duration*1000;
-				var newends = now.getTime()+duration*1000;
-				// only completely update significant changes in the end of the timeout
-				if(Math.abs(oldends-newends) > MAXDIFF && oldends<Infinity) {
-					timeouts[channel][user] = {time: now, duration: duration, id: oldtimeout.id, reasons: reasons, count: oldtimeout.count+1};
-					db.updateTimeout(channel, user, oldtimeout.id, now.getTime(), formatTimeout(channel, user, timeouts[channel][user]));
-					
-				} else {
-					// otherwise, just add the reason if it was new and update the counter, keeping the duration and time constant
-					timeouts[channel][user] = {time: oldtimeout.time, duration: oldtimeout.duration, id: oldtimeout.id, reasons: reasons, count: oldtimeout.count+1};
-					db.updateTimeout(channel, user, oldtimeout.id, oldtimeout.time.getTime(), formatTimeout(channel, user, timeouts[channel][user]));
-				}
+			var oldends = oldtimeout.time.getTime()+oldtimeout.duration*1000;
+			var newends = now.getTime()+duration*1000;
+			// only completely update significant changes in the end of the timeout
+			if(Math.abs(oldends-newends) > MAXDIFF) {
+				self.timeouts[channel][user] = {time: now, duration: duration, id: oldtimeout.id, reasons: reasons, count: oldtimeout.count+1};
+				db.updateTimeout(channel, user, oldtimeout.id, now.getTime(), formatTimeout(channel, user, self.timeouts[channel][user]));
 			} else {
-				timeouts[channel][user] = {time: now, duration: Infinity, id: oldtimeout.id, reasons: reasons, count: 1};
-				db.updateTimeout(channel, user, oldtimeout.id, now.getTime(), formatTimeout(channel, user, timeouts[channel][user]));
+				// otherwise, just add the reason if it was new and update the counter, keeping the duration and time constant
+				self.timeouts[channel][user] = {time: oldtimeout.time, duration: oldtimeout.duration, id: oldtimeout.id, reasons: reasons, count: oldtimeout.count+1};
+				db.updateTimeout(channel, user, oldtimeout.id, oldtimeout.time.getTime(), formatTimeout(channel, user, self.timeouts[channel][user]));
 			}
 		} else {
-			if(duration) {
-				var timeout;
-				if(reason)
-					timeout = {time: now, duration: duration, reasons: [reason], count: 1};
-				else
-					timeout = {time: now, duration: duration, reasons: [], count: 1};
-				db.addTimeout(channel, user, now.getTime(), formatTimeout(channel, user, timeout), function(id){
-					timeout.id = id;
-					timeouts[channel][user] = timeout;
-				});
-			} else {
-				var timeout;
-				if(reason)
-					timeout = {time: now, duration: Infinity, reasons: [reason], count: 1};
-				else
-					timeout = {time: now, duration: Infinity, reasons: [], count: 1};
-				db.addTimeout(channel, user, now.getTime(), formatTimeout(channel, user, timeout), function(id){
-					timeout.id = id;
-					timeouts[channel][user] = timeout;
-				});
-			}
+			var timeout;
+			if(reason)
+				timeout = {time: now, duration: duration, reasons: [reason], count: 1};
+			else
+				timeout = {time: now, duration: duration, reasons: [], count: 1};
+			db.addTimeout(channel, user, now.getTime(), formatTimeout(channel, user, timeout), function(id){
+				timeout.id = id;
+				self.timeouts[channel][user] = timeout;
+			});
 		}
 	}
 
@@ -199,7 +186,6 @@ function logviewerBot(settings, db) {
 		var channel = data[PARAM].slice(1);
 		if(user && user.length > 0) {
 			var duration,reason;
-			console.log(data[TAGS]);
 			if(data[TAGS]) {
 				if(data[TAGS]["ban-duration"]) duration = data[TAGS]["ban-duration"];
 				if(data[TAGS]["ban-reason"]) reason = data[TAGS]["ban-reason"].replace(/\\s/g," ");

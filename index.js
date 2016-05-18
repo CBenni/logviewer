@@ -187,8 +187,8 @@ app.get('/api/login', function(req, res, next) {
 			},function(e,r,body2){
 				console.log("Token response: "+body2);
 				if(body2 === undefined) {
-					console.log("Error: "+httpResponse.statusCode);
-					getToken(err,httpResponse,body);
+					console.log("Error: "+r.statusCode);
+					getToken(err,r,body);
 				} else {
 					var auth = JSON.parse(body2).token;
 					if(auth.valid) {

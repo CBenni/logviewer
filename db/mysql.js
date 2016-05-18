@@ -139,7 +139,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	
 	self.addTimeout = function(channel, nick, time, message, callback) {
 		self.pool.query("INSERT INTO ?? (time,nick,text) VALUES (?,?,?)",["chat_"+channel, Math.floor(time/1000), nick, message], function(error, result){
-			
+			callback(result.insertId);
 		});
 		self.pool.query("INSERT INTO ?? (nick,timeouts) VALUES (?,1) ON DUPLICATE KEY UPDATE timeouts = timeouts + 1",["users_"+channel, nick, nick]);
 	}
