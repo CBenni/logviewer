@@ -36,7 +36,7 @@ logviewerApp.controller("ChannelListController", function($rootScope, $scope, $h
 		for(var i=0;i<emotesets.length;++i) {
 			var emoteset = result.data.emoticon_sets[emotesets[i]];
 			for(var j=0;j<emoteset.length;++j) {
-				emoteset[j].code = emoteset[j].code.replace(/\\(.)/g,"$1").replace(/(.)\?/g,"$1");
+				emoteset[j].code = emoteset[j].code.replace(/\\(.)/g,"$1").replace(/(.)\?/g,"$1").replace(/\[(.)[^\\\]]*\]/g,"$1").replace(/\((.)\|[^\)]*\)/g,"$1");
 				allemotes.push(emoteset[j]);
 			}
 		}
