@@ -1,15 +1,15 @@
 #main {
 	float: left;
-	width: 80%;
+	width: 100%;
 	min-height: calc(100% - 50px);
 }
 
-#main.fullwidth {
-	width: 100%;
+#main.largecolumn {
+	width: 80%;
 }
 
 @media (max-width:960px) {
-	#main {
+	#main.largecolumn {
 		width: 100%;
 	}
 }

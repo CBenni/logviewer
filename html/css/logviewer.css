@@ -3,6 +3,7 @@ div { outline-style:none; }
 
 #chat {
 	width: 20%;
+	min-width: 250px;
 	height: calc(100% - 50px);
 	position: fixed;
 	right: 0;
@@ -19,6 +20,11 @@ div { outline-style:none; }
 @media (max-width:960px) {
 	#chat {
 		display: none;
+	}
+}
+@media (min-width:960px) {
+	#main.largecolumn {
+		max-width: calc(100% - 250px);
 	}
 }
 
