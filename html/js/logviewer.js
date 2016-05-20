@@ -362,6 +362,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	
 	logviewerSocket.on("comment-add", function(comment){
 		$scope.users[comment.topic].comments.push(comment);
+		getProfilePic(comment.author);
 	});
 	
 	logviewerSocket.on("comment-update", function(comment){
