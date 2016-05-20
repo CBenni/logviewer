@@ -5,8 +5,10 @@ var PREFIX = 2
 var COMMAND = 3
 var PARAM = 4
 var TRAILING = 5
-function logviewerBot(settings, db) {
+function logviewerBot(settings, db, io) {
 	var self = this;
+	
+	var messagecompressor = require('./messagecompressor');
 	
 	var host = "irc.chat.twitch.tv";
 	var port = 6667;
@@ -73,12 +75,17 @@ function logviewerBot(settings, db) {
 		// remove the user from the revent timeouts
 		if(self.timeouts[channel] && self.timeouts[channel][user]) self.timeouts[channel][user] = undefined;
 		if(self.oldtimeouts[channel] && self.oldtimeouts[channel][user]) self.oldtimeouts[channel][user] = undefined;
-		
-		db.addLine(channel, user, messagecompressor.compressMessage(user, data));
+		var time = Math.floor(Date.now()/1000);
+		db.addLine(channel, user, messagecompressor.compressMessage(user, data), true, function(id) {
+			io.to("logs-"+channel+"-"+user).emit("log-add", {id: id, time: time, nick: user, text: data[0]});
+		});
 		if(user === "twitchnotify" || user === "gdqsubs") {
 			var m = newsubregex.exec(text) || resubregex.exec(text);
 			if(m) {
-				db.addLine(channel, m[1].toLowerCase(), "dtwitchnotify "+text);
+				var sub = m[1].toLowerCase();
+				db.addLine(channel, sub, "dtwitchnotify "+text, false, function(id) {
+					io.to("logs-"+channel+"-"+user).emit("log-add", {id: id, time: time, nick: sub, text: `@display-name=twitchnotify;color=;subscriber=0;turbo=0;user-type=;emotes=;mod=0 :${sub}!${sub}@${sub}.tmi.twitch.tv PRIVMSG #${channel} :${text}`});
+				});
 			}
 		}
 	});
@@ -128,19 +135,19 @@ function logviewerBot(settings, db) {
 		if(isFinite(timeout.duration)){
 			// timeout
 			if(timeout.reasons.length==0)
-				return "djtv <"+user+" has been timed out for "+formatTimespan(timeout.duration)+formatCount(timeout.count)+">"
+				return "<"+user+" has been timed out for "+formatTimespan(timeout.duration)+formatCount(timeout.count)+">"
 			else if(timeout.reasons.length==1)
-				return "djtv <"+user+" has been timed out for "+formatTimespan(timeout.duration)+". Reason: "+timeout.reasons.join(", ")+formatCount(timeout.count)+">"
+				return "<"+user+" has been timed out for "+formatTimespan(timeout.duration)+". Reason: "+timeout.reasons.join(", ")+formatCount(timeout.count)+">"
 			else
-				return "djtv <"+user+" has been timed out for "+formatTimespan(timeout.duration)+". Reasons: "+timeout.reasons.join(", ")+formatCount(timeout.count)+">"
+				return "<"+user+" has been timed out for "+formatTimespan(timeout.duration)+". Reasons: "+timeout.reasons.join(", ")+formatCount(timeout.count)+">"
 		} else {
 			// banned
 			if(timeout.reasons.length==0)
-				return "djtv <"+user+" has been banned>"
+				return "<"+user+" has been banned>"
 			else if(timeout.reasons.length==1)
-				return "djtv <"+user+" has been banned. Reason: "+timeout.reasons.join(", ")+">"
+				return "<"+user+" has been banned. Reason: "+timeout.reasons.join(", ")+">"
 			else
-				return "djtv <"+user+" has been banned. Reasons: "+timeout.reasons.join(", ")+">"
+				return "<"+user+" has been banned. Reasons: "+timeout.reasons.join(", ")+">"
 		}
 	}
 	
@@ -161,11 +168,17 @@ function logviewerBot(settings, db) {
 			// only completely update significant changes in the end of the timeout
 			if(Math.abs(oldends-newends) > MAXDIFF) {
 				self.timeouts[channel][user] = {time: now, duration: duration, id: oldtimeout.id, reasons: reasons, count: oldtimeout.count+1};
-				db.updateTimeout(channel, user, oldtimeout.id, now.getTime(), formatTimeout(channel, user, self.timeouts[channel][user]));
+				var text = formatTimeout(channel, user, self.timeouts[channel][user])
+				db.updateTimeout(channel, user, oldtimeout.id, now.getTime(), "djtv "+text);
+				// emit timeout via websockets
+				io.to("logs-"+channel+"-"+user).emit("log-update", {id: oldtimeout.id, time: Math.floor(now.getTime()/1000), nick: user, text: `@display-name=jtv;color=;subscriber=0;turbo=0;user-type=;emotes=;mod=0 :${user}!${user}@${user}.tmi.twitch.tv PRIVMSG #${channel} :${text}`});
 			} else {
 				// otherwise, just add the reason if it was new and update the counter, keeping the duration and time constant
 				self.timeouts[channel][user] = {time: oldtimeout.time, duration: oldtimeout.duration, id: oldtimeout.id, reasons: reasons, count: oldtimeout.count+1};
-				db.updateTimeout(channel, user, oldtimeout.id, oldtimeout.time.getTime(), formatTimeout(channel, user, self.timeouts[channel][user]));
+				var text = formatTimeout(channel, user, self.timeouts[channel][user]);
+				db.updateTimeout(channel, user, oldtimeout.id, oldtimeout.time.getTime(), "djtv "+text);
+				// emit timeout via websockets
+				io.to("logs-"+channel+"-"+user).emit("log-update", {id: oldtimeout.id, time: Math.floor(oldtimeout.time.getTime()/1000), nick: user, text: `@display-name=jtv;color=;subscriber=0;turbo=0;user-type=;emotes=;mod=0 :${user}!${user}@${user}.tmi.twitch.tv PRIVMSG #${channel} :${text}`});
 			}
 		} else {
 			var timeout;
@@ -173,8 +186,11 @@ function logviewerBot(settings, db) {
 				timeout = {time: now, duration: duration, reasons: [reason], count: 1};
 			else
 				timeout = {time: now, duration: duration, reasons: [], count: 1};
-			db.addTimeout(channel, user, now.getTime(), formatTimeout(channel, user, timeout), function(id){
+			var text = formatTimeout(channel, user, timeout);
+			db.addTimeout(channel, user, now.getTime(), "djtv "+text, function(id){
 				timeout.id = id;
+				// emit timeout via websockets
+				io.to("logs-"+channel+"-"+user).emit("log-add", {id: timeout.id, time: Math.floor(timeout.time.getTime()/1000), nick: user, text: `@display-name=jtv;color=;subscriber=0;turbo=0;user-type=;emotes=;mod=0 :${user}!${user}@${user}.tmi.twitch.tv PRIVMSG #${channel} :${text}`});
 				// for the off-chance that rotation happened within this one millisecond (has happened before...)
 				if(self.timeouts[channel] === undefined) self.timeouts[channel] = {};
 				self.timeouts[channel][user] = timeout;

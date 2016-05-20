@@ -16,5 +16,8 @@
 		"nick": "",
 		"oauth": "",
 		"modcheckinterval": 2
+	},
+	"index": {
+		"html": "/html/index.html"
 	}
 }

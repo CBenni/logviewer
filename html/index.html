@@ -11,7 +11,6 @@
 	<link href='https://fonts.googleapis.com/css?family=Roboto:400,100,300,500,700' rel='stylesheet' type='text/css'>
 	<link href="/static/bower_components/angular-material/angular-material.min.css" rel="stylesheet">
 	<link href="/static/css/base.css" rel="stylesheet">
-	<link href="/static/css/chat.css" rel="stylesheet">
 	<link href="/static/css/animations.css" rel="stylesheet">
 	<link href="/static/css/logviewer.css" rel="stylesheet">
 	<link href="/static/css/settings.css" rel="stylesheet">
@@ -47,6 +46,15 @@
 </div>
 <ui-view></ui-view>
 
+<script>
+var settings = null;
+function getGlobalSettings(data) {
+	settings = data;
+}
+</script>
+<script src="/api/?callback=getGlobalSettings" data-noconcat=""></script>
+
+
 <script src="/static/bower_components/jquery/dist/jquery.min.js"></script>
 <script src="/static/bower_components/angular/angular.min.js"></script>
 <script src="/static/bower_components/angular-sanitize/angular-sanitize.min.js"></script>
@@ -56,20 +64,13 @@
 <script src="/static/bower_components/angular-ui-router/release/angular-ui-router.min.js"></script>
 <script src="/static/bower_components/angular-material/angular-material.min.js"></script>
 <script src="/static/bower_components/angular-cookies/angular-cookies.min.js"></script>
+<script src="/static/bower_components/socket.io-client/socket.io.js"></script>
+<script src="/static/bower_components/angular-socket-io/socket.min.js"></script>
 <script src="/static/bower_components/prefixfree/prefixfree.js"></script>
-
-<script>
-var settings = null;
-function getGlobalSettings(data) {
-	settings = data;
-}
-</script>
-<script src="/api/?callback=getGlobalSettings"></script>
 
 <script src="/static/js/logviewer.js"></script>
 <script src="/static/js/settings.js"></script>
 <script src="/static/js/list.js"></script>
-<script src="/static/js/chat.js"></script>
 <script src="/static/js/messageparser.js"></script>
 <script src="/static/js/index.js"></script>
 </body>

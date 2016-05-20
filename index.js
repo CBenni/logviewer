@@ -1,4 +1,5 @@
-var jsonfile = require('jsonfile');
+var settings = require('./settings.json');
+
 var util = require('util');
 var request = require('request');
 var url = require('url');
@@ -9,11 +10,90 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser')
 var app = express();
 var server = require('http').Server(app);
-var io = require('socket.io')(server);
 var messagecompressor = require('./messagecompressor');
 server.listen(8080);
 
 
+// websocket server
+var io = require('socket.io')(server);
+
+// set up subscriptions
+io.sockets.on('connection', function(socket){
+	socket.token = "";
+	
+	socket.on('token', function(token) { 
+		if(token && typeof(token)==="string") {
+			socket.logviewer_token = token;
+			console.log("Token received. "+token);
+		}
+	});
+	
+	socket.on('subscribe', function(room) { 
+		if(room && typeof(room)==="string") {
+			channel_user = room.split("-");
+			
+			if(channel_user.length === 2) {
+				var channel = channel_user[0].toLowerCase();
+				var user = channel_user[1].toLowerCase();
+				db.getActiveChannel(channel, function(channelObj) {
+					if(!channelObj)
+					{
+						// bad join. will disconnect the client (since this channel doesnt exist/isnt active)
+						console.log("Bad join.");
+						socket.disconnect();
+						return;
+					}
+					var requiredlevel;
+					getLevel(channelObj.name, socket.logviewer_token, function(level){
+						if(level >= channelObj.viewlogs) {
+							var logsroom = "logs-"+channelObj.name+"-"+user;
+							console.log('joining room', logsroom);
+							socket.join(logsroom); 
+						} else {
+							console.log("Access to logs denied. "+socket.logviewer_token);
+							// ignore the join
+						}
+						if(level >= channelObj.viewcomments) {
+							var commentsroom = "comments-"+channelObj.name+"-"+user;
+							console.log('joining room', commentsroom);
+							socket.join(commentsroom); 
+						} else {
+							console.log("Access to comments denied. "+socket.logviewer_token);
+							// ignore the join request
+						}
+					});
+				});
+			}
+		}
+	});
+
+	socket.on('unsubscribe', function(room) {
+		if(room && typeof(room)==="string") {
+			channel_user = room.split("-");
+			
+			if(channel_user.length === 2) {
+				var channel = channel_user[0].toLowerCase();
+				var user = channel_user[1].toLowerCase();
+				db.getActiveChannel(channel, function(channelObj) {
+					if(!channelObj)
+					{
+						// bad leave. Do nothing (this room has already been left, see down below)
+						return;
+					}
+					var logsroom = "logs-"+channelObj.name+"-"+user;
+					socket.leave(logsroom);
+					var commentsroom = "comments-"+channelObj.name+"-"+user;
+					socket.leave(commentsroom);
+				});
+			}
+		}
+		console.log('leaving room', room);
+		socket.leave(room); 
+	});
+});
+
+
+// HTTP server and database connector
 // Middleware
 app.use(compression());
 app.set('view engine', 'jade');
@@ -21,12 +101,10 @@ app.use('/static', express.static("./html"));
 app.use(cookieParser());
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
-// no need for a database for settings, its all direct accesses anyways.
-var settings = require('./settings.json');
 var databaseconnector = require("./db/"+settings.database.type);
 var db = new databaseconnector(settings.database);
 var lvbot = require("./bot");
-var bot = new lvbot(settings, db);
+var bot = new lvbot(settings, db, io);
 function absMax(){
 	var best=0;
 	for(var i=0;i<arguments.length;++i){
@@ -85,13 +163,16 @@ function checkAuth(req, res, callback) {
 }
 
 function getLevel(channel, token, callback) {
-	db.getAuthUser(token, function(name){
-		if(name) {
-			getUserLevel(channel,name,function(level){
-				callback(level,name);
-			});
-		} else callback(0,null);
-	});
+	if(!token || token === "") callback(0);
+	else {
+		db.getAuthUser(token, function(name){
+			if(name) {
+				getUserLevel(channel,name,function(level){
+					callback(level,name);
+				});
+			} else callback(0,null);
+		});
+	}
 }
 
 function generateToken(res, username, callback) {
@@ -107,7 +188,7 @@ function generateToken(res, username, callback) {
 app.get('/', function(req, res, next) {
 	try {
 		checkAuth(req, res, function(){
-			res.sendFile(__dirname + '/html/index.html');
+			res.sendFile(__dirname + settings.index.html);
 		});
 	} 
 	catch(err) {
@@ -157,17 +238,18 @@ app.get('/api',function(req,res,next) {
 app.get('/:channel', function(req, res, next) {
 	try {
 		checkAuth(req, res, function(){
-			res.sendFile(__dirname + '/html/index.html');
+			res.sendFile(__dirname + settings.index.html);
 		});
 	} 
 	catch(err) {
 		next(err);
 	}
 });
+
 app.get('/:channel/settings', function(req, res, next) {
 	try {
 		checkAuth(req, res, function(){
-			res.sendFile(__dirname + '/html/index.html');
+			res.sendFile(__dirname + settings.index.html);
 		});
 	} 
 	catch(err) {
@@ -495,6 +577,9 @@ app.post('/api/comments/:channel',function(req,res,next){
 							// only people with the edit permission can delete other peoples comments
 							if(level >= channelObj.editcomments || comment.author == nick) {
 								db.updateComment(channelObj.name, newsettings.id, newsettings.text);
+								// only send back stuff needed for identification and changes
+								var time = Math.floor(Date.now()/1000);
+								io.to("comments-"+channelObj.name+"-"+comment.topic).emit("comment-update", {id: newsettings.id, edited: time, text: newsettings.text, topic: comment.topic});
 								res.status(200).end();
 							} else {
 								res.status(403).jsonp({"error":"Can only edit own comments"});
@@ -510,7 +595,10 @@ app.post('/api/comments/:channel',function(req,res,next){
 					} else if(newsettings.text === undefined) {
 						res.status(400).jsonp({"error":"Missing parameter text."});
 					} else if(level >= channelObj.writecomments) {
-						db.addComment(channelObj.name,nick,newsettings.topic, newsettings.text);
+						var time = Math.floor(Date.now()/1000);
+						db.addComment(channelObj.name, nick, newsettings.topic, newsettings.text, function(id){
+							io.to("comments-"+channelObj.name+"-"+newsettings.topic).emit("comment-add", {id: id, added: time, edited: time, channel: channelObj.name, author: nick, topic: newsettings.topic, text: newsettings.text});
+						});
 						res.status(200).end();
 					} else {
 						res.status(403).jsonp({"error":"Cannot write comments for this channel"});
@@ -547,6 +635,7 @@ app.delete('/api/comments/:channel',function(req,res,next){
 						// only people with the deletion permission can delete other peoples comments
 						if(level >= channelObj.deletecomments || comment.author == nick) { 
 							db.deleteComment(channelObj.name, req.query.id);
+							io.to("comments-"+channelObj.name+"-"+comment.topic).emit("comment-delete", {id: req.query.id, topic: comment.topic});
 							res.status(200).end();
 							return;
 						} else {

@@ -132,8 +132,10 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		});
 	}
 	
-	self.addLine = function(channel, nick, message, count) {
-		self.pool.query("INSERT INTO ?? (time,nick,text) VALUES (?,?,?)",["chat_"+channel, Math.floor(Date.now()/1000), nick, message]);
+	self.addLine = function(channel, nick, message, count, callback) {
+		self.pool.query("INSERT INTO ?? (time,nick,text) VALUES (?,?,?)",["chat_"+channel, Math.floor(Date.now()/1000), nick, message], function(error, result) {
+			if(callback) callback(result.insertId);
+		});
 		if(count !== false) self.pool.query("INSERT INTO ?? (nick,messages) VALUES (?,1) ON DUPLICATE KEY UPDATE messages = messages + 1",["users_"+channel, nick,nick]);
 	}
 	
@@ -248,9 +250,11 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		});
 	}
 	
-	self.addComment = function(channel,author,topic,text) {
+	self.addComment = function(channel, author, topic, text, callback) {
 		var d = Math.floor(Date.now()/1000);
-		self.pool.query("INSERT INTO comments(added,edited,channel,author,topic,text) VALUES (?,?,?,?,?,?)", [d,d,channel,author,topic,text]);
+		self.pool.query("INSERT INTO comments(added,edited,channel,author,topic,text) VALUES (?,?,?,?,?,?)", [d,d,channel,author,topic,text], function(error, result) {
+			if(callback) callback(result.insertId);
+		});
 	}
 	
 	self.updateComment = function(channel,id,newtext) {

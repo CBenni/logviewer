@@ -38,7 +38,7 @@ logviewerApp.controller("SettingsController", function($rootScope, $scope, $http
 	$scope.loadStatus = 0;
 	$scope.levels = [];
 	$scope.userObject = null;
-	$scope.channel = $stateParams.channel;
+	$scope.channel = $stateParams.channel.toLowerCase();
 	var oldsettings = jQuery.extend({},$scope.settings);
 	var oldlevels = jQuery.extend([],$scope.levels);
 	

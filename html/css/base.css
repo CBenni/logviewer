@@ -195,6 +195,7 @@ div.inline {
 
 img.logo {
 	width: 20px;
+    vertical-align: middle;
 }
 
 #forkongithub a {

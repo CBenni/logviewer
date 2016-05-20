@@ -32,10 +32,10 @@ var _badges = {
 	"subscriber": null
 };
 
-var logviewerApp = angular.module("logviewerApp", ['ngSanitize','ngAnimate']);
-logviewerApp.controller("ChannelController", function($scope, $http, $stateParams,$rootScope,$sce){
+var logviewerApp = angular.module("logviewerApp", ['ngSanitize','ngAnimate','btford.socket-io']);
+logviewerApp.controller("ChannelController", function($scope, $http, $stateParams, $rootScope, $sce, logviewerSocket){
 	console.log($stateParams.user);
-	$scope.channel = $stateParams.channel;
+	$scope.channel = $stateParams.channel.toLowerCase();
 	$scope.channelsettings = null;
 	$scope.userObject = null;
 	$scope.newcomments = {};
@@ -146,8 +146,13 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 					$scope.users[nick].messages.push($scope.messages[message.id]);
 				}
 			}
+			// flag that states if we have loaded all messages (back in time) for this user
 			$scope.users[nick].allloaded = messagesToAdd.length < 10;
 			$scope.users[nick].isloading = false;
+			
+			// join socket.io room
+			console.log("Subscribing to "+ $scope.channel+"-"+nick);
+			logviewerSocket.emit("subscribe",$scope.channel+"-"+nick);
 		},function(response){
 			console.log(response);
 		});
@@ -192,9 +197,16 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	}
 	$scope.delUser = function(nick) {
 		delete $scope.users[nick];
+		// leave socket.io room
+		console.log("Unubscribing from "+ $scope.channel+"-"+nick);
+		logviewerSocket.emit("unsubscribe",$scope.channel+"-"+nick);
 	}
 	$scope.clearUsers = function()
 	{
+		var users = Object.keys($scope.users);
+		for(var i=0;i<users.length;++i) {
+			logviewerSocket.emit("unsubscribe",$scope.channel+"-"+users[i]);
+		}
 		$scope.users = {};
 	}
 	$scope.selectMessage = function(id){
@@ -284,20 +296,17 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	$scope.addComment = function(nick) {
 		$http.post("/api/comments/"+$scope.channel,{token: $rootScope.auth.token, topic: nick, text: $scope.newcomments[nick]}).then(function(response){
 			$scope.newcomments[nick] = "";
-			getComments(nick);
 		});
 	}
 	
 	$scope.updateComment = function(comment) {
-		$http.post("/api/comments/"+$scope.channel,{token: $rootScope.auth.token, id: comment.id, text: comment.text}).then(function(response){
+		$http.post("/api/comments/"+$scope.channel,{token: $rootScope.auth.token, id: comment.id, topic: comment.topic, text: comment.text}).then(function(response){
 			$scope.editingComment = -1;
-			getComments(comment.topic);
 		});
 	}
 	
 	$scope.deleteComment = function(comment) {
 		$http.delete("/api/comments/"+$scope.channel+"/?token="+$rootScope.auth.token+"&id="+comment.id).then(function(response){
-			getComments(comment.topic);
 		});
 	}
 	
@@ -314,6 +323,66 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 		}
 		$scope.emote = allemotes[Math.floor(Math.random()*allemotes.length)];
 		$scope.emote.url = "http://static-cdn.jtvnw.net/emoticons/v1/" + $scope.emote.id + "/3.0";
+	});
+	
+	// chat connector
+	logviewerSocket.on("connect", function(){
+		console.log("Connected to socket.io");
+		logviewerSocket.emit("token",$rootScope.auth.token);
+	});
+	
+	logviewerSocket.on("log-add", function(message){
+		console.log("Message added: "+message);
+		if($scope.messages[message.id] === undefined) {
+			message.before = [];
+			message.after = [];
+			$scope.messages[message.id] = message;
+			$scope.users[message.nick].messages.push(message);
+		} else {
+			$scope.users[message.nick].messages.push($scope.messages[message.id]);
+		}
+	});
+	
+	logviewerSocket.on("log-update", function(message){
+		console.log("Message updated: "+message);
+		var msgs = $scope.users[message.nick].messages;
+		// we iterate backwards since usually, the newest messages get updated
+		for(var i=msgs.length-1;i>=0;--i) {
+			if(msgs[i].id == message.id) {
+				msgs[i].time = message.time;
+				msgs[i].text = message.text;
+				msgs[i].nick = message.nick;
+				break;
+			}
+		}
+		$scope.messages[message.id].time = message.time;
+		$scope.messages[message.id].text = message.text;
+		$scope.messages[message.id].nick = message.nick;
+	});
+	
+	logviewerSocket.on("comment-add", function(comment){
+		$scope.users[comment.topic].comments.push(comment);
+	});
+	
+	logviewerSocket.on("comment-update", function(comment){
+		var comments = $scope.users[comment.topic].comments;
+		for(var i=0;i<comments.length;++i) {
+			if(comments[i].id == comment.id) {
+				comments[i].text = comment.text;
+				comments[i].edited = comment.edited;
+				break;
+			}
+		}
+	});
+	
+	logviewerSocket.on("comment-delete", function(comment){
+		var comments = $scope.users[comment.topic].comments;
+		for(var i=0;i<comments.length;++i) {
+			if(comments[i].id == comment.id) {
+				comments.splice(i,1);
+				break;
+			}
+		}
 	});
 });
 
@@ -418,6 +487,10 @@ logviewerApp.filter('aAnAccountType', function() {
 		return aAnAccountTypes[levels.filter(function(x){return x>=level})[0]];
 	};
 });
+
+logviewerApp.factory("logviewerSocket", function(socketFactory) {
+	return socketFactory();
+})
 
  
 function isScrollBottom(element) {
