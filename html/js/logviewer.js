@@ -85,7 +85,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	}
 	
 	$scope.chatEmbedUrl = function() {
-		if($scope.channelsettings) return $sce.trustAsResourceUrl("https://www.twitch.tv/" + $scope.channelsettings.name + "/chat?popout=");
+		if($scope.channelsettings) return $sce.trustAsResourceUrl("https://www.twitch.tv/" + $scope.channelsettings.name + "/chat?"+($scope.darkmode?"darkpopout":"popout"));
 		else return;
 	}
 	
