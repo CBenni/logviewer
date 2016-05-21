@@ -449,25 +449,6 @@ logviewerApp.filter('secondsTimestamp', function() {
 	}
 });
 
-
-logviewerApp.directive('scrollToBottom', function () {
-	return {
-		link: function (scope, element) {
-			$elem = $(element);
-			var isScrolledToBottom = isScrollBottom($elem);
-			$elem.scroll(function(event){
-				isScrolledToBottom = isScrollBottom($elem);
-			});
-			$elem.on('DOMNodeInserted', function (event) {
-				console.log(event)
-				if(isScrolledToBottom == true) {
-					setTimeout(function(){$(element).scrollTop($(element)[0].scrollHeight);},1);
-				}
-			});
-		}
-	}
-});
-
 logviewerApp.filter('orderObjectBy', function() {
 	return function(items, field, reverse) {
 		var filtered = [];
