@@ -1,0 +1,21 @@
+body, a, input,
+.footer, md-dialog.md-default-theme, md-dialog, 
+.footer a, .footer a:visited, .footer a:hover, .footer a:active,
+.contacts a, .contacts a:visited, .contacts a:hover, .contacts a:active,
+md-input-container .md-placeholder, md-input-container label:not(.md-no-float):not(.md-container-ignore),
+md-input-container.md-default-theme .md-input, md-input-container .md-input {
+    color: white;
+}
+
+body, md-dialog.md-default-theme, md-dialog {
+    background-color: #363636;
+}
+
+.header, .footer {
+	background-color: #1E1E1E;
+}
+
+md-input-container.md-default-theme .md-input, md-input-container .md-input,
+md-select.md-default-theme .md-select-value, md-select .md-select-value {
+	border-color: rgba(255,255,255,0.12);
+}

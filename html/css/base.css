@@ -89,6 +89,21 @@
 	opacity: 1;
 }
 
+.usermenu {
+	background-color: #19191F;
+	position: absolute;
+	top: 50px;
+	left: 0;
+	padding: 8px 15px;;
+	width: 200px;
+	z-index: 999;
+	color: white;
+}
+
+.fab-nobackground {
+	background-color: transparent !important;
+}
+
 
 .nobottom .md-errors-spacer {
 	display: none;
@@ -108,6 +123,10 @@ md-input-container.notop {
 	min-width: 0;
 	font-size: 12px;
 	padding: 5px 10px;
+}
+
+md-checkbox.darkbg .md-icon {
+	border-color: rgba(255,255,255,0.54);
 }
 
 .hide-gt-s {
@@ -236,12 +255,10 @@ img.logo {
 	#forkongithub {
 		position: absolute;
 		display: block;
-		top: 0;
 		left: 0;
 		width: 200px;
 		overflow: hidden;
 		height: 200px;
-		z-index: 9999;
 	}
 
 	#forkongithub a {

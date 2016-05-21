@@ -57,6 +57,12 @@ app.controller("mainctrl", function($rootScope,$scope,$http,$cookies,$stateParam
 			clickOutsideToClose: true
 		});
 	}
+	
+	$scope.darkmode = $cookies.get("lv-darkmode") === "true";
+	$scope.saveMode = function() {
+		$cookies.put("lv-darkmode", $scope.darkmode);
+	}
+	
 	// preload this
 	$http.get("https://api.twitch.tv/kraken/chat/emoticon_images?emotesets=0,33,457", {cache: true});
 });
@@ -73,3 +79,23 @@ function DialogController($scope, $mdDialog) {
 		$mdDialog.hide(answer);
 	};
 }
+
+app.directive('clickOutside', function ($document) {
+	return {
+		restrict: 'A',
+		scope: {
+			clickOutside: '&'
+		},
+		link: function (scope, el, attr) {
+
+			$document.on('click', function (e) {
+				if (el !== e.target && !el[0].contains(e.target)) {
+					scope.$apply(function () {
+						scope.$eval(scope.clickOutside);
+					});
+				}
+			});
+		}
+	}
+
+});
