@@ -19,3 +19,15 @@ md-input-container.md-default-theme .md-input, md-input-container .md-input,
 md-select.md-default-theme .md-select-value, md-select .md-select-value {
 	border-color: rgba(255,255,255,0.12);
 }
+
+.logviewer-chat-text.status-msg {
+	color: #ccc;
+}
+
+.logviewer-comment {
+    background-color: #666;
+}
+
+.logviewer-comment:before {
+    border-right-color: #666;
+}

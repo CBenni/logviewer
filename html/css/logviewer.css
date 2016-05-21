@@ -190,6 +190,10 @@ img.emote {
 	cursor: pointer;
 }
 
+.logviewer-chat-text.status-msg {
+	color: #333;
+}
+
 /* comments */
 .logviewer-comment {
   background-color: #eee;
