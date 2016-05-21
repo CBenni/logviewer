@@ -39,33 +39,33 @@ logviewerApp.controller("SettingsController", function($rootScope, $scope, $http
 	$scope.levels = [];
 	$scope.userObject = null;
 	$scope.channel = $stateParams.channel.toLowerCase();
-	var oldsettings = jQuery.extend({},$scope.settings);
-	var oldlevels = jQuery.extend([],$scope.levels);
+	var oldsettings = JSON.parse(JSON.stringify($scope.settings));
+	var oldlevels = JSON.parse(JSON.stringify($scope.levels));
 	
 	$http.jsonp("/api/channel/"+$stateParams.channel+"/?token="+$rootScope.auth.token+"&callback=JSON_CALLBACK").then(function(response){
 		$scope.settings = response.data.channel || $scope.settings;
 		$scope.userObject = response.data.me;
-		oldsettings = jQuery.extend({},$scope.settings);
+		oldsettings = JSON.parse(JSON.stringify($scope.settings));
 		$scope.loadStatus = response.data.channel==null?-1:1;
 	});
 	
 	$http.jsonp("/api/levels/"+$stateParams.channel+"/?token="+$rootScope.auth.token+"&callback=JSON_CALLBACK").then(function(response){
 		$scope.levels = response.data;
 		$scope.addEmptyRow();
-		oldlevels = jQuery.extend(true,[],$scope.levels);
+		oldlevels = JSON.parse(JSON.stringify($scope.levels));
 	});
 	
 	
 	
 	$scope.save = function() {
 		var changedsettings = getChanges(oldsettings,$scope.settings);
-		oldsettings = jQuery.extend({},$scope.settings);
-		if(!jQuery.isEmptyObject(changedsettings)) {
+		oldsettings = JSON.parse(JSON.stringify($scope.settings));
+		if(Object.keys(changedsettings).length > 0) {
 			$http.post("/api/settings/"+$stateParams.channel, {token: $rootScope.auth.token, settings: changedsettings});
 		}
 		
 		var changedlevels = getListChanges(oldlevels,$scope.levels);
-		oldlevels = jQuery.extend([],$scope.levels);
+		oldlevels = JSON.parse(JSON.stringify($scope.levels));
 		if(changedlevels.length!=0) $http.post("/api/levels/"+$stateParams.channel, {token: $rootScope.auth.token, levels: changedlevels});
 	}
 	
