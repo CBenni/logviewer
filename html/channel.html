@@ -2,6 +2,7 @@
 <div class="content" ng-cloak ng-if="loadStatus == 0" layout="row" layout-align="center center">
 	<md-progress-circular md-mode="indeterminate"></md-progress-circular> loading...
 </div>
+<div ng-if="loadStatus == -1"><!-- empty div for space-between centering --></div>
 <div class="content" ng-cloak ng-if="loadStatus == -1" layout="row" layout-align="center center" layout-xs="column">
 	<div flex="none" class="big-error-icon">
 		<md-icon>error</md-icon>
@@ -12,6 +13,7 @@
 		<a ui-sref="settings({channel: $stateParams.channel})" ng-if="$stateParams.channel">settings</a>.</span>
 	</div>
 </div>
+<div ng-if="loadStatus == 1 && userObject.level < channelsettings.viewlogs"><!-- empty div for space-between centering --></div>
 <div class="content" ng-cloak ng-show="loadStatus == 1 && userObject.level < channelsettings.viewlogs" layout="row" layout-align="center center" layout-xs="column">
 	<div flex="none" class="big-error-icon" flex="none">
 		<md-icon>error</md-icon>

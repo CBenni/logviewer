@@ -2,6 +2,7 @@
 <div class="content" ng-cloak ng-if="loadStatus == 0" layout="row" layout-align="center center">
 	<md-progress-circular md-mode="indeterminate"></md-progress-circular> loading...
 </div>
+<div ng-if="loadStatus != 0 && userObject.level < 10"><!-- empty div for space-between centering --></div>
 <div class="content" ng-cloak ng-if="loadStatus != 0 && userObject.level < 10" layout="row" layout-align="center center" layout-xs="column">
 	<div flex="none" class="big-error-icon">
 		<md-icon>error</md-icon>
