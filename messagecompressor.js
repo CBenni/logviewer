@@ -100,6 +100,7 @@ function compressMessage(user, data) {
 			var val = data[TAGS][key];
 			if(val == undefined) {
 				console.error("ERRONEOUS TAG: "+data[0]);
+				continue;
 			}
 			if(defaults[key] !== val) {
 				if(key == "emotes") {
