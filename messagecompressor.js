@@ -98,6 +98,9 @@ function compressMessage(user, data) {
 		for(var i=0;i<copykeys.length;++i) {
 			var key = copykeys[i];
 			var val = data[TAGS][key];
+			if(val == undefined) {
+				console.error("ERRONEOUS TAG: "+data[0]);
+			}
 			if(defaults[key] !== val) {
 				if(key == "emotes") {
 					val = compressEmotes(val);
