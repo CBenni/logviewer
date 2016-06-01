@@ -97,7 +97,7 @@ io.sockets.on('connection', function(socket){
 // Middleware
 app.use(compression());
 app.set('view engine', 'jade');
-app.use('/static', express.static("./html"));
+app.use('/html', express.static("./html"));
 app.use(cookieParser());
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded

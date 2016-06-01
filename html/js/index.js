@@ -6,17 +6,17 @@ app.config(function($stateProvider, $urlRouterProvider, $urlMatcherFactoryProvid
 		.state("index", {
 			url: "/",
 			title: 'index',
-			templateUrl: "/static/list.html",
+			templateUrl: "/html/list.html",
 			controller: "ChannelListController"
 		})
 		.state("channel", {
 			url: "/:channel?user",
-			templateUrl: "/static/channel.html",
+			templateUrl: "/html/channel.html",
 			controller: "ChannelController"
 		})
 		.state("settings", {
 			url: "/:channel/settings",
-			templateUrl: "/static/settings.html",
+			templateUrl: "/html/settings.html",
 			controller: "SettingsController"
 		});
 });

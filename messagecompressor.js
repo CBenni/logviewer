@@ -94,7 +94,7 @@ function compressMessage(user, data) {
 	*/
 	var res = "";
 	if(data[TAGS]) {
-		var defaults = {"color":"","subscriber":"0","turbo":"0","user-type":"","emotes":"", "display-name": toTitleCase(user),"mod":0};
+		var defaults = {"color":"","subscriber":"0","turbo":"0","user-type":"","emotes":"", "display-name": toTitleCase(user),"mod":"0"};
 		for(var i=0;i<copykeys.length;++i) {
 			var key = copykeys[i];
 			var val = data[TAGS][key];
