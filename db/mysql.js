@@ -264,5 +264,11 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	self.deleteComment = function(channel,id) {
 		self.pool.query("DELETE FROM comments WHERE id=? AND channel=?",[id,channel]);
 	}
+	
+	self.findUser = function(channel, query, callback) {
+		self.pool.query("SELECT nick FROM ?? WHERE nick LIKE ? LIMIT 11",["users_"+channel, query+"%"], function(error,results,fields) {
+			callback(results);
+		});
+	}
 }
 

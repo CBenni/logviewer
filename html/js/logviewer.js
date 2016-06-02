@@ -32,8 +32,15 @@ var _badges = {
 	"subscriber": null
 };
 
+if (!String.prototype.startsWith) {
+	String.prototype.startsWith = function(searchString, position){
+		position = position || 0;
+		return this.substr(position, searchString.length) === searchString;
+	};
+}
+
 var logviewerApp = angular.module("logviewerApp", ['ngSanitize','ngAnimate','btford.socket-io']);
-logviewerApp.controller("ChannelController", function($scope, $http, $stateParams, $rootScope, $sce, logviewerSocket){
+logviewerApp.controller("ChannelController", function($scope, $http, $stateParams, $rootScope, $sce, logviewerSocket, $q){
 	console.log($stateParams.user);
 	$scope.channel = $stateParams.channel.toLowerCase();
 	$scope.channelsettings = null;
@@ -65,11 +72,13 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	$scope.selectedID = null;
 	
 	$scope.username = "";
+	$scope.typedUserSearch = "";
 	$scope.submitAddUserForm = function()
 	{
-		if($scope.username) {
-			$scope.addUser($scope.username);
+		if($scope.username || $scope.typedUserSearch) {
+			$scope.addUser($scope.username || $scope.typedUserSearch);
 			$scope.username = "";
+			$scope.typedUserSearch = "";
 		}
 	}
 	
@@ -385,6 +394,45 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 			}
 		}
 	});
+	
+	
+	var autocompletes = {};
+	var deferreds = {};
+	logviewerSocket.on("search", function(result){
+		var list = [];
+		for(var i=0;i<result.users.length;++i){
+			list.push(result.users[i].nick);
+		}
+		autocompletes[result.search] = list;
+		// resolve the promise
+		if(deferreds[result.search]) {
+			deferreds[result.search].resolve(list);
+			delete deferreds[result.search];
+		}
+	});
+	
+	$scope.userSearch = function(query) {
+		query = query.toLowerCase();
+		if(query.length < 4) return [];
+		if(autocompletes[query] === undefined) {
+			// check if a more general query (minimum query length is 4) has returned values
+			for(var i=4;i<query.length;++i) {
+				var generalQuery = autocompletes[query.slice(0,i)];
+				if(generalQuery !== undefined && generalQuery !== null) {
+					// found a proper query
+					autocompletes[query] = generalQuery.filter(function(x){return x.startsWith(query);});
+					return autocompletes[query];
+				}
+			}
+			// search for the user
+			logviewerSocket.emit("search", {channel: $scope.channel, user: query});
+			deferreds[query] = $q.defer();
+			// return nothing
+			return deferreds[query].promise;
+		} else {
+			return autocompletes[query];
+		}
+	}
 });
 
 logviewerApp.filter('ifEmpty', function() {

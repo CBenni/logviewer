@@ -105,12 +105,13 @@
 }
 
 
-.nobottom .md-errors-spacer {
+.nobottom .md-errors-spacer, md-autocomplete[md-floating-label] md-input-container .md-errors-spacer {
 	display: none;
 }
 
 md-input-container.nobottom {
 	margin-bottom: 0;
+	padding-bottom: 0;
 }
 
 md-input-container.notop {

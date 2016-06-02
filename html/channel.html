@@ -28,14 +28,27 @@
 	<h2 class="hide-gt-s">Logs for channel {{::channelsettings.name}}</h2>
 	<div id="adduserform">
 		<form ng-submit="submitAddUserForm()" class="navbar-form">
-			<div class="form-group">
-				<md-input-container class="nobottom">
-					<input class="form-control" type="text" placeholder="User name" style="min-width: 10em" ng-model="username">
-				</md-input-container>
-				<div class="button-row">
-					<md-button class="btn md-raised md-primary md-small-xs" type="submit">ADD</md-button>
-					<md-button class="btn md-raised md-primary md-small-xs" type="button" ng-click="addUser('twitchnotify')">RECENT SUBS<span class="hide-s">CRIBERS</span></md-button>
-					<md-button class="btn md-raised md-primary md-small-xs" type="button" ng-click="clearUsers()">CLEAR ALL</md-button>
+			<div class="form-group" layout="row" layout-wrap>
+				<div flex="noshrink">
+					<md-autocomplete class="form-control" type="text" style="min-width: 10em"
+							md-input-name="usernameField"
+							md-items="item in userSearch(typedUserSearch)"
+							md-search-text="typedUserSearch"
+							md-selected-item="username"
+							md-item-text="item"
+							md-min-length="4"
+							md-autoselect="true"
+							md-no-cache="true"
+							md-select-on-match="true"
+							md-match-case-insensitive="true"
+							md-floating-label="User name">
+						<span md-highlight-text="typedUserSearch" md-highlight-flags="^i">{{item}}</span>
+					</md-autocomplete>
+				</div>
+				<div class="button-row" flex="none">
+					<md-button class="btn md-raised md-primary" type="submit">ADD</md-button>
+					<md-button class="btn md-raised md-primary" type="button" ng-click="addUser('twitchnotify')">RECENT SUBS<span class="hide-s">CRIBERS</span></md-button>
+					<md-button class="btn md-raised md-primary" type="button" ng-click="clearUsers()">CLEAR ALL</md-button>
 				</div>
 			</div>
 		</form>

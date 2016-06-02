@@ -28,6 +28,33 @@ io.sockets.on('connection', function(socket){
 		}
 	});
 	
+	socket.on('search', function(query) {
+		if(query.user && query.user.length > 3) {
+			var channel = query.channel.toLowerCase();
+			var user = query.user.toLowerCase();
+			db.getActiveChannel(channel, function(channelObj) {
+				if(!channelObj)
+				{
+					// bad join. will disconnect the client (since this channel doesnt exist/isnt active)
+					console.log("Bad join.");
+					socket.disconnect();
+					return;
+				}
+				var requiredlevel;
+				getLevel(channelObj.name, socket.logviewer_token, function(level){
+					if(level >= channelObj.viewlogs) {
+						db.findUser(channelObj.name, user, function(users){
+							if(users && users.length < 10) socket.emit("search", {search: query.user, users: users});
+							else socket.emit("search", {search: query.user, users: null});
+						});
+					} else {
+						console.log("Access to user search denied. "+socket.logviewer_token);
+					}
+				});
+			});
+		}
+	});
+	
 	socket.on('subscribe', function(room) { 
 		if(room && typeof(room)==="string") {
 			channel_user = room.split("-");
