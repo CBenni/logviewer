@@ -276,7 +276,7 @@ app.get('/:channel', function(req, res, next) {
 app.get('/lv/:channel', function(req, res, next) {
 	try {
 		checkAuth(req, res, function(){
-			res.redirect(301, '/'+req.query.channel);
+			res.redirect(301, '/'+req.params.channel.toLowerCase());
 		});
 	} 
 	catch(err) {
