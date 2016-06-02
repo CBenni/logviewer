@@ -399,11 +399,17 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	var autocompletes = {};
 	var deferreds = {};
 	logviewerSocket.on("search", function(result){
+		// result.users is a list of any (or none have been found)
+		// if the list would exceed length 10, it is null instead
 		var list = [];
-		for(var i=0;i<result.users.length;++i){
-			list.push(result.users[i].nick);
+		if(result.users !== null) {
+			for(var i=0;i<result.users.length;++i){
+				list.push(result.users[i].nick);
+			}
+			autocompletes[result.search] = list;
+		} else {
+			autocompletes[result.search] = null;
 		}
-		autocompletes[result.search] = list;
 		// resolve the promise
 		if(deferreds[result.search]) {
 			deferreds[result.search].resolve(list);
@@ -415,13 +421,16 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 		query = query.toLowerCase();
 		if(query.length < 4) return [];
 		if(autocompletes[query] === undefined) {
-			// check if a more general query (minimum query length is 4) has returned values
-			for(var i=4;i<query.length;++i) {
-				var generalQuery = autocompletes[query.slice(0,i)];
-				if(generalQuery !== undefined && generalQuery !== null) {
-					// found a proper query
-					autocompletes[query] = generalQuery.filter(function(x){return x.startsWith(query);});
-					return autocompletes[query];
+			// we only quick-return values for queries that have no wildcards
+			if(query.indexOf("%")<0 && query.indexOf("*")<0) {
+				// check if a more general query (minimum query length is 4) has returned values
+				for(var i=4;i<query.length;++i) {
+					var generalQuery = autocompletes[query.slice(0,i)];
+					if(generalQuery !== undefined && generalQuery !== null) {
+						// found a proper query
+						autocompletes[query] = generalQuery.filter(function(x){return x.startsWith(query);});
+						return autocompletes[query];
+					}
 				}
 			}
 			// search for the user
@@ -430,7 +439,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 			// return nothing
 			return deferreds[query].promise;
 		} else {
-			return autocompletes[query];
+			return autocompletes[query] || [];
 		}
 	}
 });

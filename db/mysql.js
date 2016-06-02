@@ -266,7 +266,9 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	}
 	
 	self.findUser = function(channel, query, callback) {
-		self.pool.query("SELECT nick FROM ?? WHERE nick LIKE ? LIMIT 11",["users_"+channel, query+"%"], function(error,results,fields) {
+		var searchString = query.replace("_","\\_").replace("*","%")+"%";
+		searchString = searchString.replace(/%{2,}/g,"%");
+		self.pool.query("SELECT nick FROM ?? WHERE nick LIKE ? LIMIT 11",["users_"+channel, searchString], function(error,results,fields) {
 			callback(results);
 		});
 	}
