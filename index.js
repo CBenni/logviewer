@@ -273,6 +273,17 @@ app.get('/:channel', function(req, res, next) {
 	}
 });
 
+app.get('/lv/:channel', function(req, res, next) {
+	try {
+		checkAuth(req, res, function(){
+			res.redirect(301, '/'+channel);
+		});
+	} 
+	catch(err) {
+		next(err);
+	}
+});
+
 app.get('/:channel/settings', function(req, res, next) {
 	try {
 		checkAuth(req, res, function(){
