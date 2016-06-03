@@ -27,7 +27,7 @@ function getListChanges(l1,l2) {
 	return res;
 }
 
-logviewerApp.controller("SettingsController", function($rootScope, $scope, $http, $stateParams){
+logviewerApp.controller("SettingsController", function($rootScope, $scope, $http, $stateParams, $mdToast){
 	$scope.settings = {
 		active: 0,
 		viewlogs: 0,
@@ -39,34 +39,68 @@ logviewerApp.controller("SettingsController", function($rootScope, $scope, $http
 	$scope.levels = [];
 	$scope.userObject = null;
 	$scope.channel = $stateParams.channel.toLowerCase();
-	var oldsettings = JSON.parse(JSON.stringify($scope.settings));
-	var oldlevels = JSON.parse(JSON.stringify($scope.levels));
+	var oldsettings = angular.copy($scope.settings);
+	var oldlevels = angular.copy($scope.levels);
 	
 	$http.jsonp("/api/channel/"+$stateParams.channel+"/?token="+$rootScope.auth.token+"&callback=JSON_CALLBACK").then(function(response){
 		$scope.settings = response.data.channel || $scope.settings;
 		$scope.userObject = response.data.me;
-		oldsettings = JSON.parse(JSON.stringify($scope.settings));
+		oldsettings = angular.copy($scope.settings);
 		$scope.loadStatus = response.data.channel==null?-1:1;
 	});
 	
 	$http.jsonp("/api/levels/"+$stateParams.channel+"/?token="+$rootScope.auth.token+"&callback=JSON_CALLBACK").then(function(response){
 		$scope.levels = response.data;
 		$scope.addEmptyRow();
-		oldlevels = JSON.parse(JSON.stringify($scope.levels));
+		oldlevels = angular.copy($scope.levels);
 	});
 	
-	
+	$scope.settingsChanged = function() {
+		var changedsettings = getChanges(oldsettings,$scope.settings);
+		if(Object.keys(changedsettings).length > 0) {
+			return true;
+		}
+		var changedlevels = getListChanges(oldlevels,$scope.levels);
+		return changedlevels.length!=0;
+	}
 	
 	$scope.save = function() {
+		var promises = [];
+		var changed = [];
+		
 		var changedsettings = getChanges(oldsettings,$scope.settings);
-		oldsettings = JSON.parse(JSON.stringify($scope.settings));
 		if(Object.keys(changedsettings).length > 0) {
-			$http.post("/api/settings/"+$stateParams.channel, {token: $rootScope.auth.token, settings: changedsettings});
+			changed.push("settings");
+			promises.push($http.post("/api/settings/"+$stateParams.channel, {token: $rootScope.auth.token, settings: changedsettings}));
 		}
 		
 		var changedlevels = getListChanges(oldlevels,$scope.levels);
-		oldlevels = JSON.parse(JSON.stringify($scope.levels));
-		if(changedlevels.length!=0) $http.post("/api/levels/"+$stateParams.channel, {token: $rootScope.auth.token, levels: changedlevels});
+		if(changedlevels.length!=0) {
+			changed.push("levels");
+			promises.push($http.post("/api/levels/"+$stateParams.channel, {token: $rootScope.auth.token, levels: changedlevels}));
+		}
+		
+		Promise.all(promises).then(function(response){
+			oldsettings = angular.copy($scope.settings);
+			oldlevels = angular.copy($scope.levels);
+			$mdToast.show($mdToast.simple({
+				parent: "#main",
+				textContent: changed.join(" and ") + " saved",
+				position: "top right",
+				hideDelay: 3000
+			}));
+		}, function(reason) {
+			var reasonString = {
+				403: "Error: Access denied.",
+				404: "Error: Channel not found."
+			}[reason.status] || "An unknown error occurred. Please try again later.";
+			$mdToast.show($mdToast.simple({
+				parent: "#main",
+				textContent: reasonString,
+				position: "top right",
+				hideDelay: 3000
+			}));
+		});
 	}
 	
 	$scope.addEmptyRow = function() {
