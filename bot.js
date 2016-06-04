@@ -335,7 +335,7 @@ function logviewerBot(settings, db, io) {
 											var d = Date.now()/1000;
 											bot.send("PRIVMSG #jtv :/w "+user+" ["+formatTimespan(d-message.time)+" ago] "+dname+": "+data[TRAILING]);
 										}
-										bot.send("PRIVMSG #jtv :/w "+user+" See http://beta.cbenni.com/"+channel+"/?user="+message.nick);
+										bot.send("PRIVMSG #jtv :/w "+user+" See "+settings.auth.baseurl+"/"+channel+"/?user="+message.nick);
 									}
 								} else {
 									bot.send("PRIVMSG #jtv :/w "+user+" Channel "+channel+" not found or invalid access level.");
