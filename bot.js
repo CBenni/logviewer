@@ -279,6 +279,7 @@ function logviewerBot(settings, db, io) {
 		//:logv!logv@logv.tmi.twitch.tv WHISPER cbenni :Message text
 		var matches = [];
 		var user = /\w+/.exec(data[PREFIX])[0];
+		// try to find some kind of matches
 		for(var i=0;i<regexes_user_channel.length;++i) {
 			var m = regexes_user_channel[i].exec(data[TRAILING]);
 			if(m) {
@@ -293,9 +294,12 @@ function logviewerBot(settings, db, io) {
 		}
 		var done = 0;
 		var replied = false;
+		// if we have someting that could look like legit syntax...
 		if(matches.length > 0) {
+			// get all channels and aliases
 			db.getChannels(function(channels) {
 				db.getAliases(function(aliases) {
+					// iterate over the matches until weve found one that actually features an existing channel or alias.
 					for(var i=0;i<matches.length;++i) {
 						var match = matches[i];
 						var channel = match.channel;
@@ -314,12 +318,10 @@ function logviewerBot(settings, db, io) {
 								break;
 							}
 						}
+						// we have found one, get the logs, send them back and finish
 						if(found) {
 							getLogs(channel, nick, user, function(messages, copyofnick) {
-								done++;
-								if(replied) return;
 								if(messages !== undefined) {
-									replied = true;
 									if(messages.length == 0) {
 										bot.send("PRIVMSG #jtv :/w "+user+" No logs for "+copyofnick+" found.");
 									} else {
@@ -335,19 +337,14 @@ function logviewerBot(settings, db, io) {
 										}
 										bot.send("PRIVMSG #jtv :/w "+user+" See http://beta.cbenni.com/"+channel+"/?user="+message.nick);
 									}
-								} else if(done >= matches.length) {
-									replied = true;
+								} else {
 									bot.send("PRIVMSG #jtv :/w "+user+" Channel "+channel+" not found or invalid access level.");
 								}
 							});
 						} else {
-							done ++;
-							if(replied) return;
-							if(done >= matches.length) {
-								replied = true;
-								bot.send("PRIVMSG #jtv :/w "+user+" Channel "+channel+" not found.");
-							}
+							bot.send("PRIVMSG #jtv :/w "+user+" Channel "+channel+" not found.");
 						}
+						return;
 					}
 				});
 			});

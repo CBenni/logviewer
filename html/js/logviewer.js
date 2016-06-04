@@ -1,37 +1,4 @@
-var _badges = {
-	"global_mod": {
-		"alpha": "http://chat-badges.s3.amazonaws.com/globalmod-alpha.png",
-		"image": "http://chat-badges.s3.amazonaws.com/globalmod.png",
-		"svg": "http://chat-badges.s3.amazonaws.com/globalmod.svg"
-	},
-	"admin": {
-		"alpha": "http://chat-badges.s3.amazonaws.com/admin-alpha.png",
-		"image": "http://chat-badges.s3.amazonaws.com/admin.png",
-		"svg": "http://chat-badges.s3.amazonaws.com/admin.svg"
-	},
-	"broadcaster": {
-		"alpha": "http://chat-badges.s3.amazonaws.com/broadcaster-alpha.png",
-		"image": "http://chat-badges.s3.amazonaws.com/broadcaster.png",
-		"svg": "http://chat-badges.s3.amazonaws.com/broadcaster.svg"
-	},
-	"mod": {
-		"alpha": "http://chat-badges.s3.amazonaws.com/mod-alpha.png",
-		"image": "http://chat-badges.s3.amazonaws.com/mod.png",
-		"svg": "http://chat-badges.s3.amazonaws.com/mod.svg"
-	},
-	"staff": {
-		"alpha": "http://chat-badges.s3.amazonaws.com/staff-alpha.png",
-		"image": "http://chat-badges.s3.amazonaws.com/staff.png",
-		"svg": "http://chat-badges.s3.amazonaws.com/staff.svg"
-	},
-	"turbo": {
-		"alpha": "http://chat-badges.s3.amazonaws.com/turbo-alpha.png",
-		"image": "http://chat-badges.s3.amazonaws.com/turbo.png",
-		"svg": "http://chat-badges.s3.amazonaws.com/turbo.svg"
-	},
-	"subscriber": null
-};
-
+var _badges = {"badge_sets":{"admin":{"versions":{"1":{"image_url_1x":"https://static-cdn.jtvnw.net/badges/v1/9ef7e029-4cdf-4d4d-a0d5-e2b3fb2583fe/1","image_url_2x":"https://static-cdn.jtvnw.net/badges/v1/9ef7e029-4cdf-4d4d-a0d5-e2b3fb2583fe/2","image_url_3x":"https://static-cdn.jtvnw.net/badges/v1/9ef7e029-4cdf-4d4d-a0d5-e2b3fb2583fe/3","description":"Twitch Admin","title":"Twitch Admin","click_action":"none","click_url":""}}},"broadcaster":{"versions":{"1":{"image_url_1x":"https://static-cdn.jtvnw.net/badges/v1/5527c58c-fb7d-422d-b71b-f309dcb85cc1/1","image_url_2x":"https://static-cdn.jtvnw.net/badges/v1/5527c58c-fb7d-422d-b71b-f309dcb85cc1/2","image_url_3x":"https://static-cdn.jtvnw.net/badges/v1/5527c58c-fb7d-422d-b71b-f309dcb85cc1/3","description":"Broadcaster","title":"Broadcaster","click_action":"none","click_url":""}}},"global_mod":{"versions":{"1":{"image_url_1x":"https://static-cdn.jtvnw.net/badges/v1/9384c43e-4ce7-4e94-b2a1-b93656896eba/1","image_url_2x":"https://static-cdn.jtvnw.net/badges/v1/9384c43e-4ce7-4e94-b2a1-b93656896eba/2","image_url_3x":"https://static-cdn.jtvnw.net/badges/v1/9384c43e-4ce7-4e94-b2a1-b93656896eba/3","description":"Global Moderator","title":"Global Moderator","click_action":"none","click_url":""}}},"moderator":{"versions":{"1":{"image_url_1x":"https://static-cdn.jtvnw.net/badges/v1/3267646d-33f0-4b17-b3df-f923a41db1d0/1","image_url_2x":"https://static-cdn.jtvnw.net/badges/v1/3267646d-33f0-4b17-b3df-f923a41db1d0/2","image_url_3x":"https://static-cdn.jtvnw.net/badges/v1/3267646d-33f0-4b17-b3df-f923a41db1d0/3","description":"Moderator","title":"Moderator","click_action":"none","click_url":""}}},"staff":{"versions":{"1":{"image_url_1x":"https://static-cdn.jtvnw.net/badges/v1/d97c37bd-a6f5-4c38-8f57-4e4bef88af34/1","image_url_2x":"https://static-cdn.jtvnw.net/badges/v1/d97c37bd-a6f5-4c38-8f57-4e4bef88af34/2","image_url_3x":"https://static-cdn.jtvnw.net/badges/v1/d97c37bd-a6f5-4c38-8f57-4e4bef88af34/3","description":"Twitch Staff","title":"Twitch Staff","click_action":"none","click_url":""}}},"subscriber":{"versions":{"1":{"image_url_1x":"https://static-cdn.jtvnw.net/badges/v1/19dd8673-124d-4f44-830c-b0f4f9d78635/1","image_url_2x":"https://static-cdn.jtvnw.net/badges/v1/19dd8673-124d-4f44-830c-b0f4f9d78635/2","image_url_3x":"https://static-cdn.jtvnw.net/badges/v1/19dd8673-124d-4f44-830c-b0f4f9d78635/3","description":"Subscriber","title":"Subscriber","click_action":"subscribe_to_channel","click_url":""}}},"turbo":{"versions":{"1":{"image_url_1x":"https://static-cdn.jtvnw.net/badges/v1/bd444ec6-8f34-4bf9-91f4-af1e3428d80f/1","image_url_2x":"https://static-cdn.jtvnw.net/badges/v1/bd444ec6-8f34-4bf9-91f4-af1e3428d80f/2","image_url_3x":"https://static-cdn.jtvnw.net/badges/v1/bd444ec6-8f34-4bf9-91f4-af1e3428d80f/3","description":"Turbo","title":"Turbo","click_action":"turbo","click_url":""}}},"warcraft":{"versions":{"alliance":{"image_url_1x":"https://static-cdn.jtvnw.net/badges/v1/c4816339-bad4-4645-ae69-d1ab2076a6b0/1","image_url_2x":"https://static-cdn.jtvnw.net/badges/v1/c4816339-bad4-4645-ae69-d1ab2076a6b0/2","image_url_3x":"https://static-cdn.jtvnw.net/badges/v1/c4816339-bad4-4645-ae69-d1ab2076a6b0/3","description":"For Lordaeron!","title":"Alliance","click_action":"visit_url","click_url":"http://warcraftontwitch.tv/"},"horde":{"image_url_1x":"https://static-cdn.jtvnw.net/badges/v1/de8b26b6-fd28-4e6c-bc89-3d597343800d/1","image_url_2x":"https://static-cdn.jtvnw.net/badges/v1/de8b26b6-fd28-4e6c-bc89-3d597343800d/2","image_url_3x":"https://static-cdn.jtvnw.net/badges/v1/de8b26b6-fd28-4e6c-bc89-3d597343800d/3","description":"For the Horde!","title":"Horde","click_action":"visit_url","click_url":"http://warcraftontwitch.tv/"}}}}};
 if (!String.prototype.startsWith) {
 	String.prototype.startsWith = function(searchString, position){
 		position = position || 0;
@@ -48,8 +15,19 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	$scope.newcomments = {};
 	$scope.editingComment = {id:-1};
 	$scope.loadStatus = 0;
-	$http.jsonp("https://api.twitch.tv/kraken/chat/"+$scope.channel+"/badges?callback=JSON_CALLBACK&client_id="+settings.auth.client_id).then(function(response){
-		_badges = response.data;
+	
+	var ttvapi = function(endpoint, params) {
+		if(params) return $http.jsonp(endpoint+"/?callback=JSON_CALLBACK&client_id="+settings.auth.client_id+"&"+params);
+		else return $http.jsonp(endpoint+"/?callback=JSON_CALLBACK&client_id="+settings.auth.client_id+"&"+params);
+	}
+	
+	ttvapi("https://api.twitch.tv/kraken/channels/"+$scope.channel).then(function(response){
+		ttvapi("https://badges.twitch.tv/v1/badges/channels/"+response.data._id+"/display", "language=en").then(function(response){
+			angular.merge(_badges, response.data);
+		});
+		ttvapi("https://badges.twitch.tv/v1/badges/global/display", "language=en").then(function(response){
+			angular.merge(_badges, response.data);
+		});
 	}, function(response){
 		// nothing to do here.
 	});
@@ -87,7 +65,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	$scope.profilePics = {};
 	var getProfilePic = function(nick) {
 		if($scope.profilePics[nick] === undefined) {
-			$http.jsonp("https://api.twitch.tv/kraken/channels/"+nick+"/?callback=JSON_CALLBACK&client_id="+settings.auth.client_id).then(function(response) {
+			ttvapi("https://api.twitch.tv/kraken/channels/"+nick).then(function(response) {
 				$scope.profilePics[nick] = response.data.logo;
 			});
 		}

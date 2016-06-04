@@ -33,20 +33,7 @@ function getPrivmsgInfo(parsedmessage) {
 	var tags = parsedmessage[STATE_V3] || {};
 	var nick = parsedmessage[STATE_PREFIX].match(/(\w+)/)[1];
 	var channel = parsedmessage[STATE_PARAM];
-	var badges = []
-	// moderation badge
-	if(nick == channel.substring(1)) {
-		badges.push("broadcaster");
-	}
-	else if(tags["user-type"] != "") {
-		badges.push(tags["user-type"]);
-	}
-	if(tags["subscriber"]=="1") {
-		badges.push("subscriber")
-	}
-	if(tags["turbo"]=="1") {
-		badges.push("turbo")
-	}
+	var badges = tags.badges.split(",");
 	
 	var text = parsedmessage[STATE_TRAILING];
 	var isaction = false;
@@ -130,11 +117,12 @@ DEFAULTCOLORS = ['#e391b8', '#e091ce', '#da91de', '#c291db', '#ab91d9', '#9691d6
 function renderMessage(messageinfo, badges) {
 	var result = ""
 	for(var i=0;i<messageinfo.badges.length;i++) {
-		badgetype = messageinfo.badges[i];
-		badgeinfo = badges[badgetype];
-		if(badgeinfo) {
-			badgetitle = badgetype.replace("_"," ").replace(/\b\w/g,function(m){return m.toUpperCase();});
-			result += '<img src="' + badgeinfo.image + '" title="' + badgetitle + '" class="logviewer-badge logviewer-badge-' + badgetype + '">'
+		var badgeid = messageinfo.badges[i].split("/");
+		if(badgeid[0]) {
+			var badgeinfo = badges.badge_sets[badgeid[0]].versions[badgeid[1]];
+			if(badgeinfo) {
+				result += '<img src="' + badgeinfo.image_url_1x + '" title="' + badgeinfo.title + '" class="logviewer-badge logviewer-badge-' + badgeid[0] + '">'
+			}
 		}
 	}
 	

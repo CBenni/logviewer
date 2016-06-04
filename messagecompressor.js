@@ -75,14 +75,18 @@ function decompressEmotes(emotes) {
 }
 
 
-var copykeys = ["color","subscriber","turbo","user-type","emotes","display-name","mod"];
-var userTypes = {"m":"mod","g":"global_mod","a":"admin","s":"staff"};
-
-var tagTypes = {};
-for(var tagid = 0; tagid < copykeys.length; ++tagid) {
-	var tagname = copykeys[tagid];
-	tagTypes[tagname[0]] = tagname;
+var copykeys = ["color","emotes","display-name","badges"];
+var badgesdecompress = { "t": "turbo", "b": "broadcaster", "m": "moderator", "a": "admin", "s": "staff", "g": "global_mod", "h": "horde", "l": "alliance", "w": "warcraft" };
+var badgescompress = {};
+var badgekeys = Object.keys(badgesdecompress);
+for(var i=0;i<badgekeys.length;++i) {
+	var key = badgekeys[i];
+	badgescompress[badgesdecompress[key]] = key;
 }
+
+
+var tagTypes = {"c":"color", "e": "emotes", "d": "display-name", "b": "badges", "m": "mod", "s": "subscriber", "t": "turbo", "u": "user-type"};
+var userTypesToBadges = { "m": "moderator/1", "a": "admin/1", "s": "staff/1" };
 
 function compressMessage(user, data) {
 	/*
@@ -94,7 +98,7 @@ function compressMessage(user, data) {
 	*/
 	var res = "";
 	if(data[TAGS]) {
-		var defaults = {"color":"","subscriber":"0","turbo":"0","user-type":"","emotes":"", "display-name": toTitleCase(user),"mod":"0"};
+		var defaults = {"color":"","emotes":"","display-name":toTitleCase(user),"badges":""};
 		for(var i=0;i<copykeys.length;++i) {
 			var key = copykeys[i];
 			var val = data[TAGS][key];
@@ -106,11 +110,18 @@ function compressMessage(user, data) {
 				if(key == "emotes") {
 					val = compressEmotes(val);
 				}
-				else if(key == "user-type") {
-					val = val[0];
-				}
 				else if(key == "display-name" && val==user) {
 					val = "";
+				} else if(key == "badges") {
+					// compress badges
+					var badges = val.split(",");
+					val = "";
+					for(var j=0;j<badges.length;++j) {
+						var badge = badges[j].split("/");
+						if(badge[0] == "broadcaster") continue; // no need for this one.
+						if(val) val += ",";
+						val += (badgescompress[badge[0]] || badge[0]) + "/" + ((badgescompress[badge[1]] || badge[1]) || "");
+					}
 				}
 				if(res) res += ";";
 				res += key[0]+val;
@@ -128,23 +139,41 @@ function decompressMessage(channel, user, data) {
 	if(tags === "") tags = [];
 	else tags = tags.split(";");
 	var message = data.slice(index + 1);
-	var res = "";
-	var defaults = {"color":"","subscriber":"0","turbo":"0","user-type":"","emotes":"", "display-name": toTitleCase(user),"mod":0};	
+	var outTags = {"color":"","emotes":"","display-name": toTitleCase(user),"badges": ""};
+	var badges = [];
 	// decompress tags
 	for(var i=0;i<tags.length;++i) {
 		var key = tagTypes[tags[i][0]];
 		var val = tags[i].slice(1);
-		if(key == "user-type") val = userTypes[val];
-		else if(key == "emotes") val = decompressEmotes(val);
+		if(key == "emotes") val = decompressEmotes(val);
 		else if(key == "display-name" && val=="") val = user;
-		if(res) res += ";";
-		res += key+"="+val;
-		delete defaults[key];
+		else if(key == "badges") {
+			// decompress badges 
+			var compressedBadges = val.split(",");
+			for(var j=0;j<compressedBadges.length;++j) {
+				var badgeParts = compressedBadges[j].split("/");
+				badge = (badgesdecompress[badgeParts[0]] || badgeParts[0]) + "/" + ((badgesdecompress[badgeParts[1]] || badgeParts[1]) || "");
+				if(badges.indexOf(badge) < 0) badges.push(badge);
+			}
+		}
+		else if(key == "user-type") {
+			badge = userTypesToBadges[val];
+			if(badges.indexOf(badge) < 0) badges.push(badge);
+		}
+		outTags[key] = val;
 	}
-	var remainingkeys = Object.keys(defaults);
-	for(var j=0; j<remainingkeys.length; ++j) {
+	if(channel == "#"+user) {
+		badge = "broadcaster/1";
+		if(badges.indexOf(badge) < 0) badges.push(badge);
+	}
+	outTags.badges = badges.join(",");
+	var res = "";
+	var outTagKeys = Object.keys(outTags);
+	for(var j=0; j<outTagKeys.length; ++j) {
 		if(res) res += ";";
-		res += remainingkeys[j]+"="+defaults[remainingkeys[j]];
+		var key = outTagKeys[j];
+		if(outTags[key]) res += key+"="+outTags[key];
+		else res += key+"=";
 	}
 	return "@"+res+" :"+user+"!"+user+"@"+user+".tmi.twitch.tv PRIVMSG "+channel+" :"+message;
 }
