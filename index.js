@@ -81,7 +81,7 @@ io.sockets.on('connection', function(socket){
 					getLevel(channelObj.name, socket.logviewer_token, function(level){
 						if(level >= channelObj.viewlogs) {
 							var logsroom = "logs-"+channelObj.name+"-"+user;
-							winston.info('joining room', logsroom);
+							winston.debug('joining room', logsroom);
 							socket.join(logsroom); 
 						} else {
 							winston.debug("Access to logs denied. "+socket.logviewer_token);
@@ -89,7 +89,7 @@ io.sockets.on('connection', function(socket){
 						}
 						if(level >= channelObj.viewcomments) {
 							var commentsroom = "comments-"+channelObj.name+"-"+user;
-							winston.info('joining room', commentsroom);
+							winston.debug('joining room', commentsroom);
 							socket.join(commentsroom); 
 						} else {
 							winston.debug("Access to comments denied. "+socket.logviewer_token);
@@ -121,7 +121,7 @@ io.sockets.on('connection', function(socket){
 				});
 			}
 		}
-		winston.info('leaving room', room);
+		winston.debug('leaving room', room);
 		socket.leave(room); 
 	});
 });
