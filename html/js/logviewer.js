@@ -148,6 +148,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	
 	$scope.moreUser = function(nick)
 	{
+		if($scope.users[nick].isloading) return;
 		$scope.users[nick].isloading = true;
 		$http.jsonp("/api/logs/" + $scope.channel,{
 			params: {
@@ -158,6 +159,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 				callback: "JSON_CALLBACK"
 			}
 		}).then(function(response){
+			$scope.users[nick].isloading = false;
 			$scope.users[nick].data = response.data.user;
 			var messagesToAdd = response.data.before;
 			for(var i=messagesToAdd.length-1;i>=0;--i) {
@@ -172,7 +174,6 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 				}
 			}
 			$scope.users[nick].allloaded = response.data.before.length < 10;
-			$scope.users[nick].isloading = false;
 		},function(response){
 			// TODO: error message
 			console.log(response);
@@ -196,7 +197,10 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 		}
 		$scope.users = {};
 	}
-	$scope.selectMessage = function(id){
+	$scope.selectMessage = function(nick, id){
+		var user = $scope.users[nick];
+		user.isloadingContext["before"] = true;
+		user.isloadingContext["after"] = true;
 		if($scope.selectedID === id) {
 			$scope.selectedID = null;
 		} 
@@ -213,10 +217,13 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 						callback: "JSON_CALLBACK"
 					}
 				}).then(function(response){
+					user.isloadingContext["before"] = false;
+					user.isloadingContext["after"] = false;
 					$scope.messages[id].before = response.data.before;
 					$scope.messages[id].after = response.data.after;
 				},function(response){
-					// TODO: error message
+					user.isloadingContext["before"] = false;
+					user.isloadingContext["after"] = false;
 					console.log(response);
 				});
 			}

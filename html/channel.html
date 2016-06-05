@@ -94,7 +94,7 @@
 								'logviewer-disabled-message':(selectedID !== null) && (selectedID !== message.id), 
 								'logviewer-selected-message': selectedID === message.id
 							}" 
-							ng-click="selectMessage(message.id)">
+							ng-click="selectMessage(user.data.nick, message.id)">
 							<span class="logviewer-time hide-s">{{message.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}</span>
 							<span class="logviewer-message" ng-bind-html='message.text | chatLine'></span>
 						</div>

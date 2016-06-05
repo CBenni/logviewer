@@ -1,3 +1,5 @@
+var winston = require('winston');
+
 var ircbot = require('./ircbot');
 var messagecompressor = require('./messagecompressor');
 var TAGS = 1
@@ -52,12 +54,12 @@ function logviewerBot(settings, db, io) {
 				self.joinChannel(channels[i].name);
 			}
 		});
-		console.log("Connected!");
+		winston.info("Connected!");
 	});
 
 	bot.on("raw", function(data){
 		if(data[COMMAND] != "PRIVMSG") {
-			console.log(data[0]);
+			winston.debug(data[0]);
 		}
 	});
 
@@ -67,7 +69,7 @@ function logviewerBot(settings, db, io) {
 		var user = /\w+/.exec(data[PREFIX])[0];
 		var channel = data[PARAM].slice(1);
 		var text = data[TRAILING];
-		console.log("#" + channel + " <" + user +"> " + text);
+		winston.debug("#" + channel + " <" + user +"> " + text);
 		
 		// if the user is a mod, set his level to 5
 		if(data[TAGS] && data[TAGS]["mod"] === "1") self.userlevels[channel][user] = 5;
@@ -210,7 +212,7 @@ function logviewerBot(settings, db, io) {
 			}
 			doTimeout(channel, user, duration, reason);
 		} else {
-			console.log("#"+channel + " <chat was cleared by a moderator>");
+			winston.debug("#"+channel + " <chat was cleared by a moderator>");
 			db.addTimeout(channel, "__jtv__", "djtv <chat was cleared by a moderator>");
 		}
 	});

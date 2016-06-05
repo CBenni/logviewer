@@ -1,6 +1,12 @@
 var settings = require('./settings.json');
 
 var util = require('util');
+
+var winston = require('winston');
+var strftime = require('strftime');
+winston.level = 'debug';
+if(settings.logging.file) winston.add(winston.transports.File, { filename: strftime(settings.logging.file), level: 'info', handleExceptions: true, humanReadableUnhandledException: true });
+
 var request = require('request');
 var url = require('url');
 
@@ -14,6 +20,8 @@ var messagecompressor = require('./messagecompressor');
 server.listen(8080);
 
 
+
+
 // websocket server
 var io = require('socket.io')(server);
 
@@ -24,7 +32,6 @@ io.sockets.on('connection', function(socket){
 	socket.on('token', function(token) { 
 		if(token && typeof(token)==="string") {
 			socket.logviewer_token = token;
-			console.log("Token received. "+token);
 		}
 	});
 	
@@ -35,8 +42,8 @@ io.sockets.on('connection', function(socket){
 			db.getActiveChannel(channel, function(channelObj) {
 				if(!channelObj)
 				{
-					// bad join. will disconnect the client (since this channel doesnt exist/isnt active)
-					console.log("Bad join.");
+					// bad search. will disconnect the client (since this channel doesnt exist/isnt active)
+					winston.warn("Bad search with query "+query);
 					socket.disconnect();
 					return;
 				}
@@ -48,7 +55,7 @@ io.sockets.on('connection', function(socket){
 							else socket.emit("search", {search: query.user, users: null});
 						});
 					} else {
-						console.log("Access to user search denied. "+socket.logviewer_token);
+						winston.debug("Access to user search denied. "+socket.logviewer_token);
 					}
 				});
 			});
@@ -66,7 +73,7 @@ io.sockets.on('connection', function(socket){
 					if(!channelObj)
 					{
 						// bad join. will disconnect the client (since this channel doesnt exist/isnt active)
-						console.log("Bad join.");
+						winston.warn("Bad join to room "+room);
 						socket.disconnect();
 						return;
 					}
@@ -74,18 +81,18 @@ io.sockets.on('connection', function(socket){
 					getLevel(channelObj.name, socket.logviewer_token, function(level){
 						if(level >= channelObj.viewlogs) {
 							var logsroom = "logs-"+channelObj.name+"-"+user;
-							console.log('joining room', logsroom);
+							winston.info('joining room', logsroom);
 							socket.join(logsroom); 
 						} else {
-							console.log("Access to logs denied. "+socket.logviewer_token);
+							winston.debug("Access to logs denied. "+socket.logviewer_token);
 							// ignore the join
 						}
 						if(level >= channelObj.viewcomments) {
 							var commentsroom = "comments-"+channelObj.name+"-"+user;
-							console.log('joining room', commentsroom);
+							winston.info('joining room', commentsroom);
 							socket.join(commentsroom); 
 						} else {
-							console.log("Access to comments denied. "+socket.logviewer_token);
+							winston.debug("Access to comments denied. "+socket.logviewer_token);
 							// ignore the join request
 						}
 					});
@@ -114,7 +121,7 @@ io.sockets.on('connection', function(socket){
 				});
 			}
 		}
-		console.log('leaving room', room);
+		winston.info('leaving room', room);
 		socket.leave(room); 
 	});
 });
@@ -300,14 +307,12 @@ app.get('/:channel/settings', function(req, res, next) {
 app.get('/api/login', function(req, res, next) {
 	try {
 		var getToken = function(err,httpResponse,body) {
-			console.log(body);
 			var token = JSON.parse(body).access_token;
 			request.get({
 				url: "https://api.twitch.tv/kraken/?oauth_token="+token+"&client_id="+settings.auth.client_id
 			},function(e,r,body2){
-				console.log("Token response: "+body2);
 				if(body2 === undefined) {
-					console.log("Error: "+r.statusCode);
+					winston.error("Error: "+r.statusCode);
 					getToken(err,r,body);
 				} else {
 					var auth = JSON.parse(body2).token;
@@ -696,5 +701,5 @@ app.delete('/api/comments/:channel',function(req,res,next){
 app.use(function(err, req, res, next) {
 	res.status(err.status || 500);
 	res.send("<pre>"+err.stack+"\r\n"+err.message+"</pre>");
-	console.log(err);
+	winston.error(err);
 });

@@ -1,4 +1,5 @@
 var mysql = require('mysql');
+var winston = require('winston');
 
 module.exports = function MySQLDatabaseConnector(settings) {
 	var self = this;
@@ -13,7 +14,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	});
 	self.pool.getConnection(function(err, connection) {
 		if(err) {
-			console.error('Error connecting to MySQL database: ' + err.stack);
+			winston.error('Error connecting to MySQL database: ' + err.stack);
 			return;
 		}
 		// create the channels table if it doesnt exist
@@ -134,6 +135,10 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	
 	self.addLine = function(channel, nick, message, count, callback) {
 		self.pool.query("INSERT INTO ?? (time,nick,text) VALUES (?,?,?)",["chat_"+channel, Math.floor(Date.now()/1000), nick, message], function(error, result) {
+			if(error) {
+				winston.error("addLine: Could not insert! "+error);
+				return;
+			}
 			if(callback) callback(result.insertId);
 		});
 		if(count !== false) self.pool.query("INSERT INTO ?? (nick,messages) VALUES (?,1) ON DUPLICATE KEY UPDATE messages = messages + 1",["users_"+channel, nick,nick]);
@@ -141,6 +146,10 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	
 	self.addTimeout = function(channel, nick, time, message, callback) {
 		self.pool.query("INSERT INTO ?? (time,nick,text) VALUES (?,?,?)",["chat_"+channel, Math.floor(time/1000), nick, message], function(error, result){
+			if(error) {
+				winston.error("addTimeout: Could not insert! "+error);
+				return;
+			}
 			callback(result.insertId);
 		});
 		self.pool.query("INSERT INTO ?? (nick,timeouts) VALUES (?,1) ON DUPLICATE KEY UPDATE timeouts = timeouts + 1",["users_"+channel, nick, nick]);
@@ -152,6 +161,10 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	
 	self.getLogsByNick = function(channel, nick, limit, callback) {
 		self.pool.query("SELECT id,time,nick,text FROM ?? WHERE nick=? ORDER BY time DESC LIMIT ?", ["chat_"+channel, nick, limit], function(error, results, fields) {
+			if(error) {
+				winston.error("getLogsByNick: Select failed! "+error);
+				return;
+			}
 			if(results) callback(results.reverse());
 			else callback([]);
 		});
@@ -272,5 +285,10 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			callback(results);
 		});
 	}
+	
+	// error handling
+	self.pool.on('error', function(err) {
+		winston.error(err);
+	});
 }
 

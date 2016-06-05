@@ -1,5 +1,6 @@
 var net = require('net');
 var events = require('events');
+var winston = require('winston');
 
 var rx = /^(?:@([^ ]+) )?(?:[:](\S+) )?(\S+)(?: (?!:)(.+?))?(?: [:](.+))?$/;
 var rx2 = /([^=;]+)=([^;]*)/g;
@@ -16,7 +17,7 @@ function IRCBot(host, port) {
 	self.client = new net.Socket();
 	
 	self.send = function(data) {
-		console.log("--> "+data);
+		winston.debug("--> "+data);
 		self.client.write(data+'\n');
 	}
 	
@@ -30,10 +31,7 @@ function IRCBot(host, port) {
 	self.parseIRCMessage = function(message) {
 		var data = rx.exec(message);
 		if(data == null) {
-			console.log("==================== ERROR ====================");
-			console.log("Couldnt parse message");
-			console.log("'"+message+"'");
-			console.log("===============================================");
+			winston.error("Couldnt parse message '"+message+"'");
 			return null;
 		}
 		var tagdata = data[STATE_V3];

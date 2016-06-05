@@ -19,5 +19,8 @@
 	},
 	"index": {
 		"html": "/html/index.html"
+	},
+	"logging": {
+		"file": "logviewer.log"
 	}
 }

@@ -1,3 +1,5 @@
+var winston = require('winston');
+
 var TAGS = 1
 var PREFIX = 2
 var COMMAND = 3
@@ -103,7 +105,7 @@ function compressMessage(user, data) {
 			var key = copykeys[i];
 			var val = data[TAGS][key];
 			if(val == undefined) {
-				console.error("ERRONEOUS TAG: "+data[0]);
+				winston.error("ERRONEOUS TAG: "+data[0]);
 				continue;
 			}
 			if(defaults[key] !== val) {
