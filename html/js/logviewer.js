@@ -180,9 +180,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 			$scope.users[nick].isloading = false;
 		})
 	}
-	$scope.loadUser = function(nick) {
-		
-	}
+	
 	$scope.delUser = function(nick) {
 		delete $scope.users[nick];
 		// leave socket.io room
@@ -203,6 +201,8 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 		user.isloadingContext["after"] = true;
 		if($scope.selectedID === id) {
 			$scope.selectedID = null;
+			user.isloadingContext["before"] = false;
+			user.isloadingContext["after"] = false;
 		} 
 		else if($scope.selectedID === null && id !== null) {
 			$scope.selectedID = id;
@@ -226,6 +226,9 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 					user.isloadingContext["after"] = false;
 					console.log(response);
 				});
+			} else {
+				user.isloadingContext["before"] = false;
+				user.isloadingContext["after"] = false;
 			}
 		}
 		else {
