@@ -269,10 +269,10 @@ app.get('/api',function(req,res,next) {
 	}
 });
 
-app.get('/:channel', function(req, res, next) {
+app.get('/lv/', function(req, res, next) {
 	try {
 		checkAuth(req, res, function(){
-			res.sendFile(__dirname + settings.index.html);
+			res.redirect(301, '/');
 		});
 	} 
 	catch(err) {
@@ -284,6 +284,17 @@ app.get('/lv/:channel', function(req, res, next) {
 	try {
 		checkAuth(req, res, function(){
 			res.redirect(301, '/'+req.params.channel.toLowerCase());
+		});
+	} 
+	catch(err) {
+		next(err);
+	}
+});
+
+app.get('/:channel', function(req, res, next) {
+	try {
+		checkAuth(req, res, function(){
+			res.sendFile(__dirname + settings.index.html);
 		});
 	} 
 	catch(err) {
