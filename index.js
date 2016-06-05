@@ -5,6 +5,8 @@ var util = require('util');
 var winston = require('winston');
 var strftime = require('strftime');
 winston.level = 'debug';
+winston.remove(winston.transports.Console);
+winston.add(winston.transports.Console, { level: 'debug', handleExceptions: true, humanReadableUnhandledException: true });
 if(settings.logging.file) winston.add(winston.transports.File, { filename: strftime(settings.logging.file), level: 'info', handleExceptions: true, humanReadableUnhandledException: true });
 
 var request = require('request');

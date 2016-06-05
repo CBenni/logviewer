@@ -227,7 +227,7 @@ function logviewerBot(settings, db, io) {
 			doTimeout(channel, user, duration, reason);
 		} else {
 			winston.debug("#"+channel + " <chat was cleared by a moderator>");
-			db.addTimeout(channel, "__jtv__", "djtv <chat was cleared by a moderator>");
+			db.addTimeout(channel, "__jtv__", Date.now(), "djtv <chat was cleared by a moderator>");
 		}
 	});
 	

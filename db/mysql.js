@@ -150,7 +150,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 				winston.error("addTimeout: Could not insert! "+error);
 				return;
 			}
-			callback(result.insertId);
+			if(callback)callback(result.insertId);
 		});
 		self.pool.query("INSERT INTO ?? (nick,timeouts) VALUES (?,1) ON DUPLICATE KEY UPDATE timeouts = timeouts + 1",["users_"+channel, nick, nick]);
 	}
