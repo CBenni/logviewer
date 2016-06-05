@@ -279,8 +279,28 @@ app.get('/lv/', function(req, res, next) {
 		next(err);
 	}
 });
+app.get('/logviewer/', function(req, res, next) {
+	try {
+		checkAuth(req, res, function(){
+			res.redirect(301, '/');
+		});
+	} 
+	catch(err) {
+		next(err);
+	}
+});
 
 app.get('/lv/:channel', function(req, res, next) {
+	try {
+		checkAuth(req, res, function(){
+			res.redirect(301, '/'+req.params.channel.toLowerCase());
+		});
+	} 
+	catch(err) {
+		next(err);
+	}
+});
+app.get('/logviewer/:channel', function(req, res, next) {
 	try {
 		checkAuth(req, res, function(){
 			res.redirect(301, '/'+req.params.channel.toLowerCase());

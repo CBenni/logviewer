@@ -33,7 +33,8 @@ function getPrivmsgInfo(parsedmessage) {
 	var tags = parsedmessage[STATE_V3] || {};
 	var nick = parsedmessage[STATE_PREFIX].match(/(\w+)/)[1];
 	var channel = parsedmessage[STATE_PARAM];
-	var badges = tags.badges.split(",");
+	var badges = [];
+	if(tags.badges) badges = tags.badges.split(",");
 	
 	var text = parsedmessage[STATE_TRAILING];
 	var isaction = false;

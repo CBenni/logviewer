@@ -74,9 +74,23 @@ function logviewerBot(settings, db, io) {
 		// if the user is a mod, set his level to 5
 		if(data[TAGS] && data[TAGS]["mod"] === "1") self.userlevels[channel][user] = 5;
 		
-		// remove the user from the revent timeouts
-		if(self.timeouts[channel] && self.timeouts[channel][user]) self.timeouts[channel][user] = undefined;
+		// remove the user from the recent timeouts (unless they were VERY recent (<2s ago)
+		var oldtimeout = (self.timeouts[channel] && self.timeouts[channel][user]) || (self.oldtimeouts[channel] && self.oldtimeouts[channel][user]);
+		if(oldtimeout) {
+			var age = Date.now()/1000 - oldtimeout.time;
+			if(age >= 2) {
+				if(self.timeouts[channel] && self.timeouts[channel][user]) self.timeouts[channel][user] = undefined;
+				if(self.oldtimeouts[channel] && self.oldtimeouts[channel][user]) self.oldtimeouts[channel][user] = undefined;
+			}
+		}
+		
+		if(self.timeouts[channel] && self.timeouts[channel][user]) {
+			var now = 
+			self.timeouts[channel][user] = undefined;
+		}
 		if(self.oldtimeouts[channel] && self.oldtimeouts[channel][user]) self.oldtimeouts[channel][user] = undefined;
+		
+		
 		var time = Math.floor(Date.now()/1000);
 		db.addLine(channel, user, messagecompressor.compressMessage(user, data), true, function(id) {
 			io.to("logs-"+channel+"-"+user).emit("log-add", {id: id, time: time, nick: user, text: data[0]});
