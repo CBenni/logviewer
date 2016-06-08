@@ -11,6 +11,7 @@ if(settings.logging.file) winston.add(winston.transports.File, { filename: strft
 
 var request = require('request');
 var url = require('url');
+var _ = require("lodash");
 
 var express = require('express');
 var compression = require('compression');
@@ -295,7 +296,7 @@ app.get('/logviewer/', function(req, res, next) {
 app.get('/lv/:channel', function(req, res, next) {
 	try {
 		checkAuth(req, res, function(){
-			res.redirect(301, '/'+req.params.channel.toLowerCase());
+			res.redirect(301, '/'+encodeURIComponent(req.params.channel.toLowerCase()));
 		});
 	} 
 	catch(err) {
@@ -305,7 +306,7 @@ app.get('/lv/:channel', function(req, res, next) {
 app.get('/logviewer/:channel', function(req, res, next) {
 	try {
 		checkAuth(req, res, function(){
-			res.redirect(301, '/'+req.params.channel.toLowerCase());
+			res.redirect(301, '/'+encodeURIComponent(req.params.channel.toLowerCase()));
 		});
 	} 
 	catch(err) {
@@ -728,6 +729,70 @@ app.delete('/api/comments/:channel',function(req,res,next){
 		next(err);
 	}
 	
+});
+
+var badgeCache = {};
+var channelIDCache = {};
+
+function getChannelID(channel, callback) {
+	if(channelIDCache[channel]) {
+		callback(channelIDCache[channel]);
+	} else {
+		request.get({
+			url: "https://api.twitch.tv/kraken/channels/"+channel+"/?client_id="+settings.auth.client_id
+		},function(e,r,body){
+			if(body === undefined) {
+				winston.error("Error: "+r.statusCode);
+			} else {
+				var channelInfo = JSON.parse(body);
+				channelIDCache[channel] = channelInfo._id;
+				callback(channelInfo._id);
+			}
+		});
+	}
+}
+
+function getBadges(resource, callback) {
+	// cache expires after 1 hour
+	var expired = Date.now() - 1000 * 3600;
+	if(badgeCache[resource] && badgeCache[resource].time > expired) {
+		callback(badgeCache[resource].badges);
+	} else {
+		winston.debug("Getting "+resource+" badges "+"https://badges.twitch.tv/v1/badges/"+resource+"/display?language=en&client_id="+settings.auth.client_id);
+		request.get({
+			url: "https://badges.twitch.tv/v1/badges/"+resource+"/display?language=en&client_id="+settings.auth.client_id
+		},function(e,r,body){
+			if(body === undefined) {
+				winston.error("Error: "+r.statusCode);
+			} else {
+				var badges = JSON.parse(body);
+				badgeCache[resource] = {
+					time: Date.now(),
+					badges: badges
+				}
+				callback(badges);
+			}
+		}, function(){
+			winston.error("Couldnt load "+resource+" badges");
+			callback({});
+		});
+	}
+}
+
+// badges. Fix for the crappy twitch API
+app.get('/api/badges/:channel', function(req,res,next){
+	try {
+		getChannelID(req.params.channel, function(id) {
+			getBadges("global", function(globalBadges){
+				getBadges("channels/"+id, function(channelBadges){
+					res.jsonp(_.merge(_.cloneDeep(globalBadges), channelBadges));
+				});
+			});
+		});
+	} 
+	catch(err) {
+		next(err);
+	}
 });
 
 

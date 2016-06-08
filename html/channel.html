@@ -84,7 +84,16 @@
 						</div>
 						<!-- context before -->
 						<div class="logviewer-chat-message logviewer-context-message" ng-show="selectedID === message.id" ng-repeat="messageBefore in message.before">
-							<span class="logviewer-time hide-s">{{messageBefore.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}</span>
+							<span class="logviewer-time hide-s">
+								<!-- vod link -->
+								<md-button ng-href="{{messageBefore.video.url}}" target="_blank" ng-class="messageBefore.video.classname" class="md-primary md-icon-button videobutton" ng-disabled="!messageBefore.video">
+									<md-tooltip ng-if="messageBefore.video.tooltip" ng-bind-html="messageBefore.video.tooltip" class="md-primary vod-tooltip" md-direction="right" md-delay="256">
+									</md-tooltip>
+									<md-icon class="md-primary">{{messageBefore.video.icon || "theaters"}}</md-icon>
+								</md-button>
+								<!-- timestamp -->
+								{{messageBefore.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}
+							</span>
 							<span class="logviewer-message" ng-bind-html='messageBefore.text | chatLine'></span>
 						</div>
 						<!-- the message -->
@@ -95,12 +104,30 @@
 								'logviewer-selected-message': selectedID === message.id
 							}" 
 							ng-click="selectMessage(user.data.nick, message.id)">
-							<span class="logviewer-time hide-s">{{message.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}</span>
+							<span class="logviewer-time hide-s">
+								<!-- vod link -->
+								<md-button ng-href="{{message.video.url}}" target="_blank" ng-class="message.video.classname" class="md-primary md-icon-button videobutton" ng-disabled="!message.video">
+									<md-tooltip ng-if="message.video.tooltip" ng-bind-html="message.video.tooltip" class="md-primary vod-tooltip" md-direction="right" md-delay="256">
+									</md-tooltip>
+									<md-icon class="md-primary">{{message.video.icon || "theaters"}}</md-icon>
+								</md-button>
+								<!-- timestamp -->
+								{{message.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}
+							</span>
 							<span class="logviewer-message" ng-bind-html='message.text | chatLine'></span>
 						</div>
 						<!-- context after -->
 						<div class="logviewer-chat-message logviewer-context-message" ng-show="selectedID === message.id" ng-repeat="messageAfter in message.after">
-							<span class="logviewer-time hide-s">{{messageAfter.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}</span>
+							<span class="logviewer-time hide-s">
+								<!-- vod link -->
+								<md-button ng-href="{{messageAfter.video.url}}" target="_blank" ng-class="messageAfter.video.classname" class="md-primary md-icon-button videobutton" ng-disabled="!messageAfter.video">
+									<md-tooltip ng-if="messageAfter.video.tooltip" ng-bind-html="messageAfter.video.tooltip" class="md-primary vod-tooltip" md-direction="right" md-delay="256">
+									</md-tooltip>
+									<md-icon class="md-primary">{{messageAfter.video.icon || "theaters"}}</md-icon>
+								</md-button>
+								<!-- timestamp -->
+								{{messageAfter.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}
+							</span>
 							<span class="logviewer-message" ng-bind-html='messageAfter.text | chatLine'></span>
 						</div>
 						<!-- button to load more after -->

@@ -8,49 +8,37 @@ if (!String.prototype.startsWith) {
 
 var logviewerApp = angular.module("logviewerApp", ['ngSanitize','ngAnimate','btford.socket-io']);
 logviewerApp.controller("ChannelController", function($scope, $http, $stateParams, $rootScope, $sce, logviewerSocket, $q){
-	console.log($stateParams.user);
 	$scope.channel = $stateParams.channel.toLowerCase();
 	$scope.channelsettings = null;
 	$scope.userObject = null;
 	$scope.newcomments = {};
+	$scope.profilePics = {};
 	$scope.editingComment = {id:-1};
 	$scope.loadStatus = 0;
+	$scope.videos = [];
+	$scope.highlights = [];
 	
-	var ttvapi = function(endpoint, params) {
-		if(params) return $http.jsonp(endpoint+"/?callback=JSON_CALLBACK&client_id="+settings.auth.client_id+"&"+params);
-		else return $http.jsonp(endpoint+"/?callback=JSON_CALLBACK&client_id="+settings.auth.client_id+"&"+params);
-	}
+	$scope.users = {};
+	$scope.messages = {};
 	
-	ttvapi("https://api.twitch.tv/kraken/channels/"+$scope.channel).then(function(response){
-		ttvapi("https://badges.twitch.tv/v1/badges/channels/"+response.data._id+"/display", "language=en").then(function(response){
-			angular.merge(_badges, response.data);
-		});
-		ttvapi("https://badges.twitch.tv/v1/badges/global/display", "language=en").then(function(response){
-			angular.merge(_badges, response.data);
-		});
-	}, function(response){
-		// nothing to do here.
-	});
+	$scope.selectedID = null;
+	$scope.username = "";
+	$scope.typedUserSearch = "";
+	$scope.userid = 0;
+	
 	$http.jsonp("/api/channel/"+$scope.channel+"/?token="+$rootScope.auth.token+"&callback=JSON_CALLBACK").then(function(response){
 		$scope.channelsettings = response.data.channel;
 		$scope.userObject = response.data.me;
 		$scope.loadStatus = response.data.channel==null?-1:-1+2*response.data.channel.active;
-		
 		if($stateParams.user) {
 			$scope.addUser($stateParams.user);
 		}
+		
 	}, function(response){
 		$scope.loadStatus = -1;
 	});
-
-	$scope.users = {};
-	$scope.messages = {};
 	
 	
-	$scope.selectedID = null;
-	
-	$scope.username = "";
-	$scope.typedUserSearch = "";
 	$scope.submitAddUserForm = function()
 	{
 		if($scope.username || $scope.typedUserSearch) {
@@ -60,9 +48,6 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 		}
 	}
 	
-	$scope.userid = 0;
-	
-	$scope.profilePics = {};
 	var getProfilePic = function(nick) {
 		if($scope.profilePics[nick] === undefined) {
 			ttvapi("https://api.twitch.tv/kraken/channels/"+nick).then(function(response) {
@@ -127,6 +112,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 				if($scope.messages[message.id] === undefined) {
 					message.before = [];
 					message.after = [];
+					message.video = getVideo(message.time);
 					$scope.messages[message.id] = message;
 					$scope.users[nick].messages.push(message);
 				} else {
@@ -167,6 +153,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 				if($scope.messages[message.id] === undefined) {
 					message.before = [];
 					message.after = [];
+					message.video = getVideo(message.time);
 					$scope.messages[message.id] = message;
 					$scope.users[nick].messages.unshift(message);
 				} else {
@@ -221,6 +208,8 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 					user.isloadingContext["after"] = false;
 					$scope.messages[id].before = response.data.before;
 					$scope.messages[id].after = response.data.after;
+					addVideoForAll(response.data.before);
+					addVideoForAll(response.data.after);
 				},function(response){
 					user.isloadingContext["before"] = false;
 					user.isloadingContext["after"] = false;
@@ -264,8 +253,14 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 					callback: "JSON_CALLBACK"
 				}
 			}).then(function(response){
-				if(position == "before") $scope.messages[selectedID].before = response.data.before.concat($scope.messages[selectedID].before);
-				else $scope.messages[selectedID].after = $scope.messages[selectedID].after.concat(response.data.after);
+				if(position == "before") {
+					$scope.messages[selectedID].before = response.data.before.concat($scope.messages[selectedID].before);
+					addVideoForAll(response.data.before);
+				}
+				else {
+					$scope.messages[selectedID].after = $scope.messages[selectedID].after.concat(response.data.after);
+					addVideoForAll(response.data.after);
+				}
 				user.isloadingContext[position] = false;
 			},function(response){
 				// TODO: error message
@@ -333,6 +328,8 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 		if($scope.messages[message.id] === undefined) {
 			message.before = [];
 			message.after = [];
+			// super unlikely for this to be the case, but what do you know.
+			message.video = getVideo(message.time);
 			$scope.messages[message.id] = message;
 			$scope.users[message.nick].messages.push(message);
 		} else {
@@ -428,6 +425,98 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 			return deferreds[query].promise;
 		} else {
 			return autocompletes[query] || [];
+		}
+	}
+	
+	var ttvapi = function(endpoint, params) {
+		if(params) return $http.jsonp(endpoint+"/?callback=JSON_CALLBACK&client_id="+settings.auth.client_id+"&"+params);
+		else return $http.jsonp(endpoint+"/?callback=JSON_CALLBACK&client_id="+settings.auth.client_id+"&"+params);
+	}
+	
+	// actually, this stuff doesnt work until they fix the api...
+	$http.jsonp("/api/badges/"+$scope.channel+"/?callback=JSON_CALLBACK").then(function(response){
+		_badges = response.data;
+	});
+	
+	var getVideos = function (offset) {
+		// get past broadcasts
+		ttvapi("https://api.twitch.tv/kraken/channels/"+$scope.channel+"/videos", "limit=100&broadcasts=true").then(function(response){
+			var count = response.data.videos.length;
+			for(var i=0;i<count;++i) {
+				var video = response.data.videos[i];
+				video.created_at = Date.parse(video.created_at) / 1000;
+				video.start = Date.parse(video.recorded_at) / 1000;
+				video.end = (video.status == "recording")? Infinity : video.start + video.length;
+				$scope.videos.push(video);
+			}
+			if(count == 100) {
+				getVideos(offset+100);
+			} else {
+				// once we are done loading, we can update all messages
+				updateMessageVideoInfo();
+			}
+		});
+	}
+	
+	var getHighlights = function (offset) {
+		// get highlights
+		ttvapi("https://api.twitch.tv/kraken/channels/"+$scope.channel+"/videos", "limit=100").then(function(response){
+			var count = response.data.videos.length;
+			for(var i=0;i<count;++i) {
+				var video = response.data.videos[i];
+				video.created_at = Date.parse(video.created_at) / 1000;
+				video.start = Date.parse(video.recorded_at) / 1000;
+				video.end = video.start + video.length;
+				$scope.highlights.push(video);
+			}
+			if(count == 100) {
+				getHighlights(offset+100);
+			} else {
+				// once we are done loading, we can update all messages
+				updateMessageVideoInfo();
+			}
+		});
+	}
+	getVideos(0);
+	getHighlights(0);
+	var getVideoInfo = function(video, timestamp) {
+		var pasttime = Math.max(0, Math.round(timestamp - video.start)-10); // remove 10s to compensate for twitch page load
+		return {
+			url: video.url+"?t="+pasttime+"s",
+			tooltip: "Watch "+((video.broadcast_type == "archive")?"past broadcast":video.broadcast_type)+"<br>"+video.title+"<br>Game: "+video.game,
+			icon: "theaters",
+			classname: (video.broadcast_type == "highlight")?"md-primary md-icon-button videobutton md-primary highlight-button":"md-primary md-icon-button videobutton"
+		}
+	}
+	
+	var getVideo = function (timestamp) {
+		for(var i=0;i<$scope.highlights.length;++i) {
+			// since the videos are ordered by time of creation, we can stop once a video was created before this message was posted
+			var video = $scope.highlights[i];
+			if(video.created_at < timestamp && video.end < timestamp) break;
+			else 
+				if(video.start <= timestamp && video.end >= timestamp) return getVideoInfo(video, timestamp);
+		}
+		for(var i=0;i<$scope.videos.length;++i) {
+			// since the videos are ordered by time of creation, we can stop once a video was created before this message was posted and the vod ended beforehand as well.
+			var video = $scope.videos[i];
+			//if(video.created_at < timestamp && video.end < timestamp) return;
+			//else 
+				if(video.start <= timestamp && video.end >= timestamp) return getVideoInfo(video, timestamp);
+		}
+	}
+	
+	var addVideoForAll = function(list) {
+		for(var i=0;i<list.length;++i) {
+			list[i].video = getVideo(list[i].time);
+		}
+	}
+	
+	var updateMessageVideoInfo = function() {
+		var messageIDs = Object.keys($scope.messages);
+		for(var i=0;i<messageIDs.length;++i) {
+			var msg = $scope.messages[messageIDs[i]];
+			msg.video = getVideo(msg.time);
 		}
 	}
 });
