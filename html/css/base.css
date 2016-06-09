@@ -195,6 +195,10 @@ div[ng-include] {
 	height: 21px;
 }
 
+.pixel {
+	display: none;
+}
+
 .contacts a, .contacts a:visited, .contacts a:hover, .contacts a:active {
 	text-decoration: none;
 	color: #66757f;
