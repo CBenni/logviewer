@@ -1,10 +1,18 @@
 <div class="md-whiteframe-3dp footer" layout="row" layout-align="space-between center">
 	<span class="hide-s leftpad">
-		Made with <img src="{{$parent.emote.url}}" alt="{{$parent.emote.code}}" title="{{$parent.emote.code}}"> by <a href="http://twitter.com/cbenni_o"><img src="/html/img/twitterlogo.png"> @cbenni_o</a>
+		Made with <img src="{{$parent.emote.url}}" alt="{{$parent.emote.code}}" title="{{$parent.emote.code}}" class="logo"> by <a href="http://twitter.com/cbenni_o"><img src="/html/img/twitterlogo.png" class="logo"> @cbenni_o</a>
 	</span>
-	<span>
+	<span style="height: 100%;">
 		<md-button class="rightbutton" ng-click="showDialog($event,'/html/tos.html')">ToS</md-button>
 		<md-button class="rightbutton" ng-click="showDialog($event,'/html/about.html')">About</md-button>
 		<md-button class="rightbutton" ng-click="showDialog($event,'/html/contact.html')">Contact</md-button>
+		<div class="rightbutton donate-btn" layout="column" layout-align="center center">
+			<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" flex="none">
+				<input type="hidden" name="cmd" value="_s-xclick">
+				<input type="hidden" name="hosted_button_id" value="VGEK7PNJU55Q6">
+				<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
+				<img alt="" border="0" src="https://www.paypalobjects.com/de_DE/i/scr/pixel.gif" width="1" height="1">
+			</form>
+		</div>
 	</span>
 </div>
