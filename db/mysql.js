@@ -151,7 +151,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			}
 			if(callback) callback(result.insertId);
 		});
-		if(count !== false) self.pool.query("INSERT INTO ?? (nick,messages) VALUES (?,1) ON DUPLICATE KEY UPDATE messages = messages + 1",["users_"+channel, nick,nick]);
+		if(count !== false) self.inserter.query("INSERT INTO ?? (nick,messages) VALUES (?,1) ON DUPLICATE KEY UPDATE messages = messages + 1",["users_"+channel, nick,nick]);
 	}
 	
 	self.addTimeout = function(channel, nick, time, message, callback) {
