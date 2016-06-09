@@ -12,15 +12,6 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		password: settings.password,
 		charset: "utf8mb4_unicode_ci"
 	});
-	// dedicated connection for inserting
-	self.inserter = mysql.createConnection({
-		host: settings.host,
-		port: settings.port || 3306,
-		user: settings.user,
-		database: settings.database,
-		password: settings.password,
-		charset: "utf8mb4_unicode_ci"
-	});
 	self.pool.getConnection(function(err, connection) {
 		if(err) {
 			winston.error('Error connecting to MySQL database: ' + err.stack);
@@ -143,32 +134,31 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	}
 	
 	self.addLine = function(channel, nick, message, count, callback) {
-		// we use the inserter for this instead of the pool
-		self.inserter.query("INSERT INTO ?? (time,nick,text) VALUES (?,?,?)",["chat_"+channel, Math.floor(Date.now()/1000), nick, message], function(error, result) {
+		// we use the pool for this instead of the pool
+		self.pool.query("INSERT INTO ?? (time,nick,text) VALUES (?,?,?)",["chat_"+channel, Math.floor(Date.now()/1000), nick, message], function(error, result) {
 			if(error) {
 				winston.error("addLine: Could not insert! "+error);
 				return;
 			}
 			if(callback) callback(result.insertId);
 		});
-		if(count !== false) self.inserter.query("INSERT INTO ?? (nick,messages) VALUES (?,1) ON DUPLICATE KEY UPDATE messages = messages + 1",["users_"+channel, nick,nick]);
+		if(count !== false) self.pool.query("INSERT INTO ?? (nick,messages) VALUES (?,1) ON DUPLICATE KEY UPDATE messages = messages + 1",["users_"+channel, nick,nick]);
 	}
 	
 	self.addTimeout = function(channel, nick, time, message, callback) {
-		// we use the inserter for this instead of the pool
-		self.inserter.query("INSERT INTO ?? (time,nick,text) VALUES (?,?,?)",["chat_"+channel, Math.floor(time/1000), nick, message], function(error, result){
+		self.pool.query("INSERT INTO ?? (time,nick,text) VALUES (?,?,?)",["chat_"+channel, Math.floor(time/1000), nick, message], function(error, result){
 			if(error) {
 				winston.error("addTimeout: Could not insert! "+error);
 				return;
 			}
 			if(callback)callback(result.insertId);
 		});
-		self.inserter.query("INSERT INTO ?? (nick,timeouts) VALUES (?,1) ON DUPLICATE KEY UPDATE timeouts = timeouts + 1",["users_"+channel, nick, nick]);
+		self.pool.query("INSERT INTO ?? (nick,timeouts) VALUES (?,1) ON DUPLICATE KEY UPDATE timeouts = timeouts + 1",["users_"+channel, nick, nick]);
 	}
 	
 	self.updateTimeout = function(channel, nick, id, time, message) {
-		// we use the inserter for this instead of the pool
-		self.inserter.query("UPDATE ?? SET time=?, text=? WHERE nick=? AND id=?",["chat_"+channel, Math.floor(time/1000), message, nick, id]);
+		// we use the pool for this instead of the pool
+		self.pool.query("UPDATE ?? SET time=?, text=? WHERE nick=? AND id=?",["chat_"+channel, Math.floor(time/1000), message, nick, id]);
 	}
 	
 	self.getLogsByNick = function(channel, nick, limit, callback) {
