@@ -12,6 +12,15 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		password: settings.password,
 		charset: "utf8mb4_unicode_ci"
 	});
+	// dedicated connection for inserting
+	self.inserter = mysql.createConnection({
+		host: settings.host,
+		port: settings.port || 3306,
+		user: settings.user,
+		database: settings.database,
+		password: settings.password,
+		charset: "utf8mb4_unicode_ci"
+	});
 	self.pool.getConnection(function(err, connection) {
 		if(err) {
 			winston.error('Error connecting to MySQL database: ' + err.stack);
@@ -134,7 +143,8 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	}
 	
 	self.addLine = function(channel, nick, message, count, callback) {
-		self.pool.query("INSERT INTO ?? (time,nick,text) VALUES (?,?,?)",["chat_"+channel, Math.floor(Date.now()/1000), nick, message], function(error, result) {
+		// we use the inserter for this instead of the pool
+		self.inserter.query("INSERT INTO ?? (time,nick,text) VALUES (?,?,?)",["chat_"+channel, Math.floor(Date.now()/1000), nick, message], function(error, result) {
 			if(error) {
 				winston.error("addLine: Could not insert! "+error);
 				return;
@@ -145,7 +155,8 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	}
 	
 	self.addTimeout = function(channel, nick, time, message, callback) {
-		self.pool.query("INSERT INTO ?? (time,nick,text) VALUES (?,?,?)",["chat_"+channel, Math.floor(time/1000), nick, message], function(error, result){
+		// we use the inserter for this instead of the pool
+		self.inserter.query("INSERT INTO ?? (time,nick,text) VALUES (?,?,?)",["chat_"+channel, Math.floor(time/1000), nick, message], function(error, result){
 			if(error) {
 				winston.error("addTimeout: Could not insert! "+error);
 				return;
@@ -156,7 +167,8 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	}
 	
 	self.updateTimeout = function(channel, nick, id, time, message) {
-		self.pool.query("UPDATE ?? SET time=?, text=? WHERE nick=? AND id=?",["chat_"+channel, Math.floor(time/1000), message, nick, id]);
+		// we use the inserter for this instead of the pool
+		self.inserter.query("UPDATE ?? SET time=?, text=? WHERE nick=? AND id=?",["chat_"+channel, Math.floor(time/1000), message, nick, id]);
 	}
 	
 	self.getLogsByNick = function(channel, nick, limit, callback) {
