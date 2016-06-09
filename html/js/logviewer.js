@@ -440,7 +440,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	
 	var getVideos = function (offset) {
 		// get past broadcasts
-		ttvapi("https://api.twitch.tv/kraken/channels/"+$scope.channel+"/videos", "limit=100&broadcasts=true").then(function(response){
+		ttvapi("https://api.twitch.tv/kraken/channels/"+$scope.channel+"/videos", "limit=100&broadcasts=true&offset="+offset).then(function(response){
 			var count = response.data.videos.length;
 			for(var i=0;i<count;++i) {
 				var video = response.data.videos[i];
@@ -460,7 +460,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	
 	var getHighlights = function (offset) {
 		// get highlights
-		ttvapi("https://api.twitch.tv/kraken/channels/"+$scope.channel+"/videos", "limit=100").then(function(response){
+		ttvapi("https://api.twitch.tv/kraken/channels/"+$scope.channel+"/videos", "limit=100&offset="+offset).then(function(response){
 			var count = response.data.videos.length;
 			for(var i=0;i<count;++i) {
 				var video = response.data.videos[i];

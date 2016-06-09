@@ -163,7 +163,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			}
 			if(callback)callback(result.insertId);
 		});
-		self.pool.query("INSERT INTO ?? (nick,timeouts) VALUES (?,1) ON DUPLICATE KEY UPDATE timeouts = timeouts + 1",["users_"+channel, nick, nick]);
+		self.inserter.query("INSERT INTO ?? (nick,timeouts) VALUES (?,1) ON DUPLICATE KEY UPDATE timeouts = timeouts + 1",["users_"+channel, nick, nick]);
 	}
 	
 	self.updateTimeout = function(channel, nick, id, time, message) {
