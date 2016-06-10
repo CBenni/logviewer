@@ -60,7 +60,7 @@ function getPrivmsgInfo(parsedmessage) {
 	
 	
 	var emotes = [];
-	if(tags["emotes"] != "") {
+	if(tags["emotes"]) {
 		var emotelists = tags["emotes"].split("/");
 		for(var i=0;i<emotelists.length;i++) {
 			var emoteidpositions = emotelists[i].split(":")
