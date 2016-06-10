@@ -37,3 +37,7 @@ h5.bigtitle {
 		font-size: 50px;
 	}
 }
+
+a.greylink {
+	color: #999;
+}

@@ -4,8 +4,21 @@
 	<h1 class="bigtitle">Logviewer</h1>
 	<h5 class="bigtitle">Denying people unbans since 2014</h5>
 	<div class="channel-list">
-		<div ng-repeat="channelObj in channels | orderBy : '-live'" class="channel-list-item">
+		<div layout="row" layout-align="center start">
+			<md-input-container>
+				<input type="text" ng-model="channelSearch.name" placeholder="search for channel"></input>
+				<md-icon class="md-primary">search</md-icon>
+			</md-input-container>
+		</div>
+		<div ng-repeat="channelObj in channels | orderBy : '-live' | filter: channelSearch | limitTo: channellimit as filteredChannels" class="channel-list-item">
 			<md-button ng-class="{live: channelObj.live, 'channel-live-indicator':true}" ui-sref="channel({channel: channelObj.name})">{{channelObj.name}}</md-button>
+		</div>
+		<div layout="row" layout-align="center start" ng-show="channels.length > 0 && filteredChannels.length == 0">
+			No channels found. 
+			<span>If you have access and want to add {{channelSearch.name}} to the logviewer, click <a ui-sref="settings({channel: channelSearch.name})">here</a></span>
+		</div>
+		<div layout="row" layout-align="center start" ng-show="channellimit && channels.length > channellimit && !channelSearch.name">
+			<a href="#" class="greylink" ng-click="channellimit = undefined">&#x25BD; Show more</a>
 		</div>
 	</div>
 </div>
