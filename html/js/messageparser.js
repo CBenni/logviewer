@@ -138,7 +138,7 @@ function renderMessage(messageinfo, badges) {
 	
 	
 	var message = messageinfo.textWithSurrogatesInPUAs;
-	if(display_name == "jtv" || display_name == "twitchnotify") {
+	if(display_name == "jtv" || display_name == "twitchnotify" || display_name == "Twitchnotify") {
 		result += '<span class="text logviewer-chat-text status-msg">'
 	}
 	else if(messageinfo.isaction) {
