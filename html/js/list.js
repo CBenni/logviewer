@@ -2,8 +2,11 @@ var logviewerApp = angular.module("logviewerApp");
 
 logviewerApp.controller("ChannelListController", function($rootScope, $scope, $http, $stateParams){
 	$scope.channels = [];
-	$scope.channellimit = 50;
+	$scope.channellimit = 80;
 	$scope.channelSearch = {};
+	
+	// todo: dynamic channellimit based on window width+height. Average item width is ~ 130px, height 51px
+	
 	var updateChannels = function(){
 		$http.jsonp("/api/channels/?callback=JSON_CALLBACK").then(function(response) {
 			var newchannels = [];

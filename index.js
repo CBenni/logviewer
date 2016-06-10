@@ -16,10 +16,10 @@ var _ = require("lodash");
 var express = require('express');
 var compression = require('compression');
 var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser')
+var bodyParser = require('body-parser');
+var messagecompressor = require('./messagecompressor');
 var app = express();
 var server = require('http').Server(app);
-var messagecompressor = require('./messagecompressor');
 server.listen(8080);
 
 
