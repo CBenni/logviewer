@@ -21,8 +21,8 @@ logviewerApp.controller("ChannelListController", function($rootScope, $scope, $h
 				for(var j=0;j<streams.length;++j) {
 					channelDict[streams[j].channel.name].live = true;
 				}
+				$scope.channels = newchannels;
 			});
-			$scope.channels = newchannels;
 		});
 	}
 	
