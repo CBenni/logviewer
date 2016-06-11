@@ -829,7 +829,7 @@ function plainTextify(channel, user, logs){
 	} else {
 		reply += "```No logs found for user "+user+" in channel "+channel+"```\n";
 	}
-	reply += 'See ' + settings.auth.baseurl + encodeURIComponent(channel) + "/?user=" + encodeURIComponent(user);
+	reply += 'See ' + settings.auth.baseurl + "/" + encodeURIComponent(channel) + "/?user=" + encodeURIComponent(user);
 	return reply;
 }
 
