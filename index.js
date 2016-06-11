@@ -850,7 +850,7 @@ function getSlackLogs(channel, user, limit, token, cb, ecb) {
 							cb(plainTextify(channel, user, logs.before));
 						});
 					} else {
-						var dsplevel = levels[level] || "unknown ("+level+")";
+						var dsplevel = levels[channelObj.viewlogs] || "unknown ("+channelObj.viewlogs+")";
 						ecb(403,"Access denied. Logs are "+dsplevel+" level - please configure your lvtoken accordingly.");
 					}
 				});
