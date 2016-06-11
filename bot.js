@@ -343,7 +343,7 @@ function logviewerBot(settings, db, io) {
 									} else {
 										for(var j=0;j<messages.length;++j) {
 											var message = messages[j];
-											var data = bot.parseIRCMessage(message.text);
+											var data = messagecompressor.parseIRCMessage(message.text);
 											var dname = message.nick;
 											if(data[TAGS] && data[TAGS]["display-name"]) {
 												dname = data[TAGS]["display-name"];

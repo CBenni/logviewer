@@ -180,14 +180,6 @@ function decompressMessage(channel, user, data) {
 	return "@"+res+" :"+user+"!"+user+"@"+user+".tmi.twitch.tv PRIVMSG "+channel+" :"+message;
 }
 
-module.exports = {
-	compressMessage: compressMessage,
-	decompressMessage: decompressMessage,
-};
-
-
-
-
 var rx = /^(?:@([^ ]+) )?(?:[:](\S+) )?(\S+)(?: (?!:)(.+?))?(?: [:](.+))?$/;
 var rx2 = /([^=;]+)=([^;]*)/g;
 var rx3 = /\r\n|\r|\n/;
@@ -198,6 +190,10 @@ var STATE_PARAM = 4
 var STATE_TRAILING = 5
 function parseIRCMessage(message) {
 	var data = rx.exec(message);
+	if(data == null) {
+		winston.error("Couldnt parse message '"+message+"'");
+		return null;
+	}
 	var tagdata = data[STATE_V3];
 	if (tagdata) {
 		var tags = {};
@@ -211,3 +207,11 @@ function parseIRCMessage(message) {
 	}
 	return data;
 }
+
+module.exports = {
+	compressMessage: compressMessage,
+	decompressMessage: decompressMessage,
+	parseIRCMessage: parseIRCMessage
+};
+
+
