@@ -9,7 +9,7 @@ logviewerApp.controller("ChannelListController", function($rootScope, $scope, $h
 	// todo: dynamic channellimit based on window width+height. Average item width is ~ 130px, height 51px
 	var calcChannellimit = function () {
 		var availableWidth = 0.7 * window.innerWidth;
-		var availableHeight = window.innerHeight - 400; // 350px get used on the header, footer, title and search
+		var availableHeight = window.innerHeight - 450; // 450px get used on the header, footer, title, show more and search
 		
 		$scope.channellimit = Math.floor(availableHeight * availableWidth / (130 * 51));
 	}
