@@ -11,7 +11,7 @@ logviewerApp.controller("ChannelListController", function($rootScope, $scope, $h
 		var availableWidth = 0.7 * window.innerWidth;
 		var availableHeight = window.innerHeight - 450; // 450px get used on the header, footer, title, show more and search
 		
-		$scope.channellimit = Math.floor(availableHeight * availableWidth / (130 * 51));
+		$scope.channellimit = Math.max(5, Math.floor(availableHeight * availableWidth / (130 * 51)));
 	}
 	
 	angular.element($window).bind('resize', function(){
