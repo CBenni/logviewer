@@ -16,7 +16,7 @@ logviewerApp.controller("ChannelListController", function($rootScope, $scope, $h
 	
 	angular.element($window).bind('resize', function(){
 		$scope.$apply(function(){
-			calcChannellimit();
+			if(isFinite($scope.channellimit)) calcChannellimit();
 		});
 	});
 	calcChannellimit();
