@@ -1,11 +1,25 @@
 var logviewerApp = angular.module("logviewerApp");
 
-logviewerApp.controller("ChannelListController", function($rootScope, $scope, $http, $stateParams){
+logviewerApp.controller("ChannelListController", function($rootScope, $scope, $http, $stateParams, $window){
 	$scope.channels = [];
 	$scope.channellimit = 80;
 	$scope.channelSearch = {};
 	
+	
 	// todo: dynamic channellimit based on window width+height. Average item width is ~ 130px, height 51px
+	var calcChannellimit = function () {
+		var availableWidth = 0.8 * window.innerWidth;
+		var availableHeight = window.innerHeight - 350; // 350px get used on the header, footer, title and search
+		
+		$scope.channellimit = Math.floor(availableHeight * availableWidth / (130 * 51));
+	}
+	
+	angular.element($window).bind('resize', function(){
+		$scope.$apply(function(){
+			calcChannellimit();
+		});
+	});
+	calcChannellimit();
 	
 	var updateChannels = function(){
 		$http.jsonp("/api/channels/?callback=JSON_CALLBACK").then(function(response) {
@@ -49,6 +63,6 @@ logviewerApp.controller("ChannelListController", function($rootScope, $scope, $h
 			}
 		}
 		$scope.emote = allemotes[Math.floor(Math.random()*allemotes.length)];
-		$scope.emote.url = "http://static-cdn.jtvnw.net/emoticons/v1/" + $scope.emote.id + "/3.0";
+		$scope.emote.url = "//static-cdn.jtvnw.net/emoticons/v1/" + $scope.emote.id + "/3.0";
 	});
 });
