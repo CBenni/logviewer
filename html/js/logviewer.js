@@ -314,7 +314,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 			}
 		}
 		$scope.emote = allemotes[Math.floor(Math.random()*allemotes.length)];
-		$scope.emote.url = "http://static-cdn.jtvnw.net/emoticons/v1/" + $scope.emote.id + "/3.0";
+		$scope.emote.url = "//static-cdn.jtvnw.net/emoticons/v1/" + $scope.emote.id + "/3.0";
 	});
 	
 	// chat connector

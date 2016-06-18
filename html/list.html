@@ -14,8 +14,7 @@
 			<md-button ng-class="{live: channelObj.live, 'channel-live-indicator':true}" ui-sref="channel({channel: channelObj.name})">{{channelObj.name}}</md-button>
 		</div>
 		<div layout="row" layout-align="center start" ng-show="channels.length > 0 && filteredChannels.length == 0">
-			No channels found. 
-			<span>If you have access and want to add {{channelSearch.name}} to the logviewer, click <a ui-sref="settings({channel: channelSearch.name})">here</a></span>
+			<span>No channels found. If you have access and want to add {{channelSearch.name}} to the logviewer, click <a ui-sref="settings({channel: channelSearch.name})">here</a></span>
 		</div>
 		<div layout="row" layout-align="center start" ng-show="channellimit && channels.length > channellimit && !channelSearch.name">
 			<a href="#" class="greylink" ng-click="channellimit = undefined">&#x25BD; Show more</a>

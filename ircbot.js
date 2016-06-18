@@ -1,6 +1,7 @@
 var net = require('net');
 var events = require('events');
 var winston = require('winston');
+var parseIRCMessage = require("./messagecompressor").parseIRCMessage;
 
 var rx = /^(?:@([^ ]+) )?(?:[:](\S+) )?(\S+)(?: (?!:)(.+?))?(?: [:](.+))?$/;
 var rx2 = /([^=;]+)=([^;]*)/g;
@@ -28,28 +29,6 @@ function IRCBot(host, port) {
 		});
 	}
 	
-	self.parseIRCMessage = function(message) {
-		var data = rx.exec(message);
-		if(data == null) {
-			winston.error("Couldnt parse message '"+message+"'");
-			return null;
-		}
-		var tagdata = data[STATE_V3];
-		if (tagdata) {
-			var tags = {};
-			do {
-				m = rx2.exec(tagdata);
-				if (m) {
-					tags[m[1]] = m[2];
-				}
-			} while (m);
-			data[STATE_V3] = tags;
-		}
-		return data;
-	}
-
-	
-	
 	var buffer = new Buffer('');
 
 	self.client.on('data', function(chunk) {
@@ -69,7 +48,7 @@ function IRCBot(host, port) {
 
 		lines.forEach(function(line) {
 			if(line.length>0) {
-				var parsed = self.parseIRCMessage(line);
+				var parsed = parseIRCMessage(line);
 				parsed[STATE_COMMAND] == "PING" && self.send("PONG");
 				self.emit('raw', parsed);
 				self.emit(parsed[STATE_COMMAND], parsed);

@@ -807,6 +807,122 @@ app.get('/api/badges/:channel', function(req,res,next){
 	}
 });
 
+// slack custom plugin
+// command: /lv <user> [channel] [limit]
+var levels = {0: "everyone", 1: "log in", 5: "moderator", 7: "super-moderator", 10: "bradcaster/editor"}
+
+var STATE_V3 = 1
+var STATE_PREFIX = 2
+var STATE_COMMAND = 3
+var STATE_PARAM = 4
+var STATE_TRAILING = 5
+function plainTextify(channel, user, logs){
+	var reply = "";
+	if(logs.length > 0) {
+		reply = "Here are the logs for " + user + " in " + channel + "\n```";
+		for(var i=0;i<logs.length;++i) {
+			var line = logs[i];
+			reply += "\n" + strftime("%Y-%m-%d %r", new Date(line.time * 1000));
+			reply += " | " + messagecompressor.parseIRCMessage(line.text)[STATE_TRAILING];
+		}
+		reply += "```\n";
+	} else {
+		reply += "```No logs found for user "+user+" in channel "+channel+"```\n";
+	}
+	reply += 'See ' + settings.auth.baseurl + "/" + encodeURIComponent(channel) + "/?user=" + encodeURIComponent(user);
+	return reply;
+}
+
+function getSlackLogs(channel, user, limit, token, cb, ecb) {
+	try {
+		var channel = channel.toLowerCase();
+		var query = {nick: user, before: parseInt(limit) || 10, token: token};
+		db.getActiveChannel(channel, function(channelObj) {
+			if(!channelObj)
+			{
+				ecb(404, "Error: Channel "+channel+" not found.");
+				return;
+			}
+			if(channelObj.viewlogs > 0) {
+				getLevel(channelObj.name, query.token, function(level){
+					if(level >= channelObj.viewlogs) {
+						getLogs(channelObj.name, query, function(logs){
+							cb(plainTextify(channel, user, logs.before));
+						});
+					} else {
+						var dsplevel = levels[channelObj.viewlogs] || "unknown ("+channelObj.viewlogs+")";
+						ecb(403,"Access denied. Logs are "+dsplevel+" level - please configure your lvtoken accordingly.");
+					}
+				});
+			} else {
+				getLogs(channelObj.name, query, function(logs){
+					cb(plainTextify(channel, user, logs.before));
+				});
+			}
+		});
+	} 
+	catch(err) {
+		ecb(500, "Error: "+err);
+	}
+}
+
+app.get('/api/slack/', function(req,res,next){
+	var fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+	console.log("Slack request: "+fullUrl);
+	var default_channel = req.query.default_channel;
+	var params = req.query.text.split(" ");
+	var token = req.query.lvtoken;
+	if(params.length == 0) {
+		res.status(400).end("Error: Missing user name");
+	} else if(params.length == 1) {
+		if(default_channel) {
+			getSlackLogs(default_channel, params[0], 10, token, function(data){
+				res.end(data);
+			}, function(status, error) { res.status(status).end(error); });
+		} else {
+			res.status(400).end("Error: Missing channel name and no default channel set.");
+		}
+	} else if(params.length == 2) {
+		if(/^\d+$/.test(params[1])) {
+			// 2nd param is the limit
+			if(default_channel) {
+				getSlackLogs(default_channel, params[0], params[1], token, function(data){
+					res.end(data);
+				}, function(status, error) { res.status(status).end(error); });
+			} else {
+				res.status(400).end("Error: Missing channel name and no default channel set.");
+			}
+		} else {
+			// 2nd param is the channel
+			getSlackLogs(params[1], params[0], 10, token, function(data){
+				res.end(data);
+			}, function(status, error) { res.status(status).end(error); });
+		}
+	} else if(params.length == 3) {
+		if(/^\d+$/.test(params[1])) {
+			// 2nd param is the limit
+			if(default_channel) {
+				getSlackLogs(params[2], params[0], params[1], token, function(data){
+					res.end(data);
+				}, function(status, error) { res.status(status).end(error); });
+			} else {
+				res.status(400).end("Error: Missing channel name and no default channel set.");
+			}
+		} else if(/^\d+$/.test(params[2])) {
+			// 3nd param is the limit
+			getSlackLogs(params[1], params[0], params[2], token, function(data){
+				res.end(data);
+			}, function(status, error) { res.status(status).end(error); });
+		} else {
+			// no limit specified
+			res.status(400).end("Error: Unexpected parameter "+params[2]);
+		}
+	} else {
+		res.status(400).end("Error: Too many parameters!");
+	}
+});
+
+
 
 app.use(function(err, req, res, next) {
 	res.status(err.status || 500);
