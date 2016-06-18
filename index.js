@@ -780,7 +780,7 @@ function getBadges(resource, callback) {
 					}
 					callback(badges);
 				} catch(e) {
-					winston.error("Error: not a json string in getBadges. Returned HTTP status code: "+r.statusCode);
+					winston.error("Error: not a json string in getBadges("+resource+"). Returned HTTP status code: "+r.statusCode);
 					callback(defaultbadges);
 				}
 			}
