@@ -7,10 +7,30 @@
 		
 		<h3>How to use it</h3>
 		Simply go to the channel page you wish to check logs for, enter a name in the username box and press the "ADD" button, which adds a log view for this user.
-		
+		<p>
 		Alternatively, you can whisper the logviewer account from any twitch chat or the whisper menu to check for logs, with the following:
 		<code>/w logviewer #channel username</code>
 		where <code>#channel</code> is the channel name (for example, #nl_kripp) and username is the username you want to check. It will respond with the newest logs of this users and a direct link
+		
+		<h3>Slack integration</h3>
+		You can add a slash command to look up chat logs in your Slack team:
+		<ol>
+			<li>Add <a href="https://my.slack.com/services/new/slash-commands" target="_blank">Slacks custom slash commands app</a> to your server</li>
+			<li>Add a new configuration and call it something like <code>lv</code></li>
+			<li>Set the URL to <code>{{location.protocol()+"://"+location.host()+(location.port()=="80"?"":":"+location.port())}}/api/slack/?default_channel={{$parent.$stateParams.channel || "YOUR_CHANNEL_NAME"}}</code> and change the method to <code>GET</code></li>
+			<li>If the channel doesn't have logs readable by "everyone" (see the <a ui-sref="settings({channel: $parent.$stateParams.channel})" ng-show="$parent.$stateParams.channel">settings</a><span ng-hide="$parent.$stateParams.channel">settings</span>), then add a token to the URL. Contact me for details.
+			<li>Customize the command as you like</li>
+			<li>Save</li>
+		</ol>
+		<h4>Usage</h4>
+		To check a users logs, you can now use the slash command you just created, for example:<br>
+		<code>/lv username</code> - gets the last 10 lines of log for the user <code>username</code> in the default channel<br>
+		<code>/lv username 3</code> - gets the last 3 lines of log for the user <code>username</code> in the default channel<br>
+		<code>/lv username channel</code> - gets the last 10 lines of log for the user <code>username</code> in the channel <code>channel</code><br>
+		<code>/lv username channel 3</code> - gets the last 3 lines of log for the user <code>username</code> in the channel <code>channel</code><br>
+		Keep in mind only you can see the response! 
+		<h3>Discord integration</h3>
+		Coming soon™
 		
 		<h3>FAQ</h3>
 		<ul>
@@ -24,7 +44,7 @@
 				If you fulfill this condition but do not have access to the channel account (in which case you can add it yourself), you can contact me.
 			</li>
 			<li><h4>How long are logs saved?</h4>
-				For most channels, the logs will be stored for at least 1 month. If you want a specific channel's logs to be stored for a longer period than that, contact me.
+				As long as my server costs are covered by the voluntary donations. Contact me if you want to make an agreement on permanent log storage.
 			</li>
 			<li><h4>A certain users logs don't show up, what happened?</h4>
 				There are multiple things that can result in this:

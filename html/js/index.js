@@ -29,9 +29,10 @@ app.run(function($rootScope, $state) {
 	});
 });
 
-app.controller("mainctrl", function($rootScope,$scope,$http,$cookies,$stateParams,$mdDialog){
+app.controller("mainctrl", function($rootScope,$scope,$http,$location,$cookies,$stateParams,$mdDialog){
 	$rootScope.auth = { name: $cookies.get("login")||"", token: $cookies.get("token")||"" };
 	$scope.$stateParams = $stateParams;
+	$rootScope.$stateParams = $stateParams;
 	$scope.login = function() {
 		window.location.href = "https://api.twitch.tv/kraken/oauth2/authorize"
 			+"?response_type=code"
@@ -68,7 +69,9 @@ app.controller("mainctrl", function($rootScope,$scope,$http,$cookies,$stateParam
 });
 
 
-function DialogController($scope, $mdDialog) {
+function DialogController($scope, $mdDialog, $location) {
+	$scope.location = $location;
+	
 	$scope.hide = function() {
 		$mdDialog.hide();
 	};
