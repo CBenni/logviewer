@@ -870,7 +870,8 @@ app.get('/api/slack/', function(req,res,next){
 	var fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
 	console.log("Slack request: "+fullUrl);
 	var default_channel = req.query.default_channel;
-	var params = req.query.text.split(" ");
+	var params = [];
+	if(req.query.text) params = req.query.text.split(" ");
 	var token = req.query.lvtoken;
 	if(params.length == 0) {
 		res.status(400).end("Error: Missing user name");
