@@ -791,8 +791,23 @@ function serveOnePage(req, res, next) {
 	}
 }
 
+function redirectLegacy(req, res, next) {
+	try {
+		checkAuth(req, res, function(){
+			var channel = req.params.channel;
+			res.redirect(301, '/'+(channel?encodeURIComponent(channel.toLowerCase()):""));
+		});
+	} 
+	catch(err) {
+		next(err);
+	}
+}
+
 app.get('/', serveOnePage);
 app.get('/:channel', serveOnePage);
+app.get('/lv/', redirectLegacy);
+app.get('/logviewer/', redirectLegacy);
+app.get('/lv/:channel', redirectLegacy);
 app.get('/:channel/:page', serveOnePage);
 
 
