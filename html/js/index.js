@@ -18,6 +18,11 @@ app.config(function($stateProvider, $urlRouterProvider, $urlMatcherFactoryProvid
 			url: "/:channel/settings",
 			templateUrl: "/html/settings.html",
 			controller: "SettingsController"
+		})
+		.state("connect", {
+			url: "/:channel/connect",
+			templateUrl: "/html/connect.html",
+			controller: "SettingsController"
 		});
 });
 
@@ -59,9 +64,11 @@ app.controller("mainctrl", function($rootScope,$scope,$http,$location,$cookies,$
 		});
 	}
 	
-	$scope.darkmode = $cookies.get("lv-darkmode") === "true";
+	$scope.userSettings = JSON.parse(localStorage.logviewerUserSettings ||
+		'{"dark": false, "chat": true}'
+	);
 	$scope.saveMode = function() {
-		$cookies.put("lv-darkmode", $scope.darkmode);
+		localStorage.logviewerUserSettings = JSON.stringify($scope.userSettings);
 	}
 	
 	// preload this

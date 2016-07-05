@@ -1,0 +1,14 @@
+DISCORD
+grant flow
+auth bot -> failed attempt -> return connection link http://cbenni.com/:channel/connect/?type=discord&id=SERVERID&descr=SERVER_NAME -> click connect -> add connection object
+
+consume flow
+bot gets request -> gets channel -> gets connection for SERVERID -> returns logs
+
+
+SLACK
+grant flow
+add /command -> failed attempt -> return connection link http://cbenni.com/:channel/connect/?type=slack&descr=TEAM_DOMAIN -> enter token -> click connect -> add connection object
+
+consume flow
+/command is executed -> webhook fires -> 

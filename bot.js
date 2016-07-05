@@ -105,6 +105,22 @@ function logviewerBot(settings, db, io) {
 			}
 		}
 	});
+	
+	bot.on("USERNOTICE", function(data){
+		if(data[TAGS] && data[TAGS]["msg-id"]=="resub") {
+			var time = Math.floor(Date.now()/1000);
+			var channel = data[PARAM].slice(1);
+			var text = data[TAGS]["system-msg"].replace("\\s"," ");
+			if(data[TRAILING]) text += " Message: "+data[TRAILING];
+			var sub = data[TAGS]["login"];
+			db.addLine(channel, "twitchnotify", "dtwitchnotify "+text, true, function(id) {
+				io.to("logs-"+channel+"-twitchnotify").emit("log-add", {id: id, time: time, nick: "twitchnotify", text: `@display-name=twitchnotify;color=;subscriber=0;turbo=0;user-type=;emotes=;mod=0 :${sub}!${sub}@${sub}.tmi.twitch.tv PRIVMSG #${channel} :${text}`});
+			});
+			db.addLine(channel, sub, "dtwitchnotify "+text, false, function(id) {
+				io.to("logs-"+channel+"-"+sub).emit("log-add", {id: id, time: time, nick: sub, text: `@display-name=twitchnotify;color=;subscriber=0;turbo=0;user-type=;emotes=;mod=0 :${sub}!${sub}@${sub}.tmi.twitch.tv PRIVMSG #${channel} :${text}`});
+			});
+		}
+	});
 
 	// Everything having to do with timeouts/bans
 	var ROTATECYCLE = 30000;

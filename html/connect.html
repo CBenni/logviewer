@@ -1,0 +1,26 @@
+<div id="main" layout="column" layout-align="space-between center" ng-cloak>
+<div class="content" ng-cloak ng-if="loadStatus == 0" layout="row" layout-align="center center">
+	<md-progress-circular md-mode="indeterminate"></md-progress-circular> loading...
+</div>
+<div ng-if="loadStatus != 0 && userObject.level < 10"><!-- empty div for space-between centering --></div>
+<div class="content" ng-cloak ng-if="loadStatus != 0 && userObject.level < 10" layout="row" layout-align="center center" layout-xs="column">
+	<div flex="none" class="big-error-icon">
+		<md-icon>error</md-icon>
+	</div>
+	<div style="font-size: 20px;" flex="none">
+		 You currently do not have access to change app connections of the channel {{channel}}.<br>
+		<span ng-if="userObject.valid == false">If you have {{10 | aAnAccountType }} account, then you can <md-button ng-click="login()" class="md-raised twitch-button md-small">Login with twitch</md-button></span>
+	</div>
+</div>
+<div class="content" ng-cloak ng-show="loadStatus != 0 && userObject.level >= 10">
+	<h2>Allow {{app.name}} to access data from the channel {{channel}}?</h2>
+	Apps have a level (just like normal users) governing what they have access to. Most apps will require access to logs and comments, so make sure to provide the app with a level that allows it to perform the features it provides.
+	<ul>
+		<li ng-repeat="scope in app.requiredScopes"></li>
+	</ul>
+	<md-button class="md-primary md-raised" ng-click="save()" ng-disabled="!settingsChanged()">
+	SAVE
+	</md-button>
+</div>
+<div ng-include="'/html/footer.html'"></div>
+</div>

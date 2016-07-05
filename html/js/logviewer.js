@@ -57,7 +57,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	}
 	
 	$scope.chatEmbedUrl = function() {
-		if($scope.channelsettings) return $sce.trustAsResourceUrl("https://www.twitch.tv/" + $scope.channelsettings.name + "/chat?"+($scope.darkmode?"darkpopout":"popout"));
+		if($scope.channelsettings) return $sce.trustAsResourceUrl("https://www.twitch.tv/" + $scope.channelsettings.name + "/chat?"+($scope.userSettings.dark?"darkpopout":"popout"));
 		else return;
 	}
 	
@@ -286,13 +286,13 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	}
 	
 	$scope.addComment = function(nick) {
-		$http.post("/api/comments/"+$scope.channel,{token: $rootScope.auth.token, topic: nick, text: $scope.newcomments[nick]}).then(function(response){
+		$http.post("/api/comments/"+$scope.channel,{token: $rootScope.auth.token, comment: {topic: nick, text: $scope.newcomments[nick]}}).then(function(response){
 			$scope.newcomments[nick] = "";
 		});
 	}
 	
 	$scope.updateComment = function(comment) {
-		$http.post("/api/comments/"+$scope.channel,{token: $rootScope.auth.token, id: comment.id, topic: comment.topic, text: comment.text}).then(function(response){
+		$http.post("/api/comments/"+$scope.channel,{token: $rootScope.auth.token, comment: {id: comment.id, topic: comment.topic, text: comment.text}}).then(function(response){
 			$scope.editingComment = -1;
 		});
 	}
@@ -430,7 +430,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	
 	var ttvapi = function(endpoint, params) {
 		if(params) return $http.jsonp(endpoint+"/?callback=JSON_CALLBACK&client_id="+settings.auth.client_id+"&"+params);
-		else return $http.jsonp(endpoint+"/?callback=JSON_CALLBACK&client_id="+settings.auth.client_id+"&"+params);
+		else return $http.jsonp(endpoint+"/?callback=JSON_CALLBACK&client_id="+settings.auth.client_id);
 	}
 	
 	// actually, this stuff doesnt work until they fix the api...

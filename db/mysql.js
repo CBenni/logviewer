@@ -19,19 +19,19 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		}
 		// create the channels table if it doesnt exist
 		connection.query("CREATE TABLE IF NOT EXISTS channels ("
-		  +"name varchar(32) COLLATE utf8_unicode_ci PRIMARY KEY,"
-		  +"active tinyint(4) unsigned NOT NULL DEFAULT '1',"
-		  +"viewlogs tinyint(4) unsigned NOT NULL DEFAULT '0',"
-		  +"viewcomments tinyint(4) unsigned NOT NULL DEFAULT '5',"
-		  +"writecomments tinyint(4) unsigned NOT NULL DEFAULT '5',"
-		  +"deletecomments tinyint(4) unsigned NOT NULL DEFAULT '10',"
-		  +"`max-age` int(10) unsigned NOT NULL DEFAULT '2678400'"
+			+"name varchar(32) COLLATE utf8_unicode_ci PRIMARY KEY,"
+			+"active tinyint(4) unsigned NOT NULL DEFAULT '1',"
+			+"viewlogs tinyint(4) unsigned NOT NULL DEFAULT '0',"
+			+"viewcomments tinyint(4) unsigned NOT NULL DEFAULT '5',"
+			+"writecomments tinyint(4) unsigned NOT NULL DEFAULT '5',"
+			+"deletecomments tinyint(4) unsigned NOT NULL DEFAULT '10',"
+			+"`max-age` int(10) unsigned NOT NULL DEFAULT '2678400'"
 		+")");
 		// create the auth table if it doesnt exist
 		connection.query("CREATE TABLE IF NOT EXISTS auth ("
-		  +"token varchar(64) PRIMARY KEY,"
-		  +"name varchar(32),"
-		  +"expires BIGINT unsigned"
+			+"token varchar(64) PRIMARY KEY,"
+			+"name varchar(32),"
+			+"expires BIGINT unsigned"
 		+")");
 		// create the comment table if it doesnt exist
 		connection.query("CREATE TABLE IF NOT EXISTS comments ("
@@ -47,8 +47,8 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		+")");
 		// create the alias table if it doesnt exist
 		connection.query("CREATE TABLE IF NOT EXISTS aliases ("
-		  +"alias varchar(32) PRIMARY KEY,"
-		  +"name varchar(32)"
+			+"alias varchar(32) PRIMARY KEY,"
+			+"name varchar(32)"
 		+")");
 		
 		// create the logviewer tables if they dont exist
@@ -64,6 +64,36 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			+"messages INT UNSIGNED DEFAULT '0',"
 			+"timeouts INT UNSIGNED DEFAULT '0',"
 			+"level INT DEFAULT '0'"
+		+")");
+		
+		/* create the integrations table if it doesnt exist */
+		connection.query("CREATE TABLE IF NOT EXISTS connections ("
+			+"id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,"
+			+"channel VARCHAR(32) NULL,"
+			+"level INT DEFAULT '0'," // access level of the connection
+			+"app VARCHAR(32) NOT NULL PRIMARY KEY," // name of the app (for example "Slack")
+			// identifier of the application (used to identify the location the request came from) 
+			// essentially the user name (for example, a Slack connection uses the slash command token to identify )
+			+"data VARCHAR(256) NULL," 
+			+"description TEXT NULL" // Full-text description
+		+")");
+		
+		/* create the integrations table if it doesnt exist */
+		connection.query("CREATE TABLE IF NOT EXISTS apps ("
+			+"id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,"
+			+"scopes VARCHAR(64) NULL," // optimal scopes this app needs
+			+"name VARCHAR(32) NOT NULL PRIMARY KEY," // name of the app (for example "Slack")
+			+"redirect_url VARCHAR(256) NULL," // url to redirect to after authenticating
+			+"description TEXT NULL" // Full-text description
+		+")");
+		
+		/* create the admin log table if it doesnt exist */
+		connection.query("CREATE TABLE IF NOT EXISTS adminlog ("
+			+"time BIGINT UNSIGNED NOT NULL,"
+			+"user VARCHAR(32) NULL,"
+			+"channel VARCHAR(32) NULL,"
+			+"action VARCHAR(32) NULL,"
+			+"data VARCHAR(256) NULL"
 		+")");
 
 	});
@@ -247,7 +277,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	
 	self.checkAndRefreshToken = function(user, token, expires, callback) {
 		self.pool.query("UPDATE auth SET expires=? WHERE name=? AND token=? AND expires > ?",[expires,user,token,Math.floor(Date.now()/1000)], function(error, result) {
-			callback(result.affectedRows > 0);
+			if(callback) callback(result.affectedRows > 0);
 		});
 	}
 	
@@ -290,6 +320,49 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		});
 	}
 	
+	// connections
+	/*
+		id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+		channel VARCHAR(32) NULL,
+		active tinyint(4) unsigned NOT NULL DEFAULT '1',
+		type VARCHAR(32) NOT NULL PRIMARY KEY, // name of the app (for example "Slack")
+		data VARCHAR(256) NULL, // identifier of the application (used to identify the location the request came from)
+		description TEXT NULL // Full-text description
+	
+	self.getIntegrations = function(channel, callback) {
+		self.pool.query("SELECT * FROM connections WHERE channel=?",[channel], function(error,results,fields) {
+			callback(results);
+		});
+	}
+	
+	self.getIntegration = function(channel, id, callback) {
+		self.pool.query("SELECT * FROM connections WHERE channel=? AND id=?",["users_"+channel, searchString], function(error,results,fields) {
+			callback(results[0]);
+		});
+	}
+	
+	self.addConnection = function(channel, active, type, data, description, callback) {
+		self.pool.query("INSERT INTO connections(channel, active, type, data, description) VALUES (?,?,?,?,?)",[channel, active, type, data, description], function(error, result) {
+			if(error) {
+				winston.error("addLine: Could not insert! "+error);
+				return;
+			}
+			if(callback) callback(result.insertId);
+		});
+	}
+	
+	self.updateConnection = function(channel, id, active, type, data, description, callback) {
+		self.pool.query("UPDATE connections SET active=?, type=?, data=?, description=? WHERE id=? AND channel=?",[active, type, data, description, id, channel], function(error,results,fields) {
+			if(callback) callback(results);
+		});
+	}
+	
+	self.removeConnection = function(channel, id, callback, callback) {
+		self.pool.query("DELETE FROM connections WHERE channel=? AND id=?",[channel, id], function(error,results,fields) {
+			if(callback) callback(results);
+		});
+	}
+	*/
 	// error handling
 	self.pool.on('error', function(err) {
 		winston.error(err);

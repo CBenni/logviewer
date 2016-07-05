@@ -15,7 +15,7 @@
 	<link href="/html/css/logviewer.css" rel="stylesheet">
 	<link href="/html/css/settings.css" rel="stylesheet">
 	<link href="/html/css/list.css" rel="stylesheet">
-	<link href="/html/css/dark.css" disabled ng-disabled="!darkmode" rel="stylesheet">
+	<link href="/html/css/dark.css" disabled ng-disabled="!userSettings.dark" rel="stylesheet">
 	<link rel="icon" type="image/x-icon" href="/html/img/icon.png"/>
 	<script>
 		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -35,7 +35,8 @@
 		<span click-outside="showmenu=false">
 			<md-button class="md-fab md-mini fab-nobackground" ng-click="showmenu = !showmenu;"><md-icon>menu</md-icon></md-button>
 			<div class="usermenu" ng-show="showmenu">
-				<md-checkbox class="darkbg" ng-model="darkmode" ng-change="saveMode()">Dark mode</md-checkbox>
+				<md-checkbox class="darkbg" ng-model="userSettings.dark" ng-change="saveMode()">Dark mode</md-checkbox><br>
+				<md-checkbox class="darkbg" ng-model="userSettings.chat" ng-change="saveMode()">Enable chat</md-checkbox>
 			</div>
 		</span>
 		<a ui-sref="index()" ng-if="$stateParams.channel" ui-sref-active="active">Home</a>

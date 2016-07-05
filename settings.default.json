@@ -22,5 +22,9 @@
 	},
 	"logging": {
 		"file": "logviewer.log"
+	},
+	"discord": {
+		"client_id": "",
+		"token": "", // Discord access token
 	}
 }
