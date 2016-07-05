@@ -34,9 +34,9 @@ API.prototype.getChannelObjAndLevel = function(channel, token, callback) {
 			});
 		} else {
 			self.getLevel(channel, token, function(level, username){
-				callback(null, channelObj, level, username);
+				callback({status: 404, message: "Channel "+channel+" not found."}, null, level, username);
 			});
-			callback({status: 404, message: "Channel "+channel+" not found."}, null, null, username);
+			
 		}
 	});
 }
@@ -47,25 +47,29 @@ API.prototype.getUserLevel = function(channel,name,callback) {
 	var self = this;
 	var reslvl = null;
 	var templvl = 0;
-	if(channel) {
-		if(self.bot.userlevels[channel] && self.bot.userlevels[channel][name]) templvl = self.bot.userlevels[channel][name];
-		if(channel === name) templvl = 10;
-		self.db.getUserLevel(channel, name, function(lv){
+	if(name) {
+		if(channel) {
+			if(self.bot.userlevels[channel] && self.bot.userlevels[channel][name]) templvl = self.bot.userlevels[channel][name];
+			if(channel === name) templvl = 10;
+			self.db.getUserLevel(channel, name, function(lv){
+				if(reslvl === null) {
+					reslvl = lv;
+				} else {
+					callback(absMinMax(1,reslvl,lv,templvl));
+				}
+			});
+		} else {
+			reslvl = 0;
+		}
+		
+		self.db.getUserLevel("logviewer", name, function(lv){
 			if(reslvl === null) {
 				reslvl = lv;
 			} else {
 				callback(absMinMax(1,reslvl,lv,templvl));
 			}
 		});
-	} 
-	
-	self.db.getUserLevel("logviewer", name, function(lv){
-		if(reslvl === null) {
-			reslvl = lv;
-		} else {
-			callback(absMinMax(1,reslvl,lv,templvl));
-		}
-	});
+	} else callback(0);
 }
 
 // gets the level of a user by token
@@ -74,11 +78,9 @@ API.prototype.getLevel = function(channel, token, callback) {
 	if(!token || token === "") callback(0);
 	else {
 		self.db.getAuthUser(token, function(name){
-			if(name) {
-				self.getUserLevel(channel,name,function(level){
-					callback(level,name);
-				});
-			} else callback(0,name);
+			self.getUserLevel(channel,name,function(level){
+				callback(level,name);
+			});
 		});
 	}
 }
