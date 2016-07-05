@@ -28,14 +28,13 @@ API.prototype.getChannelObjAndLevel = function(channel, token, callback) {
 	var self = this;
 	var channel = channel.toLowerCase();
 	self.db.getChannel(channel, function(channelObj) {
-		self.getLevel(channelObj.name, token, function(level, username){
-			if(channelObj)
-			{
+		if(channelObj) {
+			self.getLevel(channelObj.name, token, function(level, username){
 				callback(null, channelObj, level, username);
-			} else {
-				callback({status: 404, message: "Channel "+channel+" not found."}, null, level, username);
-			}
-		});
+			});
+		} else {
+			callback({status: 404, message: "Channel "+channel+" not found."}, null, level, username);
+		}
 	});
 }
 
