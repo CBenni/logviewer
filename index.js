@@ -343,7 +343,7 @@ app.get('/api/logs/:channel', function(req, res, next) {
 // body is a JSON object with the allowedsettings ["active","viewlogs","viewcomments","writecomments","deletecomments"] as keys
 app.post('/api/settings/:channel', function(req, res, next) {
 	try {
-		API.getChannelObjAndLevel(req.params.channel, req.query.token, function(error, channelObj, level, username) {
+		API.getChannelObjAndLevel(req.params.channel, req.body.token, function(error, channelObj, level, username) {
 			if(level >= 10) {
 				if(!channelObj)
 				{
