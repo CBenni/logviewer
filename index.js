@@ -348,6 +348,7 @@ app.post('/api/settings/:channel', function(req, res, next) {
 				if(!channelObj)
 				{
 					// add a new channel
+					var channel = req.params.channel;
 					db.addChannel(channel, function() {
 						var newsettings = req.body.settings;
 						for(var i=0;i<allowedsettings.length;++i) {
