@@ -341,6 +341,7 @@ app.get('/api/logs/:channel', function(req, res, next) {
 
 // change the settings of a channel
 // body is a JSON object with the allowedsettings ["active","viewlogs","viewcomments","writecomments","deletecomments"] as keys
+var allowedsettings = ["active","viewlogs","viewcomments","writecomments","deletecomments"];
 app.post('/api/settings/:channel', function(req, res, next) {
 	try {
 		API.getChannelObjAndLevel(req.params.channel, req.body.token, function(error, channelObj, level, username) {
@@ -348,34 +349,26 @@ app.post('/api/settings/:channel', function(req, res, next) {
 				if(!channelObj)
 				{
 					// add a new channel
-					var channel = req.params.channel;
-					db.addChannel(channel, function() {
+					var channelname = req.params.channel;
+					db.addChannel(channelname, function() {
 						var newsettings = req.body.settings;
-						for(var i=0;i<allowedsettings.length;++i) {
-							var key = allowedsettings[i];
-							if(!isNaN(parseInt(newsettings[key]))) {
-								db.setSetting(channel, key, newsettings[key]);
+						API.updateSettings(channelname, newsettings, function(error) {
+							if(error) {
+								res.status(error.status).jsonp({"error": error.message});
+							} else {
+								res.status(200).end();
 							}
-							res.status(200).end();
-							if(key === "active") {
-								if(newsettings.active == "1") bot.joinChannel(channel);
-								else bot.partChannel(channel);
-							}
-						}
+						});
 					});
 				} else {
 					var newsettings = req.body.settings;
-					for(var i=0;i<allowedsettings.length;++i) {
-						var key = allowedsettings[i];
-						if(!isNaN(parseInt(newsettings[key]))) {
-							db.setSetting(channelObj.name, key, newsettings[key]);
+					API.updateSettings(channelObj.name, newsettings, function(error) {
+						if(error) {
+							res.status(error.status).jsonp({"error": error.message});
+						} else {
+							res.status(200).end();
 						}
-						res.status(200).end();
-						if(key === "active") {
-							if(newsettings.active == "1") bot.joinChannel(channelObj.name);
-							else bot.partChannel(channelObj.name);
-						}
-					}
+					});
 				}
 			} else {
 				res.status(403).end();

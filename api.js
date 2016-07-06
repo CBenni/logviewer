@@ -87,8 +87,19 @@ API.prototype.getLevel = function(channel, token, callback) {
 
 // updates a channel settings
 var allowedsettings = ["active","viewlogs","viewcomments","writecomments","deletecomments"];
-API.prototype.updateSettings = function(channel, settings) {
-	
+API.prototype.updateSettings = function(channel, settings, callback) {
+	var self = this;
+	for(var i=0;i<allowedsettings.length;++i) {
+		var key = allowedsettings[i];
+		if(!isNaN(parseInt(settings[key]))) {
+			self.db.setSetting(channel, key, settings[key]);
+		}
+		if(key === "active") {
+			if(settings.active == "1") self.bot.joinChannel(channel);
+			else self.bot.partChannel(channel);
+		}
+	}
+	callback();
 }
 
 // gets logs for a user.
