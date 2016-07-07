@@ -222,24 +222,29 @@ function generateToken(res, username, callback) {
 app.get('/api/login', function(req, res, next) {
 	try {
 		var getToken = function(err,httpResponse,body) {
-			var token = JSON.parse(body).access_token;
-			request.get({
-				url: "https://api.twitch.tv/kraken/?oauth_token="+token+"&client_id="+settings.auth.client_id
-			},function(e,r,body2){
-				if(body2 === undefined) {
-					winston.error("Error: "+r.statusCode);
-					getToken(err,r,body);
-				} else {
-					var auth = JSON.parse(body2).token;
-					if(auth.valid) {
-						generateToken(res, auth.user_name, function(){
-							res.redirect(url.parse(req.query.state).path);
-						});
+			if(err || httpResponse.statusCode != 200) {
+				winston.error("Error getting access token: "+httpResponse.statusCode+"\r\n"+err);
+				res.end("Error getting access token: "+httpResponse.statusCode+"\r\n"+err);
+			} else {
+				var token = JSON.parse(body).access_token;
+				request.get({
+					url: "https://api.twitch.tv/kraken/?oauth_token="+token+"&client_id="+settings.auth.client_id
+				},function(e,r,body2){
+					if(e || body2 === undefined || r.statusCode != 200) {
+						winston.error("Error getting oauth token: "+r.statusCode+"\r\n"+e);
+						res.end("Error getting oauth token: "+r.statusCode+"\r\n"+e);
 					} else {
-						res.status(500).end("Invalid token");
+						var auth = JSON.parse(body2).token;
+						if(auth.valid) {
+							generateToken(res, auth.user_name, function(){
+								res.redirect(url.parse(req.query.state).path);
+							});
+						} else {
+							res.status(500).end("Invalid token");
+						}
 					}
-				}
-			});
+				});
+			}
 		}
 		request.post({
 				url: 'https://api.twitch.tv/kraken/oauth2/token',
@@ -384,7 +389,7 @@ app.post('/api/settings/:channel', function(req, res, next) {
 app.get('/api/levels/:channel',function(req,res,next){
 	try {
 		API.getChannelObjAndLevel(req.params.channel, req.query.token, function(error, channelObj, level, username){
-			if(error) {
+			if(error && error.status != 404) {
 				res.status(error.status).jsonp({"error": error.message});
 			} else {
 				if(level >= 10) {
