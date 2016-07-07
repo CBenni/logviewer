@@ -393,11 +393,13 @@ app.get('/api/levels/:channel',function(req,res,next){
 				res.status(error.status).jsonp({"error": error.message});
 			} else {
 				if(level >= 10) {
-					var channel = req.params.channel;
-					if(channelObj) channel = channelObj.name;
-					db.getLevels(channel,function(levels) {
-						res.jsonp(levels);
-					});
+					if(channelObj) {
+						db.getLevels(channelObj.name,function(levels) {
+							res.jsonp(levels);
+						});
+					} else {
+						res.jsonp([]);
+					}
 				} else {
 					res.status(403).end();
 				}
