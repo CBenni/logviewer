@@ -662,14 +662,42 @@ var STATE_PREFIX = 2
 var STATE_COMMAND = 3
 var STATE_PARAM = 4
 var STATE_TRAILING = 5
+
+
+var formatTimespan = function(timespan) {
+	var age = Math.round(timespan);
+	var periods = [
+		{abbr:"y", len: 3600*24*365},
+		{abbr:"m", len: 3600*24*30},
+		{abbr:"d", len: 3600*24},
+		{abbr:" hrs", len: 3600},
+		{abbr:" min", len: 60},
+		{abbr:" sec", len: 1},
+	];
+	var res = "";
+	var count = 0;
+	for(var i=0;i<periods.length;++i) {
+		if(age >= periods[i].len) {
+			var pval = Math.floor(age / periods[i].len);
+			age = age % periods[i].len;
+			res += (res?" ":"")+pval+periods[i].abbr;
+			count ++;
+			if(count >= 2) break;
+		}
+	}
+	return res;
+}
+
 function plainTextify(channel, user, logs){
 	var reply = "";
-	if(logs.length > 0) {
-		reply = "Here are the logs for " + user + " in " + channel + "\n```";
-		for(var i=0;i<logs.length;++i) {
-			var line = logs[i];
-			reply += "\n" + strftime("%Y-%m-%d %r", new Date(line.time * 1000));
-			reply += " | " + messagecompressor.parseIRCMessage(line.text)[STATE_TRAILING];
+	var now = Math.floor(Date.now()/1000);
+	if(logs.before.length > 0) {
+		reply = "Here are the logs for " + user + " in " + channel + 
+			" ("+logs.user.messages+" messages, "+logs.user.timeouts+" timeouts)\n```";
+		for(var i=0;i<logs.before.length;++i) {
+			var line = logs.before[i];
+			reply += "\n[" + formatTimespan(now - line.time) + " ago] " + user + ": "
+				+ messagecompressor.parseIRCMessage(line.text)[STATE_TRAILING];
 		}
 		reply += "```\n";
 	} else {
@@ -680,12 +708,13 @@ function plainTextify(channel, user, logs){
 
 function plainTextifyComments(channel, user, comments){
 	var reply = "";
+	var now = Math.floor(Date.now()/1000);
 	if(comments && comments.length > 0) {
 		for(var i=0;i<comments.length;++i) {
 			if(reply) reply += "\n";
 			var comment = comments[i];
 			reply += "Comment by "+comment.author+" (" + (comment.added == comment.edited?"added":"edited") + " " 
-				+ strftime("%Y-%m-%d %r", new Date(comment.edited * 1000)) + ")\n";
+				+ formatTimespan(now - comment.edited) + " ago)\n";
 			reply += "```"+comment.text+"```";
 		}
 	}
@@ -707,7 +736,7 @@ function getSlackLogs(channel, user, limit, token, cb, ecb) {
 					var commenttext = false;
 					var seemoretext = 'See ' + settings.auth.baseurl + "/" + encodeURIComponent(channel) + "/?user=" + encodeURIComponent(user);
 					API.getLogs(channelObj.name, query, function(logs){
-						logtext = plainTextify(channel, user, logs.before)
+						logtext = plainTextify(channel, user, logs)
 						if(commenttext !== false) cb(logtext+"\n"+commenttext+"\n"+seemoretext);
 					});
 					db.getComments(channelObj.name, user, function(comments) {
