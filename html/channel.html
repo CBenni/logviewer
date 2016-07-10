@@ -1,4 +1,4 @@
-<div id="main" ng-click="unselect($event,this)" layout="column" layout-align="space-between center" ng-class="{largecolumn: userSettings.chat}" ng-cloak>
+<div id="main" ng-click="unselect($event,this)" layout="column" layout-align="space-between center" ng-class="{largecolumn: userSettings.chat, rhs: userSettings.lhsChat}" ng-cloak>
 <div class="content" ng-cloak ng-if="loadStatus == 0" layout="row" layout-align="center center">
 	<md-progress-circular md-mode="indeterminate"></md-progress-circular> loading...
 </div>
@@ -188,7 +188,7 @@
 </div>
 <div ng-include="'/html/footer.html'"></div>
 </div>
-<div id="chat" ng-if="userSettings.chat">
+<div id="chat" ng-if="userSettings.chat" ng-class="{lhs: userSettings.lhsChat}">
 	<iframe ng-src="{{chatEmbedUrl()}}" frameborder="0" scrolling="no"></iframe>
 </div>
 </div>

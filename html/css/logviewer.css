@@ -28,6 +28,15 @@ div { outline-style:none; }
 	}
 }
 
+#main.rhs {
+	float: right;
+}
+
+#chat.lhs {
+	left: 0;
+	right: inherit;
+}
+
 /* user view */
 
 .userlogsview

@@ -36,7 +36,8 @@
 			<md-button class="md-fab md-mini fab-nobackground" ng-click="showmenu = !showmenu;"><md-icon>menu</md-icon></md-button>
 			<div class="usermenu" ng-show="showmenu">
 				<md-checkbox class="darkbg" ng-model="userSettings.dark" ng-change="saveMode()">Dark mode</md-checkbox><br>
-				<md-checkbox class="darkbg" ng-model="userSettings.chat" ng-change="saveMode()">Enable chat</md-checkbox>
+				<md-checkbox class="darkbg" ng-model="userSettings.chat" ng-change="saveMode()">Enable chat</md-checkbox><br>
+				<md-checkbox class="darkbg" ng-model="userSettings.lhsChat" ng-change="saveMode()">Chat on the left</md-checkbox>
 			</div>
 		</span>
 		<a ui-sref="index()" ng-if="$stateParams.channel" ui-sref-active="active">Home</a>

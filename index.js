@@ -739,10 +739,14 @@ function getSlackLogs(channel, user, limit, token, cb, ecb) {
 						logtext = plainTextify(channel, user, logs)
 						if(commenttext !== false) cb(logtext+"\n"+commenttext+"\n"+seemoretext);
 					});
-					db.getComments(channelObj.name, user, function(comments) {
-						commenttext = plainTextifyComments(channel, user, comments);
-						if(logtext !== false) cb(logtext+"\n"+commenttext+"\n"+seemoretext);
-					});
+					if(level >= channelObj.viewlogs) {
+						db.getComments(channelObj.name, user, function(comments) {
+							commenttext = plainTextifyComments(channel, user, comments);
+							if(logtext !== false) cb(logtext+"\n"+commenttext+"\n"+seemoretext);
+						});
+					} else {
+						commenttext = "";
+					}
 				} else {
 					var dsplevel = levels[channelObj.viewlogs] || "unknown ("+channelObj.viewlogs+")";
 					ecb(403,"Access denied. Logs are "+dsplevel+" level - please configure your lvtoken accordingly.");
