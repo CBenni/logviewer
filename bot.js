@@ -110,7 +110,7 @@ function logviewerBot(settings, db, io) {
 		if(data[TAGS] && data[TAGS]["msg-id"]=="resub") {
 			var time = Math.floor(Date.now()/1000);
 			var channel = data[PARAM].slice(1);
-			var text = data[TAGS]["system-msg"].replace("\\s"," ");
+			var text = data[TAGS]["system-msg"].replace(/\\s/g," ");
 			if(data[TRAILING]) text += " Message: "+data[TRAILING];
 			var sub = data[TAGS]["login"];
 			db.addLine(channel, "twitchnotify", "dtwitchnotify "+text, true, function(id) {

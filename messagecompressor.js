@@ -149,7 +149,7 @@ function decompressMessage(channel, user, data) {
 		var val = tags[i].slice(1);
 		if(key == "emotes") val = decompressEmotes(val);
 		else if(key == "display-name" && val=="") val = user;
-		else if(key == "badges") {
+		else if(key == "badges" && val) {
 			// decompress badges 
 			var compressedBadges = val.split(",");
 			for(var j=0;j<compressedBadges.length;++j) {

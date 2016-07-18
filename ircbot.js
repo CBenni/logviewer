@@ -50,8 +50,12 @@ function IRCBot(host, port) {
 			if(line.length>0) {
 				var parsed = parseIRCMessage(line);
 				parsed[STATE_COMMAND] == "PING" && self.send("PONG");
-				self.emit('raw', parsed);
-				self.emit(parsed[STATE_COMMAND], parsed);
+				try {
+					self.emit('raw', parsed);
+					self.emit(parsed[STATE_COMMAND], parsed);
+				} catch (error) {
+					winston.error(error);
+				}
 			}
 		});
 	});
