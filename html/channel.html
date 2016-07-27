@@ -157,7 +157,7 @@
 								<span class="author">{{::comment.author}}</span> <span class="age">{{comment|commentAge}}</span>
 							</div>
 							<div flex="none" class="comment-editing-buttons">
-								<md-button class="editing-button md-icon-button" ng-show="userObject.level >= channelsettings.writecomments || userObject.name == comment.author" ng-click="editComment(comment)">
+								<md-button class="editing-button md-icon-button" ng-show="userObject.level >= channelsettings.writecomments && userObject.name == comment.author" ng-click="editComment(comment)">
 									<md-icon>mode_edit</md-icon>
 								</md-button>
 								<md-button class="editing-button md-icon-button" ng-click="deleteComment(comment)" ng-show="userObject.level >= channelsettings.deletecomments || userObject.name == comment.author">
