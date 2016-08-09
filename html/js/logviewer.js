@@ -33,7 +33,8 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 		if($stateParams.user) {
 			$scope.addUser($stateParams.user);
 		}
-		
+		getVideos(0);
+		getHighlights(0);
 	}, function(response){
 		$scope.loadStatus = -1;
 	});
@@ -440,7 +441,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	
 	var getVideos = function (offset) {
 		// get past broadcasts
-		ttvapi("https://api.twitch.tv/kraken/channels/"+$scope.channel+"/videos", "limit=100&broadcasts=true&offset="+offset).then(function(response){
+		ttvapi("https://api.twitch.tv/kraken/channels/"+$scope.channelsettings.name+"/videos", "limit=100&broadcasts=true&offset="+offset).then(function(response){
 			var count = response.data.videos.length;
 			for(var i=0;i<count;++i) {
 				var video = response.data.videos[i];
@@ -460,7 +461,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	
 	var getHighlights = function (offset) {
 		// get highlights
-		ttvapi("https://api.twitch.tv/kraken/channels/"+$scope.channel+"/videos", "limit=100&offset="+offset).then(function(response){
+		ttvapi("https://api.twitch.tv/kraken/channels/"+$scope.channelsettings.name+"/videos", "limit=100&offset="+offset).then(function(response){
 			var count = response.data.videos.length;
 			for(var i=0;i<count;++i) {
 				var video = response.data.videos[i];
@@ -477,8 +478,6 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 			}
 		});
 	}
-	getVideos(0);
-	getHighlights(0);
 	var getVideoInfo = function(video, timestamp) {
 		var pasttime = Math.max(0, Math.round(timestamp - video.start)-10); // remove 10s to compensate for twitch page load
 		return {
