@@ -87,12 +87,13 @@ API.prototype.getLevel = function(channel, token, callback) {
 
 // updates a channel settings
 var allowedsettings = ["active","viewlogs","viewcomments","writecomments","deletecomments"];
-API.prototype.updateSettings = function(channel, settings, callback) {
+API.prototype.updateSettings = function(channel, user, settings, callback) {
 	var self = this;
 	for(var i=0;i<allowedsettings.length;++i) {
 		var key = allowedsettings[i];
 		if(!isNaN(parseInt(settings[key]))) {
 			self.db.setSetting(channel, key, settings[key]);
+			self.db.adminLog(channel, user, "setting", key, settings[key]);
 		}
 		if(key === "active") {
 			if(settings.active == "1") self.bot.joinChannel(channel);
@@ -145,7 +146,7 @@ API.prototype.getLogs = function(channel, query, callback) {
 	}
 }
 
-API.prototype.setIntegration = function(channelObj, newintegration, callback) {
+API.prototype.setIntegration = function(channelObj, user, newintegration, callback) {
 	var self = this;
 	// update
 	if(newintegration.id) {
@@ -159,7 +160,8 @@ API.prototype.setIntegration = function(channelObj, newintegration, callback) {
 						integration[key]= newval;
 					}
 				}
-				// update the connection
+				// update the integration
+				db.adminLog(channelObj.name, username, "integration", integration.type+"/"+integration.data, integration.active?"enable":"disable");
 				self.db.updateIntegration(channelObj.name, integration.id, integration.active, integration.type, integration.data, integration.description, function(){
 					callback(null, integration);
 				})
@@ -183,7 +185,8 @@ API.prototype.setIntegration = function(channelObj, newintegration, callback) {
 				integration[key]= newval;
 			}
 		}
-		// add the connection
+		// add the integration
+		db.adminLog(channelObj.name, username, "integration", integration.type+"/"+integration.data, integration.active?"enable":"disable");
 		self.db.addIntegration(channelObj.name, integration.id, integration.active, integration.type, integration.data, integration.description, function(id){
 			integration.id = id;
 			callback(null, integration);
@@ -199,6 +202,7 @@ API.prototype.setComment = function(channelObj, level, username, newcomment, cal
 			if(comment) {
 				// only people with the edit permission can delete other peoples comments
 				if(level >= channelObj.editcomments || comment.author == username) {
+					self.db.adminLog(channelObj.name, username, "update comment", "#"+newcomment.id+" by: "+comment.author+", topic: "+comment.topic, newcomment.text);
 					self.db.updateComment(channelObj.name, newcomment.id, newcomment.text);
 					// only send back stuff needed for identification and changes
 					var time = Math.floor(Date.now()/1000);
@@ -220,6 +224,7 @@ API.prototype.setComment = function(channelObj, level, username, newcomment, cal
 		} else if(level >= channelObj.writecomments) {
 			var time = Math.floor(Date.now()/1000);
 			self.db.addComment(channelObj.name, username, newcomment.topic, newcomment.text, function(id){
+				self.db.adminLog(channelObj.name, username, "add comment", "#"+id+" by: "+username+", topic: "+newcomment.topic, newcomment.text);
 				self.io.to("comments-"+channelObj.name+"-"+newcomment.topic).emit("comment-add", {id: id, added: time, edited: time, channel: channelObj.name, author: username, topic: newcomment.topic, text: newcomment.text});
 			});
 			callback();

@@ -90,10 +90,11 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		/* create the admin log table if it doesnt exist */
 		connection.query("CREATE TABLE IF NOT EXISTS adminlog ("
 			+"time BIGINT UNSIGNED NOT NULL,"
-			+"user VARCHAR(32) NULL,"
 			+"channel VARCHAR(32) NULL,"
+			+"user VARCHAR(32) NULL,"
 			+"action VARCHAR(32) NULL,"
-			+"data VARCHAR(256) NULL"
+			+"name VARCHAR(256) NULL,"
+			+"data TEXT NULL"
 		+")");
 
 	});
@@ -318,6 +319,19 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		self.pool.query("SELECT nick FROM ?? WHERE nick LIKE ? LIMIT 11",["users_"+channel, searchString], function(error,results,fields) {
 			callback(results);
 		});
+	}
+	
+	/* "CREATE TABLE IF NOT EXISTS adminlog ("
+			+"time BIGINT UNSIGNED NOT NULL,"
+			+"channel VARCHAR(32) NULL,"
+			+"user VARCHAR(32) NULL,"
+			+"action VARCHAR(32) NULL," -> setting/level/(dis)connect/(add/edit/remove) comment
+			+"key VARCHAR(32) NULL," -> setting/user/connection name/comment id
+			+"data VARCHAR(256) NULL" -> new value/level/key/comment text
+		+")" */
+	self.adminLog = function(channel, user, action, key, data) {
+		var d = Math.floor(Date.now()/1000);
+		self.pool.query("INSERT INTO adminlog(time,channel,user,action,name,data) VALUES (?,?,?,?,?,?)", [d,channel,user,action,key,data]);
 	}
 	
 	// connections

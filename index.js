@@ -355,9 +355,10 @@ app.post('/api/settings/:channel', function(req, res, next) {
 				{
 					// add a new channel
 					var channelname = req.params.channel.toLowerCase();
+					db.adminLog(channelname, username, "channel", "add", "");
 					db.addChannel(channelname, function() {
 						var newsettings = req.body.settings;
-						API.updateSettings(channelname, newsettings, function(error) {
+						API.updateSettings(channelname, username, newsettings, function(error) {
 							if(error) {
 								res.status(error.status).jsonp({"error": error.message});
 							} else {
@@ -367,7 +368,7 @@ app.post('/api/settings/:channel', function(req, res, next) {
 					});
 				} else {
 					var newsettings = req.body.settings;
-					API.updateSettings(channelObj.name, newsettings, function(error) {
+					API.updateSettings(channelObj.name, username, newsettings, function(error) {
 						if(error) {
 							res.status(error.status).jsonp({"error": error.message});
 						} else {
@@ -423,6 +424,7 @@ app.post('/api/levels/:channel',function(req,res,next){
 					for(var i=0;i<newlevels.length;++i) {
 						var userObject = newlevels[i];
 						if(Math.abs(userObject.level) <= level && /^\w+$/.test(userObject.nick)) {
+							db.adminLog(channelObj.name, username, "level", userObject.nick, userObject.level);
 							db.setLevel(channelObj.name,userObject.nick.toLowerCase(),userObject.level);
 						}
 					}
@@ -461,7 +463,7 @@ app.get('/api/connections/:channel',function(req,res,next){
 });
 
 // create or update a new app integration
-app.post('/api/connections/:channel',function(req,res,next){
+app.post('/api/integrations/:channel',function(req,res,next){
 	try {
 		API.getChannelObjAndLevel(req.params.channel, req.body.token, function(error, channelObj, level, username){
 			if(error) {
@@ -483,7 +485,7 @@ app.post('/api/connections/:channel',function(req,res,next){
 });
 
 // remove an app connection
-app.delete('/api/connections/:channel',function(req,res,next){
+app.delete('/api/integrations/:channel',function(req,res,next){
 	try {
 		API.getChannelObjAndLevel(req.params.channel, req.query.token, function(error, channelObj, level, username){
 			if(error) {
@@ -560,7 +562,8 @@ app.delete('/api/comments/:channel',function(req,res,next){
 						return;
 					}
 					// only people with the deletion permission can delete other peoples comments
-					if(level >= channelObj.deletecomments || comment.author == username) { 
+					if(level >= channelObj.deletecomments || comment.author == username) {
+						db.adminLog(channelObj.name, username, "delete comment", "#"+req.query.id+" by: "+comment.author+", topic: "+comment.topic, comment.text);
 						db.deleteComment(channelObj.name, req.query.id);
 						io.to("comments-"+channelObj.name+"-"+comment.topic).emit("comment-delete", {id: req.query.id, topic: comment.topic});
 						res.status(200).end();

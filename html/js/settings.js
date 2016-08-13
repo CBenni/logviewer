@@ -64,43 +64,57 @@ logviewerApp.controller("SettingsController", function($rootScope, $scope, $http
 		return changedlevels.length!=0;
 	}
 	
-	$scope.save = function() {
-		var promises = [];
-		var changed = [];
-		
+	var errorToast = function(reason) {
+		var reasonString = {
+			403: "Error: Access denied.",
+			404: "Error: Channel not found."
+		}[reason.status] || "An unknown error occurred. Please try again later.";
+		$mdToast.show($mdToast.simple({
+			parent: "#main",
+			textContent: reasonString,
+			position: "top right",
+			hideDelay: 3000
+		}));
+	};
+	
+	var saveSettings = function() {
 		var changedsettings = getChanges(oldsettings,$scope.settings);
+		var changed = [];
 		if(Object.keys(changedsettings).length > 0) {
 			changed.push("settings");
-			promises.push($http.post("/api/settings/"+$stateParams.channel, {token: $rootScope.auth.token, settings: changedsettings}));
+			return new Promise(function(r,j) {
+				$http.post("/api/settings/"+$stateParams.channel, {token: $rootScope.auth.token, settings: changedsettings}).then(function(){r(changed);},j);
+			});
+		} else {
+			return Promise.resolve(changed);
 		}
-		
+	}
+	
+	var saveLevels = function(changed) {
 		var changedlevels = getListChanges(oldlevels,$scope.levels);
 		if(changedlevels.length!=0) {
 			changed.push("levels");
-			promises.push($http.post("/api/levels/"+$stateParams.channel, {token: $rootScope.auth.token, levels: changedlevels}));
+			return new Promise(function(r,j) {
+				$http.post("/api/levels/"+$stateParams.channel, {token: $rootScope.auth.token, levels: changedlevels}).then(function(){r(changed);},j);
+			});
+		} else {
+			return Promise.resolve(changed);
 		}
-		
-		Promise.all(promises).then(function(response){
-			oldsettings = angular.copy($scope.settings);
-			oldlevels = angular.copy($scope.levels);
-			$mdToast.show($mdToast.simple({
-				parent: "#main",
-				textContent: changed.join(" and ") + " saved",
-				position: "top right",
-				hideDelay: 3000
-			}));
-		}, function(reason) {
-			var reasonString = {
-				403: "Error: Access denied.",
-				404: "Error: Channel not found."
-			}[reason.status] || "An unknown error occurred. Please try again later.";
-			$mdToast.show($mdToast.simple({
-				parent: "#main",
-				textContent: reasonString,
-				position: "top right",
-				hideDelay: 3000
-			}));
-		});
+	}
+	
+	$scope.save = function() {
+		saveSettings()
+			.then(saveLevels)
+			.then(function(changed){
+				oldsettings = angular.copy($scope.settings);
+				oldlevels = angular.copy($scope.levels);
+				$mdToast.show($mdToast.simple({
+					parent: "#main",
+					textContent: changed.join(" and ") + " saved",
+					position: "top right",
+					hideDelay: 3000
+				}));
+			}, errorToast);
 	}
 	
 	$scope.addEmptyRow = function() {
