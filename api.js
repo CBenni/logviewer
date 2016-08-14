@@ -202,11 +202,13 @@ API.prototype.setComment = function(channelObj, level, username, newcomment, cal
 			if(comment) {
 				// only people with the edit permission can delete other peoples comments
 				if(level >= channelObj.editcomments || comment.author == username) {
-					self.db.adminLog(channelObj.name, username, "update comment", "#"+newcomment.id+" by: "+comment.author+", topic: "+comment.topic, newcomment.text);
-					self.db.updateComment(channelObj.name, newcomment.id, newcomment.text);
-					// only send back stuff needed for identification and changes
 					var time = Math.floor(Date.now()/1000);
-					self.io.to("comments-"+channelObj.name+"-"+comment.topic).emit("comment-update", {id: newcomment.id, edited: time, text: newcomment.text, topic: comment.topic});
+					comment.edited = time;
+					comment.text = newcomment.text;
+					self.db.adminLog(channelObj.name, username, "comment", "edit", JSON.stringify(comment));
+					self.db.updateComment(channelObj.name, comment.id, comment.text);
+					// only send back stuff needed for identification and changes
+					self.io.to("comments-"+channelObj.name+"-"+comment.topic).emit("comment-update", comment);
 					callback();
 				} else {
 					callback({"status": 403, "message":"Can only edit own comments"});
@@ -224,8 +226,9 @@ API.prototype.setComment = function(channelObj, level, username, newcomment, cal
 		} else if(level >= channelObj.writecomments) {
 			var time = Math.floor(Date.now()/1000);
 			self.db.addComment(channelObj.name, username, newcomment.topic, newcomment.text, function(id){
-				self.db.adminLog(channelObj.name, username, "add comment", "#"+id+" by: "+username+", topic: "+newcomment.topic, newcomment.text);
-				self.io.to("comments-"+channelObj.name+"-"+newcomment.topic).emit("comment-add", {id: id, added: time, edited: time, channel: channelObj.name, author: username, topic: newcomment.topic, text: newcomment.text});
+				var comment = {id: id, added: time, edited: time, channel: channelObj.name, author: username, topic: newcomment.topic, text: newcomment.text};
+				self.db.adminLog(channelObj.name, username, "comment", "add", JSON.stringify(comment));
+				self.io.to("comments-"+channelObj.name+"-"+newcomment.topic).emit("comment-add", comment);
 			});
 			callback();
 		} else {

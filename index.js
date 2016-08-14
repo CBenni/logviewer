@@ -563,7 +563,7 @@ app.delete('/api/comments/:channel',function(req,res,next){
 					}
 					// only people with the deletion permission can delete other peoples comments
 					if(level >= channelObj.deletecomments || comment.author == username) {
-						db.adminLog(channelObj.name, username, "delete comment", "#"+req.query.id+" by: "+comment.author+", topic: "+comment.topic, comment.text);
+						db.adminLog(channelObj.name, username, "comment", "delete", JSON.stringify(comment));
 						db.deleteComment(channelObj.name, req.query.id);
 						io.to("comments-"+channelObj.name+"-"+comment.topic).emit("comment-delete", {id: req.query.id, topic: comment.topic});
 						res.status(200).end();
