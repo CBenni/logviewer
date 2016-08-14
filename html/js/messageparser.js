@@ -122,7 +122,7 @@ function renderMessage(messageinfo, badges) {
 		if(badgeid[0]) {
 			var badgeinfo = badges.badge_sets[badgeid[0]].versions[badgeid[1]];
 			if(badgeinfo) {
-				result += '<img src="' + badgeinfo.image_url_1x + '" title="' + badgeinfo.title + '" class="logviewer-badge logviewer-badge-' + badgeid[0] + '">'
+				result += '<img src="' + badgeinfo.image_url_1x + '" title="' + badgeinfo.title + '" class="logviewer-badge logviewer-badge-' + badgeid[0] + '" alt="">'
 			}
 		}
 	}
