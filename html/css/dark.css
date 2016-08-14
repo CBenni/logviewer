@@ -35,3 +35,7 @@ md-select.md-default-theme .md-select-value, md-select .md-select-value {
 md-icon svg {
 	fill: white;
 }
+
+.md-button.videobutton[disabled] md-icon svg {
+	fill: rgba(255,255,255,0.46);
+}
