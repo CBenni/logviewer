@@ -126,6 +126,14 @@ md-input-container.notop {
 	padding: 5px 10px;
 }
 
+md-icon svg {
+	fill: rgba(0,0,0,0.54);
+}
+
+.md-button.md-primary.md-raised md-icon svg {
+	fill: white;
+}
+
 .menu-button md-icon svg {
 	fill: white;
 }

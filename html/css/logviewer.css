@@ -252,6 +252,18 @@ a.md-primary.md-icon-button.videobutton.md-button.md-ink-ripple {
 	font-size: 10pt;
 }
 
-.highlight-button md-icon.md-primary.ng-binding.ng-scope.material-icons {
-	color: #e3b338;
+.md-button.videobutton md-icon svg {
+	fill: rgb(63,81,181);
+}
+
+.md-button.videobutton md-icon svg {
+	fill: rgb(63,81,181);
+}
+
+.md-button.videobutton.highlight-button md-icon svg {
+	fill: #e3b338;
+}
+
+.md-button.videobutton[disabled] md-icon svg {
+	fill: rgba(0,0,0,0.54);
 }
