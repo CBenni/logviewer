@@ -24,6 +24,7 @@
     "angular-material": "^1.0.7",
     "angular-cookies": "^1.5.5",
     "angular-socket-io": "^0.7.0",
-    "socket.io-client": "^1.4.6"
+    "socket.io-client": "^1.4.6",
+    "angular-linkify": "^1.2.0"
   }
 }

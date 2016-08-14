@@ -6,7 +6,7 @@ if (!String.prototype.startsWith) {
 	};
 }
 
-var logviewerApp = angular.module("logviewerApp", ['ngSanitize','ngAnimate','btford.socket-io']);
+var logviewerApp = angular.module("logviewerApp", ['ngSanitize','ngAnimate','btford.socket-io','linkify']);
 logviewerApp.controller("ChannelController", function($scope, $http, $stateParams, $rootScope, $sce, logviewerSocket, $q){
 	$scope.channel = $stateParams.channel.toLowerCase();
 	$scope.channelsettings = null;
