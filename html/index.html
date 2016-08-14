@@ -8,7 +8,6 @@
 	<title ng-bind="title + ' - logviewer'">logviewer</title>
 	<base href="/">
 	<link href="/html/bower_components/angular-material/angular-material.min.css" rel="stylesheet">
-	<link href="/html/css/material-icons.css" rel="stylesheet">
 	<link href="/html/css/roboto-1-3-4-5-7.css" rel="stylesheet">
 	<link href="/html/css/base.css" rel="stylesheet">
 	<link href="/html/css/animations.css" rel="stylesheet">
@@ -33,7 +32,7 @@
 <div class="header" layout="row" layout-align="space-between center">
 	<div layout="row" layout-align="start center" flex="none">
 		<span click-outside="showmenu=false">
-			<md-button class="md-fab md-mini fab-nobackground" ng-click="showmenu = !showmenu;"><md-icon>menu</md-icon></md-button>
+			<md-button class="md-fab md-mini fab-nobackground menu-button" ng-click="showmenu = !showmenu;"><md-icon md-svg-src="/html/img/menu.svg"></md-icon></md-button>
 			<div class="usermenu" ng-show="showmenu">
 				<md-checkbox class="darkbg" ng-model="userSettings.dark" ng-change="saveMode()">Dark mode</md-checkbox><br>
 				<md-checkbox class="darkbg" ng-model="userSettings.chat" ng-change="saveMode()">Enable chat</md-checkbox><br>

@@ -483,7 +483,6 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 		return {
 			url: video.url+"?t="+pasttime+"s",
 			tooltip: "Watch "+((video.broadcast_type == "archive")?"past broadcast":video.broadcast_type)+"<br>"+video.title+"<br>Game: "+video.game,
-			icon: "theaters",
 			classname: (video.broadcast_type == "highlight")?"md-primary md-icon-button videobutton md-primary highlight-button":"md-primary md-icon-button videobutton"
 		}
 	}

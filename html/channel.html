@@ -5,7 +5,7 @@
 <div ng-if="loadStatus == -1"><!-- empty div for space-between centering --></div>
 <div class="content" ng-cloak ng-if="loadStatus == -1" layout="row" layout-align="center center" layout-xs="column">
 	<div flex="none" class="big-error-icon">
-		<md-icon>error</md-icon>
+		<md-icon md-svg-src="/html/img/error.svg"></md-icon>
 	</div>
 	<div style="font-size: 20px;" flex="none">
 		 Channel {{::channel}} not found.<br>
@@ -16,7 +16,7 @@
 <div ng-if="loadStatus == 1 && userObject.level < channelsettings.viewlogs"><!-- empty div for space-between centering --></div>
 <div class="content" ng-cloak ng-show="loadStatus == 1 && userObject.level < channelsettings.viewlogs" layout="row" layout-align="center center" layout-xs="column">
 	<div flex="none" class="big-error-icon" flex="none">
-		<md-icon>error</md-icon>
+		<md-icon md-svg-src="/html/img/error.svg"></md-icon>
 	</div>
 	<div style="font-size: 20px;" flex="none">
 		 You currently do not have access to view logs of the channel {{::channel}}.<br>
@@ -57,7 +57,7 @@
 		<div ng-repeat="user in users | orderObjectBy:'id':true" class="panel panel-default logview z-depth-1">
 			<div class="panel-heading" layout="column">
 				<md-button class="btn-close md-primary md-icon-button" ng-click="delUser(user.data.nick)">
-					<md-icon class="md-primary">close</md-icon>
+					<md-icon class="md-primary" md-svg-src="/html/img/close.svg"></md-icon>
 				</md-button>
 				<div flex="none" layout="column" layout-align="center center">
 					<span class="username" flex="none">{{user.data.nick}} </span>
@@ -71,14 +71,14 @@
 				<div ng-if="user.messages.length > 0">
 					<div class="logviewer-more-messages" ng-class="{'logviewer-loading': user.isloading}" align="center" ng-if="user.allloaded == false">
 						<md-button class="btn md-raised md-primary logviewer-spin-icon logviewer-round-button" ng-click="moreUser(user.data.nick)">
-							<md-icon class="md-primary">loop</md-icon> Load more
+							<md-icon class="md-primary" md-svg-src="/html/img/loop.svg"></md-icon> Load more
 						</md-button>
 					</div>
 					<div class="logviewer-chat-message-block" ng-repeat="message in user.messages">
 						<!-- button to load more before -->
 						<div class="logviewer-more-context" ng-show="selectedID === message.id" ng-class="{'logviewer-loading': user.isloadingContext.before}" ng-click="moreContext(user.data.nick,'before',10)">
 							<md-button class="btn md-raised md-primary logviewer-arrows-up logviewer-round-button">
-								<md-icon class="md-primary">keyboard_arrow_up</md-icon>
+								<md-icon class="md-primary" md-svg-src="/html/img/keyboard_arrow_up.svg"></md-icon>
 								Load more
 							</md-button>
 						</div>
@@ -89,7 +89,7 @@
 								<md-button ng-href="{{messageBefore.video.url}}" target="_blank" ng-class="messageBefore.video.classname" class="md-primary md-icon-button videobutton" ng-disabled="!messageBefore.video">
 									<md-tooltip ng-if="messageBefore.video.tooltip" ng-bind-html="messageBefore.video.tooltip" class="md-primary vod-tooltip" md-direction="right" md-delay="256">
 									</md-tooltip>
-									<md-icon class="md-primary">{{messageBefore.video.icon || "theaters"}}</md-icon>
+									<md-icon class="md-primary" md-svg-src="/html/img/vod.svg"></md-icon>
 								</md-button>
 								<!-- timestamp -->
 								{{messageBefore.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}
@@ -109,7 +109,7 @@
 								<md-button ng-href="{{message.video.url}}" target="_blank" ng-class="message.video.classname" class="md-primary md-icon-button videobutton" ng-disabled="!message.video">
 									<md-tooltip ng-if="message.video.tooltip" ng-bind-html="message.video.tooltip" class="md-primary vod-tooltip" md-direction="right" md-delay="256">
 									</md-tooltip>
-									<md-icon class="md-primary">{{message.video.icon || "theaters"}}</md-icon>
+									<md-icon class="md-primary" md-svg-src="/html/img/vod.svg"></md-icon>
 								</md-button>
 								<!-- timestamp -->
 								{{message.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}
@@ -123,7 +123,7 @@
 								<md-button ng-href="{{messageAfter.video.url}}" target="_blank" ng-class="messageAfter.video.classname" class="md-primary md-icon-button videobutton" ng-disabled="!messageAfter.video">
 									<md-tooltip ng-if="messageAfter.video.tooltip" ng-bind-html="messageAfter.video.tooltip" class="md-primary vod-tooltip" md-direction="right" md-delay="256">
 									</md-tooltip>
-									<md-icon class="md-primary">{{messageAfter.video.icon || "theaters"}}</md-icon>
+									<md-icon class="md-primary" md-svg-src="/html/img/vod.svg"></md-icon>
 								</md-button>
 								<!-- timestamp -->
 								{{messageAfter.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}
@@ -133,7 +133,7 @@
 						<!-- button to load more after -->
 						<div class="logviewer-more-context" ng-show="selectedID === message.id" ng-class="{'logviewer-loading': user.isloadingContext.after}">
 							<md-button class="btn md-raised md-primary logviewer-arrows-down logviewer-round-button" ng-click="moreContext(user.data.nick,'after',10)">
-								<md-icon class="md-primary">keyboard_arrow_down</md-icon>
+								<md-icon class="md-primary" md-svg-src="/html/img/keyboard_arrow_down.svg"></md-icon>
 								Load more
 							</md-button>
 						</div>
@@ -141,7 +141,7 @@
 					<!-- button to load new messages that got added after this user was added -->
 					<div class="logviewer-more-messages" ng-class="{'logviewer-loading': user.isloadingnew}" align="center" ng-if="user.newmessages == true">
 						<md-button class="btn md-raised md-primary logviewer-spin-icon logviewer-round-button" ng-click="moreUser(user.data.nick)">
-							<md-icon class="md-primary">loop</md-icon> Load newer
+							<md-icon class="md-primary" md-svg-src="/html/img/loop.svg"></md-icon> Load newer
 						</md-button>
 					</div>
 				</div>
@@ -158,10 +158,10 @@
 							</div>
 							<div flex="none" class="comment-editing-buttons">
 								<md-button class="editing-button md-icon-button" ng-show="userObject.level >= channelsettings.writecomments && userObject.name == comment.author" ng-click="editComment(comment)">
-									<md-icon>mode_edit</md-icon>
+									<md-icon md-svg-src="/html/img/edit.svg"></md-icon>
 								</md-button>
 								<md-button class="editing-button md-icon-button" ng-click="deleteComment(comment)" ng-show="userObject.level >= channelsettings.deletecomments || userObject.name == comment.author">
-									<md-icon>delete</md-icon>
+									<md-icon md-svg-src="/html/img/delete.svg"></md-icon>
 								</md-button>
 							</div>
 						</div>

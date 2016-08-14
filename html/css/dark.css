@@ -31,3 +31,7 @@ md-select.md-default-theme .md-select-value, md-select .md-select-value {
 .logviewer-comment:before {
     border-right-color: #666;
 }
+
+md-icon svg {
+	fill: white;
+}

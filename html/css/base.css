@@ -126,6 +126,10 @@ md-input-container.notop {
 	padding: 5px 10px;
 }
 
+.menu-button md-icon svg {
+	fill: white;
+}
+
 md-checkbox.darkbg .md-icon {
 	border-color: rgba(255,255,255,0.54);
 }

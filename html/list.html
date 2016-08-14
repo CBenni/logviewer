@@ -7,7 +7,7 @@
 		<div layout="row" layout-align="center start">
 			<md-input-container>
 				<input type="text" ng-model="channelSearch.name" placeholder="search for channel"></input>
-				<md-icon class="md-primary">search</md-icon>
+				<md-icon class="md-primary" md-svg-src="/html/img/search.svg"></md-icon>
 			</md-input-container>
 		</div>
 		<div ng-repeat="channelObj in channels | orderBy : '-live' | filter: channelSearch | limitTo: channellimit as filteredChannels" class="channel-list-item">
