@@ -179,6 +179,11 @@ div.big-error-icon {
 	margin: 10px;
 }
 
+div.big-error-icon md-icon svg {
+	width: 60px;
+	height: 60px;
+}
+
 /* footer */
 div[ng-include] {
 	width: 100%;
