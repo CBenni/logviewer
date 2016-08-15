@@ -52,7 +52,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	var getProfilePic = function(nick) {
 		if($scope.profilePics[nick] === undefined) {
 			ttvapi("https://api.twitch.tv/kraken/channels/"+nick).then(function(response) {
-				$scope.profilePics[nick] = response.data.logo;
+				$scope.profilePics[nick] = response.data.logo || "https://robohash.org/"+nick+"?set=set3";
 			});
 		}
 	}
@@ -594,10 +594,10 @@ logviewerApp.filter('orderObjectBy', function() {
 		return filtered;
 	};
 });
-var aAnAccountTypes = {0:"a non-banned",1:"a twitch",5:"a moderator",7:"a super-moderator",10:"an editor",50:"an admin",1337:"a super-admin"}
+var aAnAccountTypes = {0:"a non-banned", 1:"a twitch", 2:"a regular", 5:"a moderator", 7:"a super-moderator", 10:"a manager", 50:"an admin", 1337:"a super-admin"}
 logviewerApp.filter('aAnAccountType', function() {
 	return function(level) {
-		var levels = [0,1,5,7,10,50,1337];
+		var levels = Object.keys(aAnAccountTypes);
 		return aAnAccountTypes[levels.filter(function(x){return x>=level})[0]];
 	};
 });

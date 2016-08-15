@@ -22,7 +22,7 @@
 			<md-option value="2">regulars</md-option>
 			<md-option value="5">moderators</md-option>
 			<md-option value="7">super-moderators</md-option>
-			<md-option value="10">editors</md-option>
+			<md-option value="10">managers</md-option>
 		</md-select> can read logs<br>
 	<md-select ng-model="settings.viewcomments" class="inlineselect">
 			<md-option value="0">everyone</md-option>
@@ -30,21 +30,21 @@
 			<md-option value="2">regulars</md-option>
 			<md-option value="5">moderators</md-option>
 			<md-option value="7">super-moderators</md-option>
-			<md-option value="10">editors</md-option>
+			<md-option value="10">managers</md-option>
 		</md-select> can read comments<br>
 	<md-select ng-model="settings.writecomments" class="inlineselect">
 			<md-option value="1">logged in users</md-option>
 			<md-option value="2">regulars</md-option>
 			<md-option value="5">moderators</md-option>
 			<md-option value="7">super-moderators</md-option>
-			<md-option value="10">editors</md-option>
+			<md-option value="10">managers</md-option>
 		</md-select> can write comments<br>
 	<md-select ng-model="settings.deletecomments" class="inlineselect">
 			<md-option value="1">logged in users</md-option>
 			<md-option value="2">regulars</md-option>
 			<md-option value="5">moderators</md-option>
 			<md-option value="7">super-moderators</md-option>
-			<md-option value="10">editors</md-option>
+			<md-option value="10">managers</md-option>
 		</md-select> can delete comments<br>
 	</ul>
 	<h3>Editors</h3>
@@ -66,7 +66,7 @@
 						<md-option value="2">regular</md-option>
 						<md-option value="5">moderator</md-option>
 						<md-option value="7">super-moderator</md-option>
-						<md-option value="10">editor</md-option>
+						<md-option value="10">manager</md-option>
 						<md-option value="50" ng-if="userObject.level == 1337">admin</md-option>
 						<md-option value="1337" ng-if="userObject.level == 1337">dev</md-option>
 					</md-select>
