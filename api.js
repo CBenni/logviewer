@@ -1,3 +1,4 @@
+var winston = require('winston');
 var messagecompressor = require('./messagecompressor');
 
 function API(settings, db, bot, io) {
@@ -22,6 +23,12 @@ function absMinMax(){
 
 
 // start of API
+
+API.prototype.adminLog = function(channel, user, action, key, data) {
+	this.io.to("events-"+channel).emit("adminlog", {channel: channel, user: user, action: action, name: key, data: data});
+	this.db.adminLog(channel, user, action, key, data);
+	winston.debug("Emitting adminlog: "+action+" on channel "+channel);
+}
 
 // helper function: gets both the channel object and the user level of the specified token
 API.prototype.getChannelObjAndLevel = function(channel, token, callback) {
@@ -93,7 +100,7 @@ API.prototype.updateSettings = function(channel, user, settings, callback) {
 		var key = allowedsettings[i];
 		if(!isNaN(parseInt(settings[key]))) {
 			self.db.setSetting(channel, key, settings[key]);
-			self.db.adminLog(channel, user, "setting", key, settings[key]);
+			self.adminLog(channel, user, "setting", key, settings[key]);
 		}
 		if(key === "active") {
 			if(settings.active == "1") self.bot.joinChannel(channel);
@@ -161,7 +168,7 @@ API.prototype.setIntegration = function(channelObj, user, newintegration, callba
 					}
 				}
 				// update the integration
-				db.adminLog(channelObj.name, username, "integration", integration.type+"/"+integration.data, integration.active?"enable":"disable");
+				self.adminLog(channelObj.name, username, "integration", integration.type+"/"+integration.data, integration.active?"enable":"disable");
 				self.db.updateIntegration(channelObj.name, integration.id, integration.active, integration.type, integration.data, integration.description, function(){
 					callback(null, integration);
 				})
@@ -186,7 +193,7 @@ API.prototype.setIntegration = function(channelObj, user, newintegration, callba
 			}
 		}
 		// add the integration
-		db.adminLog(channelObj.name, username, "integration", integration.type+"/"+integration.data, integration.active?"enable":"disable");
+		self.adminLog(channelObj.name, username, "integration", integration.type+"/"+integration.data, integration.active?"enable":"disable");
 		self.db.addIntegration(channelObj.name, integration.id, integration.active, integration.type, integration.data, integration.description, function(id){
 			integration.id = id;
 			callback(null, integration);
@@ -205,7 +212,7 @@ API.prototype.setComment = function(channelObj, level, username, newcomment, cal
 					var time = Math.floor(Date.now()/1000);
 					comment.edited = time;
 					comment.text = newcomment.text;
-					self.db.adminLog(channelObj.name, username, "comment", "edit", JSON.stringify(comment));
+					self.adminLog(channelObj.name, username, "comment", "edit", JSON.stringify(comment));
 					self.db.updateComment(channelObj.name, comment.id, comment.text);
 					// only send back stuff needed for identification and changes
 					self.io.to("comments-"+channelObj.name+"-"+comment.topic).emit("comment-update", comment);
@@ -227,7 +234,7 @@ API.prototype.setComment = function(channelObj, level, username, newcomment, cal
 			var time = Math.floor(Date.now()/1000);
 			self.db.addComment(channelObj.name, username, newcomment.topic, newcomment.text, function(id){
 				var comment = {id: id, added: time, edited: time, channel: channelObj.name, author: username, topic: newcomment.topic, text: newcomment.text};
-				self.db.adminLog(channelObj.name, username, "comment", "add", JSON.stringify(comment));
+				self.adminLog(channelObj.name, username, "comment", "add", JSON.stringify(comment));
 				self.io.to("comments-"+channelObj.name+"-"+newcomment.topic).emit("comment-add", comment);
 			});
 			callback();

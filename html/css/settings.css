@@ -2,3 +2,36 @@ md-select.inlineselect {
 	margin: 0;
 	display: inline-block;
 }
+
+.event-log {
+	height: 20vh;
+	max-height: 500px;
+	min-height: 100px;
+	line-height: 2em;
+	overflow: auto;
+	border: 1px rgba(194,194,194, 0.4) solid;
+    box-shadow: 0 1px 10px 0px rgba(0, 0, 0, 0.14);
+    margin-bottom: 10px;
+}
+
+.event-item {
+	padding: 0;
+}
+
+.event-icon {
+	border-radius: 3px;
+	padding: 3px;
+	color: white;
+}
+
+.event-setting {
+	background-color: #B94A48;
+}
+
+.event-level {
+	background-color: #3A87AD;
+}
+
+.event-comment {
+	background-color: #468847;
+}

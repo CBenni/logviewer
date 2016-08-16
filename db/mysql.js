@@ -89,12 +89,14 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		
 		/* create the admin log table if it doesnt exist */
 		connection.query("CREATE TABLE IF NOT EXISTS adminlog ("
+			+"id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,"
 			+"time BIGINT UNSIGNED NOT NULL,"
 			+"channel VARCHAR(32) NULL,"
 			+"user VARCHAR(32) NULL,"
 			+"action VARCHAR(32) NULL,"
 			+"name VARCHAR(256) NULL,"
-			+"data TEXT NULL"
+			+"data TEXT NULL,"
+			+"INDEX adminlog_channel (channel ASC)"
 		+")");
 
 	});
@@ -332,6 +334,18 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	self.adminLog = function(channel, user, action, key, data) {
 		var d = Math.floor(Date.now()/1000);
 		self.pool.query("INSERT INTO adminlog(time,channel,user,action,name,data) VALUES (?,?,?,?,?,?)", [d,channel,user,action,key,data]);
+	}
+	
+	self.getEvents = function(channel, limit, callback) {
+		console.log(channel)
+		console.log(limit)
+		self.pool.query("SELECT * FROM (SELECT * FROM adminlog WHERE channel=? ORDER BY id DESC LIMIT ?) sub ORDER BY id ASC",[channel,limit], function(error,results,fields) {
+			if(error) {
+				winston.error("getEvents: Select failed! "+error);
+				callback([]);
+			}
+			else callback(results);
+		});
 	}
 	
 	// connections

@@ -96,6 +96,25 @@ io.sockets.on('connection', function(socket){
 						// ignore the join request
 					}
 				});
+			} else if (channel_user.length == 1) {
+				var channel = channel_user[0].toLowerCase();
+				API.getChannelObjAndLevel(channel, socket.logviewer_token, function(error, channelObj, level){
+					if(error)
+					{
+						// bad join. will disconnect the client (since this channel doesnt exist/isnt active)
+						winston.warn("Bad join to room "+room + ": "+error.message);
+						socket.emit("error", error);
+						return;
+					}
+					if(level >= 10) {
+						var logsroom = "events-"+channelObj.name;
+						winston.debug('joining room', logsroom);
+						socket.join(logsroom); 
+					} else {
+						winston.debug("Access to events denied. "+socket.logviewer_token);
+						// ignore the join
+					}
+				});
 			}
 		}
 	});
@@ -355,7 +374,7 @@ app.post('/api/settings/:channel', function(req, res, next) {
 				{
 					// add a new channel
 					var channelname = req.params.channel.toLowerCase();
-					db.adminLog(channelname, username, "channel", "add", "");
+					API.adminLog(channelname, username, "channel", "add", "");
 					db.addChannel(channelname, function() {
 						var newsettings = req.body.settings;
 						API.updateSettings(channelname, username, newsettings, function(error) {
@@ -424,7 +443,7 @@ app.post('/api/levels/:channel',function(req,res,next){
 					for(var i=0;i<newlevels.length;++i) {
 						var userObject = newlevels[i];
 						if(Math.abs(userObject.level) <= level && /^\w+$/.test(userObject.nick)) {
-							db.adminLog(channelObj.name, username, "level", userObject.nick, userObject.level);
+							API.adminLog(channelObj.name, username, "level", userObject.nick, userObject.level);
 							db.setLevel(channelObj.name,userObject.nick.toLowerCase(),userObject.level);
 						}
 					}
@@ -563,9 +582,9 @@ app.delete('/api/comments/:channel',function(req,res,next){
 					}
 					// only people with the deletion permission can delete other peoples comments
 					if(level >= channelObj.deletecomments || comment.author == username) {
-						db.adminLog(channelObj.name, username, "comment", "delete", JSON.stringify(comment));
+						API.adminLog(channelObj.name, username, "comment", "delete", JSON.stringify(comment));
 						db.deleteComment(channelObj.name, req.query.id);
-						io.to("comments-"+channelObj.name+"-"+comment.topic).emit("comment-delete", {id: req.query.id, topic: comment.topic});
+						io.to("comments-"+channelObj.name+"-"+comment.topic).emit("adminlog", {id: req.query.id, topic: comment.topic});
 						res.status(200).end();
 					} else {
 						res.status(403).jsonp({"error":"Can only delete own comments"});
@@ -578,6 +597,32 @@ app.delete('/api/comments/:channel',function(req,res,next){
 		next(err);
 	}
 	
+});
+
+app.get('/api/events/:channel', function(req, res, next) {
+	try {
+		API.getChannelObjAndLevel(req.params.channel, req.query.token, function(error, channelObj, level, username){
+			if(error && error.status != 404) {
+				res.status(error.status).jsonp({"error": error.message});
+			} else {
+				if(level >= 10) {
+					if(channelObj) {
+						var eventCount = Math.max(req.query.limit || 25, 50);
+						db.getEvents(channelObj.name,eventCount, function(events) {
+							res.jsonp(events);
+						});
+					} else {
+						res.jsonp([]);
+					}
+				} else {
+					res.status(403).end();
+				}
+			}
+		});
+	}
+	catch(err) {
+		next(err);
+	}
 });
 
 var badgeCache = {};

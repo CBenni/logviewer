@@ -604,11 +604,4 @@ logviewerApp.filter('aAnAccountType', function() {
 
 logviewerApp.factory("logviewerSocket", function(socketFactory) {
 	return socketFactory();
-})
-
- 
-function isScrollBottom(element) {
-	var elementHeight = element.outerHeight();
-	var scrollPosition = element[0].scrollHeight - element.scrollTop();
-	return (elementHeight == scrollPosition);
-}
+});

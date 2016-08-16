@@ -27,7 +27,7 @@ function getListChanges(l1,l2) {
 	return res;
 }
 
-logviewerApp.controller("SettingsController", function($rootScope, $scope, $http, $stateParams, $mdToast){
+logviewerApp.controller("SettingsController", function($rootScope, $scope, $http, $stateParams, $mdToast, logviewerSocket){
 	$scope.settings = {
 		active: 0,
 		viewlogs: 0,
@@ -143,4 +143,92 @@ logviewerApp.controller("SettingsController", function($rootScope, $scope, $http
 		$scope.emote = allemotes[Math.floor(Math.random()*allemotes.length)];
 		$scope.emote.url = "//static-cdn.jtvnw.net/emoticons/v1/" + $scope.emote.id + "/3.0";
 	});
+	
+	$scope.events = [];
+	
+	var prettyPerm = {
+		"viewlogs": "view logs",
+		"viewcomments": "view comments",
+		"writecomments": "write comments",
+		"deletecomments": "delete comments"
+	};
+	
+	var userGroup = {
+		0: "everyone",
+		1: "logged in user",
+		2: "regular",
+		5: "moderator",
+		7: "super-moderator",
+		10: "manager"
+	};
+	var commentAction = {
+		"add": "added",
+		"edit": "edited",
+		"delete": "deleted"
+	};
+	var eventParser = {
+		"setting": function(event) {
+			if(event.name == "active") {
+				if(event.data == "1") {
+					return "enabled the logviewer."
+				} else {
+					return "disabled the logviewer."
+				}
+			} else {
+				return "set "+prettyPerm[event.name]+" to "+(userGroup[event.data] || event.data)+(event.data > 0?"s and higher only":"");
+			}
+		},
+		"level": function(event) {
+			return "set the user level of "+event.name+" to "+userGroup[event.data];
+		},
+		"comment": function(event) {
+			var comment = JSON.parse(event.data);
+			if(comment.author != event.user) {
+				return commentAction[event.name]+" a comment by "+comment.author;
+			}
+		}
+	}
+	
+	var addEvent = function(ev) {
+		if(eventParser[ev.action]) {
+			var desc = eventParser[ev.action](ev);
+			if(desc) {
+				$scope.events.push({action: ev.action, user: ev.user, desc: desc});
+			}
+		}
+	}
+	
+	$http.jsonp("/api/events/"+$stateParams.channel+"/?token="+$rootScope.auth.token+"&callback=JSON_CALLBACK").then(function(result) {
+		$scope.events = [];
+		for(var i=0;i<result.data.length;++i) {
+			addEvent(result.data[i]);
+		}
+	
+		logviewerSocket.on("connect", function(){
+			console.log("Connected to socket.io");
+			logviewerSocket.emit("token",$rootScope.auth.token);
+			logviewerSocket.emit("subscribe",$stateParams.channel);
+		});
+		logviewerSocket.on("adminlog", addEvent);
+	});
 });
+
+ 
+function isScrollBottom(element) {
+	return Math.abs(element.scrollTop - (element.scrollHeight - element.offsetHeight)) < 5;
+}
+/*
+logviewerApp.directive('scrollToBottom', function () {
+	return {
+		link: function (scope, element) {
+			var isScrolledToBottom = isScrollBottom(element);
+			element.scrollTop = element.scrollHeight;
+			element.on('DOMNodeInserted', function (event) {
+				console.log(event)
+				if(isScrolledToBottom == true) {
+					setTimeout(function(){$(element).scrollTop($(element)[0].scrollHeight);},1);
+				}
+			});
+		}
+	}
+});*/
