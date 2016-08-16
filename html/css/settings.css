@@ -7,7 +7,7 @@ md-select.inlineselect {
 	height: 20vh;
 	max-height: 500px;
 	min-height: 100px;
-	line-height: 2em;
+	line-height: 1.5em;
 	overflow: auto;
 	border: 1px rgba(194,194,194, 0.4) solid;
     box-shadow: 0 1px 10px 0px rgba(0, 0, 0, 0.14);
@@ -18,10 +18,15 @@ md-select.inlineselect {
 	padding: 0;
 }
 
+.event-time {
+	font-size: small;
+}
+
 .event-icon {
 	border-radius: 3px;
 	padding: 3px;
 	color: white;
+	font-size: small;
 }
 
 .event-setting {

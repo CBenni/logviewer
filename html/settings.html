@@ -16,7 +16,7 @@
 	<h3>Event log</h3>
 	<div class="event-log" scroll-to-bottom layout-padding>
 		<div class="event-item" ng-repeat="event in events">
-			<span ng-class="{'event-icon': true, 'event-{{event.action}}': true}">{{event.action}}</span> <span class="eventDescription">{{event.user}} {{event.desc}}</span>
+			<span class="event-time">{{event.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}</span> <span ng-class="{'event-icon': true, 'event-{{event.action}}': true}">{{event.action}}</span> <span class="eventDescription">{{event.user}} {{event.desc}}</span>
 		</div>
 	</div>
 	<h3>Settings</h3>

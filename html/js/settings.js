@@ -159,7 +159,9 @@ logviewerApp.controller("SettingsController", function($rootScope, $scope, $http
 		2: "regular",
 		5: "moderator",
 		7: "super-moderator",
-		10: "manager"
+		10: "manager",
+		50: "admin",
+		1337: "developer"
 	};
 	var commentAction = {
 		"add": "added",
@@ -193,7 +195,7 @@ logviewerApp.controller("SettingsController", function($rootScope, $scope, $http
 		if(eventParser[ev.action]) {
 			var desc = eventParser[ev.action](ev);
 			if(desc) {
-				$scope.events.push({action: ev.action, user: ev.user, desc: desc});
+				$scope.events.push({action: ev.action, user: ev.user, desc: desc, time: ev.time});
 			}
 		}
 	}
