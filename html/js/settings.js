@@ -213,6 +213,10 @@ logviewerApp.controller("SettingsController", function($rootScope, $scope, $http
 		});
 		logviewerSocket.on("adminlog", addEvent);
 	});
+	
+	$scope.$on('$destroy', function (event) {
+		logviewerSocket.removeAllListeners();
+	});
 });
 
  

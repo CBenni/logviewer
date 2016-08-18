@@ -403,6 +403,11 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 		}
 	});
 	
+	// remove all listeners when we leave.
+	$scope.$on('$destroy', function (event) {
+		logviewerSocket.removeAllListeners();
+	});
+	
 	$scope.userSearch = function(query) {
 		query = query.toLowerCase();
 		if(query.length < 4) return [];
