@@ -18,6 +18,9 @@
 		<div class="event-item" ng-repeat="event in events">
 			<span class="event-time">{{event.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}</span> <span ng-class="{'event-icon': true, 'event-{{event.action}}': true}">{{event.action}}</span> <span class="eventDescription">{{event.user}} {{event.desc}}</span>
 		</div>
+		<div class="event-item" ng-show="!events.length">
+			No items found.
+		</div>
 	</div>
 	<h3>Settings</h3>
 	<md-checkbox ng-model="settings.active" ng-true-value="1" ng-false-value="0">Enable the logviewer</md-checkbox></li>
