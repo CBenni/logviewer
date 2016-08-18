@@ -25,7 +25,8 @@ function absMinMax(){
 // start of API
 
 API.prototype.adminLog = function(channel, user, action, key, data) {
-	this.io.to("events-"+channel).emit("adminlog", {channel: channel, user: user, action: action, name: key, data: data});
+	var t = Math.floor(Date.now()/1000);
+	this.io.to("events-"+channel).emit("adminlog", {channel: channel, user: user, action: action, name: key, data: data, time: t});
 	this.db.adminLog(channel, user, action, key, data);
 	winston.debug("Emitting adminlog: "+action+" on channel "+channel);
 }

@@ -76,7 +76,7 @@ io.sockets.on('connection', function(socket){
 					{
 						// bad join. will disconnect the client (since this channel doesnt exist/isnt active)
 						winston.warn("Bad join to room "+room + ": "+error.message);
-						socket.emit("error", error);
+						//socket.emit("error", error);
 						return;
 					}
 					if(level >= channelObj.viewlogs) {
@@ -99,15 +99,8 @@ io.sockets.on('connection', function(socket){
 			} else if (channel_user.length == 1) {
 				var channel = channel_user[0].toLowerCase();
 				API.getChannelObjAndLevel(channel, socket.logviewer_token, function(error, channelObj, level){
-					if(error)
-					{
-						// bad join. will disconnect the client (since this channel doesnt exist/isnt active)
-						winston.warn("Bad join to room "+room + ": "+error.message);
-						socket.emit("error", error);
-						return;
-					}
 					if(level >= 10) {
-						var logsroom = "events-"+channelObj.name;
+						var logsroom = "events-"+(channelObj?channelObj.name:channel);
 						winston.debug('joining room', logsroom);
 						socket.join(logsroom); 
 					} else {

@@ -219,18 +219,17 @@ logviewerApp.controller("SettingsController", function($rootScope, $scope, $http
 function isScrollBottom(element) {
 	return Math.abs(element.scrollTop - (element.scrollHeight - element.offsetHeight)) < 5;
 }
-/*
+
 logviewerApp.directive('scrollToBottom', function () {
 	return {
-		link: function (scope, element) {
-			var isScrolledToBottom = isScrollBottom(element);
+		link: function (scope, el) {
+			var element = el[0];
+			console.log(element);
 			element.scrollTop = element.scrollHeight;
-			element.on('DOMNodeInserted', function (event) {
-				console.log(event)
-				if(isScrolledToBottom == true) {
-					setTimeout(function(){$(element).scrollTop($(element)[0].scrollHeight);},1);
-				}
+			var mutObs = new MutationObserver(function (event) {
+				element.scrollTop = element.scrollHeight;
 			});
+			mutObs.observe(element, {childList: true});
 		}
 	}
-});*/
+});
