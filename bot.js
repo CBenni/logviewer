@@ -1,4 +1,5 @@
 var winston = require('winston');
+var fs = require("fs");
 
 var ircbot = require('./ircbot');
 var messagecompressor = require('./messagecompressor');
@@ -258,6 +259,11 @@ function logviewerBot(settings, db, io) {
 				userlist[users[i]] = 5;
 			}
 			self.userlevels[channel] = userlist;
+			
+			if(channel === self.channels[self.channels.length - 1]) {
+				// write to file if it was the last channel in the list
+				fs.writeFile("mods.json", JSON.stringify(self.userlevels), "utf-8");
+			}
 		}
 	});
 	var regexes_channel_user =
@@ -388,6 +394,14 @@ function logviewerBot(settings, db, io) {
 	self.checkMods = function(channel) {
 		bot.send("PRIVMSG #"+channel+" :/mods");
 	}
+	
+	fs.readFile("mods.json", "utf-8", function(err, data) {
+		if(err) {
+			winston.info("No mods.json found.")
+		} else {
+			self.userlevels = JSON.parse(data);
+		}
+	});
 	
 	var currentchannel = 0;
 	var checkNextMods = function() {
