@@ -208,14 +208,14 @@ logviewerApp.controller("SettingsController", function($rootScope, $scope, $http
 	
 		logviewerSocket.on("connect", function(){
 			console.log("Connected to socket.io");
-			logviewerSocket.emit("token",$rootScope.auth.token);
-			logviewerSocket.emit("subscribe",$stateParams.channel);
 		});
+		logviewerSocket.emit("token",$rootScope.auth.token);
+		logviewerSocket.emit("subscribe",$stateParams.channel);
 		logviewerSocket.on("adminlog", addEvent);
 	});
 	
 	$scope.$on('$destroy', function (event) {
-		logviewerSocket.removeAllListeners();
+		logviewerSocket.emit("unsubscribe",$stateParams.channel);
 	});
 });
 

@@ -321,8 +321,8 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	// chat connector
 	logviewerSocket.on("connect", function(){
 		console.log("Connected to socket.io");
-		logviewerSocket.emit("token",$rootScope.auth.token);
 	});
+	logviewerSocket.emit("token",$rootScope.auth.token);
 	
 	logviewerSocket.on("log-add", function(message){
 		console.log("Message added: "+message);
@@ -405,7 +405,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	
 	// remove all listeners when we leave.
 	$scope.$on('$destroy', function (event) {
-		logviewerSocket.removeAllListeners();
+		$scope.clearUsers();
 	});
 	
 	$scope.userSearch = function(query) {

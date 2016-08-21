@@ -119,21 +119,25 @@ io.sockets.on('connection', function(socket){
 			if(channel_user.length === 2) {
 				var channel = channel_user[0].toLowerCase();
 				var user = channel_user[1].toLowerCase();
-				db.getActiveChannel(channel, function(channelObj) {
-					if(!channelObj)
-					{
-						// bad leave. Do nothing (this room has already been left, see down below)
-						return;
-					}
-					var logsroom = "logs-"+channelObj.name+"-"+user;
+				db.getChannel(channel, function(channelObj) {
+					if(channelObj) channel = channelObj.name;
+					var logsroom = "logs-"+channel+"-"+user;
+					winston.debug('leaving room', logsroom);
 					socket.leave(logsroom);
-					var commentsroom = "comments-"+channelObj.name+"-"+user;
+					var commentsroom = "comments-"+channel+"-"+user;
+					winston.debug('leaving room', commentsroom);
 					socket.leave(commentsroom);
+				});
+			} else if (channel_user.length == 1) {
+				var channel = channel_user[0].toLowerCase();
+				db.getChannel(channel, function(channelObj) {
+					if(channelObj) channel = channelObj.name;
+					var logsroom = "events-"+channel;
+					winston.debug('leaving room', logsroom);
+					socket.leave(logsroom);
 				});
 			}
 		}
-		winston.debug('leaving room', room);
-		socket.leave(room); 
 	});
 });
 
