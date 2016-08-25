@@ -158,6 +158,8 @@ var bot = new lvbot(settings, db, io);
 var API = require("./api");
 var API = new API(settings, db, bot, io);
 
+bot.API = API;
+
 
 // HTTP server routes 'n shit
 

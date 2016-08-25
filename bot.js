@@ -10,6 +10,7 @@ var PARAM = 4
 var TRAILING = 5
 function logviewerBot(settings, db, io) {
 	var self = this;
+	self.API = null;
 	
 	var messagecompressor = require('./messagecompressor');
 	
@@ -248,9 +249,11 @@ function logviewerBot(settings, db, io) {
 		}
 	});
 	
+	
 	bot.on("NOTICE", function(data){
 		//:tmi.twitch.tv NOTICE #ox33 :The moderators of this room are: 0x33, andyroid, anoetictv
-		var m = /The moderators of this room are: (.*)/.exec(data[TRAILING]);
+		//@msg-id=msg_banned :tmi.twitch.tv NOTICE #frankerzbenni :You are permanently banned from talking in frankerzbenni.
+		var m = /The moderators of this \w+ are: (.*)/.exec(data[TRAILING]);
 		if(m) {
 			users = m[1].match(/\w+/g);
 			var channel = data[PARAM].slice(1);
@@ -263,6 +266,15 @@ function logviewerBot(settings, db, io) {
 			if(channel === self.channels[self.channels.length - 1]) {
 				// write to file if it was the last channel in the list
 				fs.writeFile("mods.json", JSON.stringify(self.userlevels), "utf-8");
+			}
+		}
+		if(data[TAGS] && data[TAGS]["msg-id"] === "msg_banned"){
+			// we were banned from the channel, leave it.
+			var channel = data[PARAM].slice(1);
+			db.setSetting(channel, "active", "0");
+			self.partChannel(channel);
+			if(self.API) {
+				self.API.adminLog(channel, "", "system", "banned", "Detected that the bot is banned from the channel. Disabled the logviewer.")
 			}
 		}
 	});

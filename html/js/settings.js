@@ -188,6 +188,9 @@ logviewerApp.controller("SettingsController", function($rootScope, $scope, $http
 			if(comment.author != event.user) {
 				return commentAction[event.name]+" a comment by "+comment.author;
 			}
+		},
+		"system": function(event) {
+			return event.data;
 		}
 	}
 	
