@@ -170,7 +170,10 @@ md-checkbox.darkbg .md-icon {
 
 div.big-error-icon md-icon {
 	font-size: 60px;
-	color: #c00;
+}
+
+div.big-error-icon md-icon svg {
+	fill: #c00;
 }
 
 div.big-error-icon {
