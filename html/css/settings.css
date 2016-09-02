@@ -38,9 +38,13 @@ md-select.inlineselect {
 }
 
 .event-comment {
-	background-color: #468847;
+	background-color: #230346;
 }
 
 .event-system {
 	background-color: #F5970A;
+}
+
+.event-channel {
+	background-color: #468847;
 }

@@ -583,7 +583,7 @@ app.delete('/api/comments/:channel',function(req,res,next){
 					if(level >= channelObj.deletecomments || comment.author == username) {
 						API.adminLog(channelObj.name, username, "comment", "delete", JSON.stringify(comment));
 						db.deleteComment(channelObj.name, req.query.id);
-						io.to("comments-"+channelObj.name+"-"+comment.topic).emit("adminlog", {id: req.query.id, topic: comment.topic});
+						io.to("comments-"+channelObj.name+"-"+comment.topic).emit("comment-delete", comment);
 						res.status(200).end();
 					} else {
 						res.status(403).jsonp({"error":"Can only delete own comments"});

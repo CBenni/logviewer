@@ -154,6 +154,7 @@ logviewerApp.controller("SettingsController", function($rootScope, $scope, $http
 	};
 	
 	var userGroup = {
+		"-10": "banned",
 		0: "everyone",
 		1: "logged in user",
 		2: "regular",
@@ -169,6 +170,9 @@ logviewerApp.controller("SettingsController", function($rootScope, $scope, $http
 		"delete": "deleted"
 	};
 	var eventParser = {
+		"channel": function(event) {
+			if(event.name == "add") return "added the logviewer to the channel.";
+		},
 		"setting": function(event) {
 			if(event.name == "active") {
 				if(event.data == "1") {

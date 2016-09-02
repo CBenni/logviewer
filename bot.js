@@ -37,6 +37,7 @@ function logviewerBot(settings, db, io) {
 		if(!self.inChannel(channel)) self.channels.push(channel);
 		self.userlevels[channel] = self.userlevels[channel] || {};
 		bot.send("JOIN #"+channel);
+		bot.send("PRIVMSG #"+channel+" :.mods");
 		db.ensureTablesExist(channel);
 	}
 	
