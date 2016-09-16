@@ -34,7 +34,7 @@ logviewerApp.controller("ChannelListController", function($rootScope, $scope, $h
 				if(channelnames) channelnames += ",";
 				channelnames += name;
 			}
-			$http.jsonp("https://api.twitch.tv/kraken/streams?channel="+channelnames+"&callback=JSON_CALLBACK").then(function(response2){
+			$http.jsonp("https://api.twitch.tv/kraken/streams?channel="+channelnames+"&callback=JSON_CALLBACK&client_id="+settings.auth.client_id).then(function(response2){
 				var streams = response2.data.streams;
 				for(var j=0;j<streams.length;++j) {
 					channelDict[streams[j].channel.name].live = true;
@@ -51,7 +51,7 @@ logviewerApp.controller("ChannelListController", function($rootScope, $scope, $h
 	});
 	updateChannels();
 	
-	$http.get("https://api.twitch.tv/kraken/chat/emoticon_images?emotesets=0,33,457", {cache: true}).then(function(result) {
+	$http.get("https://api.twitch.tv/kraken/chat/emoticon_images?emotesets=0,33,457&client_id="+settings.auth.client_id, {cache: true}).then(function(result) {
 		var allemotes = [];
 		var emotesets = Object.keys(result.data.emoticon_sets);
 		// flatten response
