@@ -150,6 +150,14 @@ app.use('/html', express.static("./html"));
 app.use(cookieParser());
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+
+// enable CORS on the API
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+
 var databaseconnector = require("./db/"+settings.database.type);
 var db = new databaseconnector(settings.database);
 var lvbot = require("./bot");
