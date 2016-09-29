@@ -871,6 +871,32 @@ app.get('/api/slack/', function(req,res,next){
 	}
 });
 
+app.post('/api/token', function(req, res, next) {
+	try {
+		API.getChannelObjAndLevel("logviewer", req.body.token, function(error, channelObj, level, adminname){
+			if(error && error.status != 404) {
+				res.status(error.status).jsonp({"error": error.message});
+			} else {
+				if(level >= 50) {
+					require('crypto').randomBytes(32, function(err, buffer) {
+						var token = buffer.toString("hex");
+						var expires = Math.floor(Date.now()/1000)+(parseInt(req.body.duration) || 24*3600);
+						var username = req.body.user.toLowerCase();
+						db.storeToken(username, token, expires);
+						API.adminLog(adminname, adminname, "system", "token", "generated token for "+username);
+						res.jsonp({token: token , username: username, expires: expires});
+					});
+				} else {
+					res.status(403).end();
+				}
+			}
+		});
+	}
+	catch(err) {
+		next(err);
+	}
+});
+
 function serveOnePage(req, res, next) {
 	try {
 		checkAuth(req, res, function(){

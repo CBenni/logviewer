@@ -19,9 +19,12 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		}
 		// create the channels table if it doesnt exist
 		connection.query("CREATE TABLE IF NOT EXISTS channels ("
+			+"id int(10) unsigned,"
 			+"name varchar(32) COLLATE utf8_unicode_ci PRIMARY KEY,"
 			+"active tinyint(4) unsigned NOT NULL DEFAULT '1',"
+			+"modlogs tinyint(4) unsigned NOT NULL DEFAULT '1',"
 			+"viewlogs tinyint(4) unsigned NOT NULL DEFAULT '0',"
+			+"viewmodlogs tinyint(4) unsigned NOT NULL DEFAULT '1',"
 			+"viewcomments tinyint(4) unsigned NOT NULL DEFAULT '5',"
 			+"writecomments tinyint(4) unsigned NOT NULL DEFAULT '5',"
 			+"deletecomments tinyint(4) unsigned NOT NULL DEFAULT '10',"
