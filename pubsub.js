@@ -119,19 +119,23 @@ pubsub.prototype.addConnection = function() {
 	});
 	
 	conn.ws.on("close", function() {
-		winston.info("pubsub connection closed");
+		winston.warn("pubsub connection closed");
 		self.connections.splice(self.connections.indexOf(conn),1);
 		for(var i=0;i<conn.topics.length;++i) {
-			console.log("Re-listening to topic "+conn.topics[i])
+			winston.info("Re-listening to topic "+conn.topics[i])
 		}
 	});
+	
+	conn.ws.on("error", function(e) {
+		winston.error(e);
+	}
 	
 	self.connections.push(conn);
 	
 	conn.ws.on("message", function(data, flags) {
 		//{"type":"MESSAGE","data":{"topic":"chat_moderator_actions.21018440","message":"{\"data\":{\"type\":\"chat_login_moderation\",\"moderation_action\":\"timeout\",\"args\":[\"ubenni\",\"1\",\"lul\"],\"created_by\":\"cbenni\"}}"}}
 		var msg = JSON.parse(data);
-		console.log("Pubsub connection "+conn.id+"/"+self.connections.length+" received message: "+JSON.stringify(msg));
+		winston.debug("Pubsub connection "+conn.id+"/"+self.connections.length+" received message: "+JSON.stringify(msg));
 		self.emit(msg.type, msg, flags);
 	});
 	
