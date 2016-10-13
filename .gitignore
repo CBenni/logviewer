@@ -28,6 +28,7 @@ node_modules
 
 html/bower_components/
 html/bower_modules/
+tools/
 settings.json
 run_forever
 index.concat.js

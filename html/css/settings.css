@@ -4,8 +4,8 @@ md-select.inlineselect {
 }
 
 .event-log {
-	height: 20vh;
-	max-height: 500px;
+	height: 30vh;
+	max-height: 30vh;
 	min-height: 100px;
 	line-height: 1.5em;
 	overflow: auto;
@@ -47,4 +47,18 @@ md-select.inlineselect {
 
 .event-channel {
 	background-color: #468847;
+}
+
+.event-command {
+	background-color: #0B3311;
+}
+
+.betatag {
+	color: #FF4444;
+	font-variant: small-caps;
+	line-height: 0;
+}
+
+.settings-column {
+	min-width: 300px;
 }

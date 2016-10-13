@@ -1,0 +1,14 @@
+<md-dialog layout-padding>
+	<md-dialog-content>
+		<h2>Why can't I enable mod logs?</h2>
+		In order to use the mod logs feature, you need to make the user <code>{{globalSettings.botname}}</code> a moderator of your channel.<br>
+		To do that, type <code>/mod {{globalSettings.botname}}</code> in your channel's chat or click <a href="https://cbenni.com/static/modme" target="_blank">here</a>.<br>
+		Keep in mind that it can take up to several minutes to detect moderator status. <a href="#" ng-click="checkModded()">check now</a>
+		
+		<h2>Why that?</h2>
+		Moderator logs are restricted to moderators and higher, so to receive these events, the logviewer has to be a mod in your channel.<br>
+		<strong>IT WILL NEVER POST OR USE COMMANDS IN YOUR CHANNEL, EVER</strong> - it is just there to listen for mod logs.
+	</md-dialog-content>
+	<md-button class="closedialog" ng-click="hide()" flex="none">Let's Kappa!</md-button>
+</md-dialog>
+		

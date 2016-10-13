@@ -12,81 +12,103 @@
 		<span ng-if="userObject.valid == false">If you have {{10 | aAnAccountType }} account, then you can <md-button ng-click="login()" class="md-raised twitch-button md-small">Login with twitch</md-button></span>
 	</div>
 </div>
-<div class="content" ng-cloak ng-show="loadStatus != 0 && userObject.level >= 10">
-	<h3>Event log</h3>
-	<div class="event-log" scroll-to-bottom layout-padding>
-		<div class="event-item" ng-repeat="event in events">
-			<span class="event-time">{{event.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}</span> <span ng-class="{'event-icon': true, 'event-{{event.action}}': true}">{{event.action}}</span> <span class="eventDescription">{{event.user}} {{event.desc}}</span>
-		</div>
-		<div class="event-item" ng-show="!events.length">
-			No items found.
+<div class="content" ng-cloak ng-show="loadStatus != 0 && userObject.level >= 10" layout="column">
+	<div flex="50">
+		<h3>Event log</h3>
+		<div class="event-log" scroll-to-bottom layout-padding>
+			<div class="event-item" ng-repeat="event in events">
+				<span class="event-time" hide-xs>{{event.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}</span> <span ng-class="{'event-icon': true, 'event-{{event.action}}': true}">{{event.action}}</span> <span class="eventDescription">{{event.user}} {{event.desc}}</span>
+			</div>
+			<div class="event-item" ng-show="!events.length">
+				No items found.
+			</div>
 		</div>
 	</div>
-	<h3>Settings</h3>
-	<md-checkbox ng-model="settings.active" ng-true-value="1" ng-false-value="0">Enable the logviewer</md-checkbox></li>
-	<h3>Permissions</h3>
-	<md-select ng-model="settings.viewlogs" class="inlineselect">
-			<md-option value="0">everyone</md-option>
-			<md-option value="1">logged in users</md-option>
-			<md-option value="2">regulars</md-option>
-			<md-option value="5">moderators</md-option>
-			<md-option value="7">super-moderators</md-option>
-			<md-option value="10">managers</md-option>
-		</md-select> can read logs<br>
-	<md-select ng-model="settings.viewcomments" class="inlineselect">
-			<md-option value="0">everyone</md-option>
-			<md-option value="1">logged in users</md-option>
-			<md-option value="2">regulars</md-option>
-			<md-option value="5">moderators</md-option>
-			<md-option value="7">super-moderators</md-option>
-			<md-option value="10">managers</md-option>
-		</md-select> can read comments<br>
-	<md-select ng-model="settings.writecomments" class="inlineselect">
-			<md-option value="1">logged in users</md-option>
-			<md-option value="2">regulars</md-option>
-			<md-option value="5">moderators</md-option>
-			<md-option value="7">super-moderators</md-option>
-			<md-option value="10">managers</md-option>
-		</md-select> can write comments<br>
-	<md-select ng-model="settings.deletecomments" class="inlineselect">
-			<md-option value="1">logged in users</md-option>
-			<md-option value="2">regulars</md-option>
-			<md-option value="5">moderators</md-option>
-			<md-option value="7">super-moderators</md-option>
-			<md-option value="10">managers</md-option>
-		</md-select> can delete comments<br>
-	</ul>
-	<h3>Users</h3>
-	<table class="settingstable">
-		<tr>
-			<th>Username</th>
-			<th>Level</th>
-		</tr>
-		<tr ng-repeat="user in levels">
-			<td>
-				<md-input-container class="nobottom">
-					<input ng-model="user.nick" ng-change="addEmptyRow()"></input>
-				</md-input-container>
-			</td>
-			<td>
-				<md-input-container class="nobottom">
-					<md-select ng-model="user.level" class="inlineselect">
-						<md-option value="-10">banned</md-option>
-						<md-option value="0">default</md-option>
-						<md-option value="2">regular</md-option>
-						<md-option value="5">moderator</md-option>
-						<md-option value="7">super-moderator</md-option>
-						<md-option value="10">manager</md-option>
-						<md-option value="50" ng-if="userObject.level == 1337">admin</md-option>
-						<md-option value="1337" ng-if="userObject.level == 1337">dev</md-option>
-					</md-select>
-				</md-input-container>
-			</td>
-		</tr>
-	</table>
-	<md-button class="md-primary md-raised" ng-click="save()" ng-disabled="!settingsChanged()">
-	SAVE
-	</md-button>
+	<div flex="50" layout="row" layout-align="space-around start" layout-wrap>
+		<div flex="50" class="settings-column">
+			<h3>Settings</h3>
+				<md-checkbox ng-model="settings.active" ng-true-value="1" ng-false-value="0">Enable the logviewer</md-checkbox><br>
+				<md-checkbox ng-model="settings.modlogs" ng-true-value="1" ng-false-value="0" ng-disabled="!settings.isModded">Enable moderator logs <sup class="betatag">beta</sup></md-checkbox>
+				<md-button class="md-icon-button md-primary" ng-click="showDialog($event,'/html/moddinghelp.html')" ng-hide="settings.isModded">
+					<md-icon md-svg-src="/html/img/help.svg" class="small-help-icon"></md-icon>
+				</md-button>
+			<h3>Permissions</h3>
+				<md-select ng-model="settings.viewlogs" class="inlineselect">
+					<md-option value="0">everyone</md-option>
+					<md-option value="1">logged in users</md-option>
+					<md-option value="2">regulars</md-option>
+					<md-option value="5">moderators</md-option>
+					<md-option value="7">super-moderators</md-option>
+					<md-option value="10">managers</md-option>
+				</md-select> can read logs<br>
+				<md-select ng-model="settings.viewmodlogs" class="inlineselect">
+					<md-option value="0">everyone</md-option>
+					<md-option value="1">logged in users</md-option>
+					<md-option value="2">regulars</md-option>
+					<md-option value="5">moderators</md-option>
+					<md-option value="7">super-moderators</md-option>
+					<md-option value="10">managers</md-option>
+				</md-select> can view mod logs<br>
+				<md-select ng-model="settings.viewcomments" class="inlineselect">
+					<md-option value="0">everyone</md-option>
+					<md-option value="1">logged in users</md-option>
+					<md-option value="2">regulars</md-option>
+					<md-option value="5">moderators</md-option>
+					<md-option value="7">super-moderators</md-option>
+					<md-option value="10">managers</md-option>
+				</md-select> can read comments<br>
+				<md-select ng-model="settings.writecomments" class="inlineselect">
+					<md-option value="1">logged in users</md-option>
+					<md-option value="2">regulars</md-option>
+					<md-option value="5">moderators</md-option>
+					<md-option value="7">super-moderators</md-option>
+					<md-option value="10">managers</md-option>
+				</md-select> can write comments<br>
+				<md-select ng-model="settings.deletecomments" class="inlineselect">
+					<md-option value="1">logged in users</md-option>
+					<md-option value="2">regulars</md-option>
+					<md-option value="5">moderators</md-option>
+					<md-option value="7">super-moderators</md-option>
+					<md-option value="10">managers</md-option>
+				</md-select> can delete comments<br>
+			</ul>
+		</div>
+		<div flex="50" class="settings-column">
+			<h3>Users</h3>
+			<table class="settingstable">
+				<tr>
+					<th>Username</th>
+					<th>Level</th>
+				</tr>
+				<tr ng-repeat="user in levels">
+					<td>
+						<md-input-container class="nobottom notop">
+							<input ng-model="user.nick" ng-change="addEmptyRow()"></input>
+						</md-input-container>
+					</td>
+					<td>
+						<md-input-container class="nobottom notop">
+							<md-select ng-model="user.level" class="inlineselect">
+								<md-option value="-10">banned</md-option>
+								<md-option value="0">default</md-option>
+								<md-option value="2">regular</md-option>
+								<md-option value="5">moderator</md-option>
+								<md-option value="7">super-moderator</md-option>
+								<md-option value="10">manager</md-option>
+								<md-option value="50" ng-if="userObject.level == 1337">admin</md-option>
+								<md-option value="1337" ng-if="userObject.level == 1337">dev</md-option>
+							</md-select>
+						</md-input-container>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+	<div flex="none">
+		<md-button class="md-primary md-raised" ng-click="save()" ng-disabled="!settingsChanged()">
+		SAVE
+		</md-button>
+	</div>
 </div>
 <div ng-include="'/html/footer.html'"></div>
 </div>

@@ -57,6 +57,17 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 		}
 	}
 	
+	$scope.modLogDisplay = function(time) {
+		if(time === null) return "ban";
+		else if(time === -1) return "unban";
+		else if(isNaN(parseInt(time))) return "";
+		else return time+"s";
+	}
+	
+	$scope.modLogList = function(modlogs) {
+		return Object.keys(modlogs).join(", ");
+	}
+	
 	$scope.chatEmbedUrl = function() {
 		if($scope.channelsettings) return $sce.trustAsResourceUrl("https://www.twitch.tv/" + $scope.channelsettings.name + "/chat?"+($scope.userSettings.dark?"darkpopout":"popout"));
 		else return;
@@ -125,8 +136,8 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 			$scope.users[nick].isloading = false;
 			
 			// join socket.io room
-			console.log("Subscribing to "+ $scope.channel+"-"+nick);
-			logviewerSocket.emit("subscribe",$scope.channel+"-"+nick);
+			console.log("Subscribing to logs-"+ $scope.channel+"-"+nick);
+			logviewerSocket.emit("subscribe","logs-"+$scope.channel+"-"+nick);
 		},function(response){
 			console.log(response);
 		});
@@ -172,14 +183,14 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	$scope.delUser = function(nick) {
 		delete $scope.users[nick];
 		// leave socket.io room
-		console.log("Unubscribing from "+ $scope.channel+"-"+nick);
-		logviewerSocket.emit("unsubscribe",$scope.channel+"-"+nick);
+		console.log("Unubscribing from logs-"+ $scope.channel+"-"+nick);
+		logviewerSocket.emit("unsubscribe","logs-"+$scope.channel+"-"+nick);
 	}
 	$scope.clearUsers = function()
 	{
 		var users = Object.keys($scope.users);
 		for(var i=0;i<users.length;++i) {
-			logviewerSocket.emit("unsubscribe",$scope.channel+"-"+users[i]);
+			logviewerSocket.emit("unsubscribe","logs-"+$scope.channel+"-"+users[i]);
 		}
 		$scope.users = {};
 	}

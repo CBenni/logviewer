@@ -6,8 +6,8 @@ var winston = require('winston');
 var strftime = require('strftime');
 winston.level = 'debug';
 winston.remove(winston.transports.Console);
-winston.add(winston.transports.Console, { level: 'debug', handleExceptions: true, humanReadableUnhandledException: true });
-if(settings.logging.file) winston.add(winston.transports.File, { filename: strftime(settings.logging.file), level: 'info', handleExceptions: true, humanReadableUnhandledException: true });
+winston.add(winston.transports.Console, { level: settings.logging.console.level, handleExceptions: true, humanReadableUnhandledException: true });
+if(settings.logging.file) winston.add(winston.transports.File, { filename: strftime(settings.logging.file.filename), level: settings.logging.file.level, handleExceptions: true, humanReadableUnhandledException: true });
 
 var request = require('request');
 var url = require('url');
@@ -66,11 +66,10 @@ io.sockets.on('connection', function(socket){
 	
 	socket.on('subscribe', function(room) { 
 		if(room && typeof(room)==="string") {
-			channel_user = room.split("-");
-			
-			if(channel_user.length === 2) {
-				var channel = channel_user[0].toLowerCase();
-				var user = channel_user[1].toLowerCase();
+			var room_split = room.split("-");
+			if(room_split[0] === "logs") {
+				var channel = room_split[1].toLowerCase();
+				var user = room_split[2].toLowerCase();
 				API.getChannelObjAndLevel(channel, socket.logviewer_token, function(error, channelObj, level){
 					if(error)
 					{
@@ -79,32 +78,36 @@ io.sockets.on('connection', function(socket){
 						//socket.emit("error", error);
 						return;
 					}
-					if(level >= channelObj.viewlogs) {
+					if(level >= channelObj.viewmodlogs) {
+						var logsroom = "logs-"+channelObj.name+"-"+user+"-modlogs";
+						winston.info('joining room', logsroom);
+						socket.join(logsroom); 
+					} else if(level >= channelObj.viewlogs) {
 						var logsroom = "logs-"+channelObj.name+"-"+user;
-						winston.debug('joining room', logsroom);
+						winston.info('joining room', logsroom);
 						socket.join(logsroom); 
 					} else {
-						winston.debug("Access to logs denied. "+socket.logviewer_token);
+						winston.info("Access to logs denied. "+socket.logviewer_token);
 						// ignore the join
 					}
 					if(level >= channelObj.viewcomments) {
 						var commentsroom = "comments-"+channelObj.name+"-"+user;
-						winston.debug('joining room', commentsroom);
+						winston.info('joining room', commentsroom);
 						socket.join(commentsroom); 
 					} else {
-						winston.debug("Access to comments denied. "+socket.logviewer_token);
+						winston.info("Access to comments denied. "+socket.logviewer_token);
 						// ignore the join request
 					}
 				});
-			} else if (channel_user.length == 1) {
-				var channel = channel_user[0].toLowerCase();
+			} else if (room_split[0] == "events") {
+				var channel = room_split[1].toLowerCase();
 				API.getChannelObjAndLevel(channel, socket.logviewer_token, function(error, channelObj, level){
 					if(level >= 10) {
 						var logsroom = "events-"+(channelObj?channelObj.name:channel);
-						winston.debug('joining room', logsroom);
+						winston.info('joining room', logsroom);
 						socket.join(logsroom); 
 					} else {
-						winston.debug("Access to events denied. "+socket.logviewer_token);
+						winston.info("Access to events denied. "+socket.logviewer_token);
 						// ignore the join
 					}
 				});
@@ -114,22 +117,25 @@ io.sockets.on('connection', function(socket){
 
 	socket.on('unsubscribe', function(room) {
 		if(room && typeof(room)==="string") {
-			channel_user = room.split("-");
+			var room_split = room.split("-");
 			
-			if(channel_user.length === 2) {
-				var channel = channel_user[0].toLowerCase();
-				var user = channel_user[1].toLowerCase();
+			if(room_split[0] == "logs") {
+				var channel = room_split[1].toLowerCase();
+				var user = room_split[2].toLowerCase();
 				db.getChannel(channel, function(channelObj) {
 					if(channelObj) channel = channelObj.name;
 					var logsroom = "logs-"+channel+"-"+user;
+					var modlogsroom = "logs-"+channel+"-"+user+"-modlogs";
 					winston.debug('leaving room', logsroom);
+					winston.debug('leaving room', modlogsroom);
 					socket.leave(logsroom);
+					socket.leave(modlogsroom);
 					var commentsroom = "comments-"+channel+"-"+user;
 					winston.debug('leaving room', commentsroom);
 					socket.leave(commentsroom);
 				});
-			} else if (channel_user.length == 1) {
-				var channel = channel_user[0].toLowerCase();
+			} else if (room_split[0] == "events") {
+				var channel = room_split[1].toLowerCase();
 				db.getChannel(channel, function(channelObj) {
 					if(channelObj) channel = channelObj.name;
 					var logsroom = "events-"+channel;
@@ -155,6 +161,7 @@ app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  res.header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE");
   next();
 });
 
@@ -203,7 +210,8 @@ app.get('/api',function(req,res,next) {
 						auth: {
 							client_id: settings.auth.client_id,
 							baseurl: settings.auth.baseurl
-						}
+						},
+						botname: settings.bot.nick
 					});
 				}
 				else res.status(404).jsonp({
@@ -212,7 +220,8 @@ app.get('/api',function(req,res,next) {
 					auth: {
 						client_id: settings.auth.client_id,
 						baseurl: settings.auth.baseurl
-					}
+					},
+					botname: settings.bot.nick
 				});
 			});
 		} else {
@@ -222,7 +231,8 @@ app.get('/api',function(req,res,next) {
 				auth: {
 					client_id: settings.auth.client_id,
 					baseurl: settings.auth.baseurl
-				}
+				},
+				botname: settings.bot.nick
 			});
 		}
 	}
@@ -327,7 +337,27 @@ app.get('/api/logout',function(req,res,next) {
 app.get('/api/channel/:channel', function(req, res, next) {
 	try {
 		API.getChannelObjAndLevel(req.params.channel, req.query.token, function(error, channelObj, level, username) {
-			res.jsonp({"channel":channelObj,"me":{name:username, level:level, valid: !!username}});
+			// check if the logviewer bot is modded
+			bot.isModded(channelObj || {name: req.params.channel}, function(isModded){
+				channelObj.isModded = isModded;
+				res.jsonp({"channel":channelObj,"me":{name:username, level:level, valid: !!username}});
+			});
+		});
+	} 
+	catch(err) {
+		next(err);
+	}
+});
+
+
+// checks if the user is a moderator
+app.get('/api/checkmodded/:channel', function(req, res, next) {
+	try {
+		API.getChannelObjAndLevel(req.params.channel, req.query.token, function(error, channelObj, level, username) {
+			// check if the logviewer bot is modded
+			bot.isModded(channelObj, function(isModded){
+				res.jsonp({isModded: isModded});
+			}, true);
 		});
 	} 
 	catch(err) {
@@ -337,7 +367,7 @@ app.get('/api/channel/:channel', function(req, res, next) {
 
 app.get('/api/channels', function(req, res, next) {
 	try {
-		db.getChannels(function(r) {
+		db.getChannelList(function(r) {
 			res.jsonp(r);
 		});
 	} 
@@ -354,7 +384,7 @@ app.get('/api/logs/:channel', function(req, res, next) {
 			} else if(channelObj.active) {
 				// level check.
 				if(level >= channelObj.viewlogs) {
-					API.getLogs(channelObj.name, req.query, function(logs){
+					API.getLogs(channelObj, req.query, level >= channelObj.viewmodlogs, function(logs){
 						res.jsonp(logs);
 					});
 				} else {
@@ -370,6 +400,38 @@ app.get('/api/logs/:channel', function(req, res, next) {
 	}
 });
 
+
+var knownChannels = {};
+function getChannelID(channelname, callback) {
+	if(knownChannels[channelname]) {
+		callback(null, knownChannels[channelname]);
+		return;
+	}
+	request.get({
+		url: "https://api.twitch.tv/kraken/channels/"+channelname+"?client_id="+settings.auth.client_id
+	},function(e,r,body){
+		if(e) {
+			winston.error(e);
+			callback(e);
+		} else if(body === undefined) {
+			winston.error("Error: "+r.statusCode);
+			callback("Error: "+r.statusCode);
+		} else {
+			try {
+				var id = JSON.parse(body)._id;
+				knownChannels[channel] = id;
+				callback(null, id);
+			} catch(e) {
+				winston.error("Error: "+e+" in getChannelID("+channelname+").");
+				if(callback) callback(e);
+			}
+		}
+	}, function(error){
+		winston.error("Couldnt load "+channelname+"'s channel ID.\nError: "+error);
+		if(callback) callback(error);
+	});
+}
+
 // change the settings of a channel
 // body is a JSON object with the allowedsettings ["active","viewlogs","viewcomments","writecomments","deletecomments"] as keys
 var allowedsettings = ["active","viewlogs","viewcomments","writecomments","deletecomments"];
@@ -381,20 +443,27 @@ app.post('/api/settings/:channel', function(req, res, next) {
 				{
 					// add a new channel
 					var channelname = req.params.channel.toLowerCase();
-					API.adminLog(channelname, username, "channel", "add", "");
-					db.addChannel(channelname, function() {
-						var newsettings = req.body.settings;
-						API.updateSettings(channelname, username, newsettings, function(error) {
-							if(error) {
-								res.status(error.status).jsonp({"error": error.message});
-							} else {
-								res.status(200).end();
-							}
-						});
+					getChannelID(channelname, function(e, id) {
+						if(e) {
+							winston.error(e);
+							res.status(500).jsonp({"error": e});
+						} else {
+							API.adminLog(channelname, username, "channel", "add", id);
+							db.addChannel({id: id, name: channelname}, function(channelObj) {
+								var newsettings = req.body.settings;
+								API.updateSettings(channelObj, username, newsettings, function(error) {
+									if(error) {
+										res.status(error.status).jsonp({"error": error.message});
+									} else {
+										res.status(200).end();
+									}
+								});
+							});
+						}
 					});
 				} else {
 					var newsettings = req.body.settings;
-					API.updateSettings(channelObj.name, username, newsettings, function(error) {
+					API.updateSettings(channelObj, username, newsettings, function(error) {
 						if(error) {
 							res.status(error.status).jsonp({"error": error.message});
 						} else {
@@ -790,7 +859,7 @@ function getSlackLogs(channel, user, limit, token, cb, ecb) {
 					var logtext = false;
 					var commenttext = false;
 					var seemoretext = 'See ' + settings.auth.baseurl + "/" + encodeURIComponent(channel) + "/?user=" + encodeURIComponent(user);
-					API.getLogs(channelObj.name, query, function(logs){
+					API.getLogs(channelObj, query, false, function(logs){
 						logtext = plainTextify(channel, user, logs)
 						if(commenttext !== false) cb(logtext+"\n"+commenttext+"\n"+seemoretext);
 					});

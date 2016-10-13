@@ -87,7 +87,7 @@ for(var i=0;i<badgekeys.length;++i) {
 }
 
 
-var tagTypes = {"c":"color", "e": "emotes", "d": "display-name", "b": "badges", "m": "mod", "s": "subscriber", "t": "turbo", "u": "user-type"};
+var tagTypes = {"c":"color", "e": "emotes", "d": "display-name", "b": "badges", "m": "mod", "s": "subscriber", "t": "turbo", "u": "user-type", "l": "logs"};
 var userTypesToBadges = { "m": "moderator/1", "a": "admin/1", "s": "staff/1" };
 
 function compressMessage(user, data) {

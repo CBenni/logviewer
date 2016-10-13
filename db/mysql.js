@@ -21,10 +21,10 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		connection.query("CREATE TABLE IF NOT EXISTS channels ("
 			+"id int(10) unsigned,"
 			+"name varchar(32) COLLATE utf8_unicode_ci PRIMARY KEY,"
-			+"active tinyint(4) unsigned NOT NULL DEFAULT '1',"
-			+"modlogs tinyint(4) unsigned NOT NULL DEFAULT '1',"
+			+"active tinyint(4) unsigned NOT NULL DEFAULT '0',"
+			+"modlogs tinyint(4) unsigned NOT NULL DEFAULT '0',"
 			+"viewlogs tinyint(4) unsigned NOT NULL DEFAULT '0',"
-			+"viewmodlogs tinyint(4) unsigned NOT NULL DEFAULT '1',"
+			+"viewmodlogs tinyint(4) unsigned NOT NULL DEFAULT '5',"
 			+"viewcomments tinyint(4) unsigned NOT NULL DEFAULT '5',"
 			+"writecomments tinyint(4) unsigned NOT NULL DEFAULT '5',"
 			+"deletecomments tinyint(4) unsigned NOT NULL DEFAULT '10',"
@@ -55,19 +55,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		+")");
 		
 		// create the logviewer tables if they dont exist
-		connection.query("CREATE TABLE IF NOT EXISTS chat_logviewer ("
-			+"id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,"
-			+"time BIGINT UNSIGNED NOT NULL,"
-			+"nick VARCHAR(32) NOT NULL,"
-			+"text VARCHAR(2047) NOT NULL,"
-			+"INDEX (nick, time)"
-		+")");
-		connection.query("CREATE TABLE IF NOT EXISTS users_logviewer ("
-			+"nick VARCHAR(32) NOT NULL PRIMARY KEY,"
-			+"messages INT UNSIGNED DEFAULT '0',"
-			+"timeouts INT UNSIGNED DEFAULT '0',"
-			+"level INT DEFAULT '0'"
-		+")");
+		self.ensureTablesExist({name: "logviewer"});
 		
 		/* create the integrations table if it doesnt exist */
 		connection.query("CREATE TABLE IF NOT EXISTS connections ("
@@ -104,15 +92,16 @@ module.exports = function MySQLDatabaseConnector(settings) {
 
 	});
 	
-	self.ensureTablesExist = function(channel) {
-		self.pool.query("CREATE TABLE IF NOT EXISTS chat_"+channel+" ("
+	self.ensureTablesExist = function(channelObj) {
+		self.pool.query("CREATE TABLE IF NOT EXISTS chat_"+channelObj.name+" ("
 			+"id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,"
 			+"time BIGINT UNSIGNED NOT NULL,"
 			+"nick VARCHAR(32) NOT NULL,"
 			+"text VARCHAR(2047) NOT NULL,"
+			+"modlog VARCHAR(1024) DEFAULT NULL,"
 			+"INDEX (nick, time)"
 		+")");
-		self.pool.query("CREATE TABLE IF NOT EXISTS users_"+channel+" ("
+		self.pool.query("CREATE TABLE IF NOT EXISTS users_"+channelObj.name+" ("
 			+"nick VARCHAR(32) NOT NULL PRIMARY KEY,"
 			+"messages INT UNSIGNED DEFAULT '0',"
 			+"timeouts INT UNSIGNED DEFAULT '0',"
@@ -121,7 +110,13 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	}
 	
 	self.getChannels = function(callback) {
-		self.pool.query("SELECT name FROM channels WHERE active=1",function(error, results, fields){
+		self.pool.query("SELECT * FROM channels WHERE active=1",function(error, results, fields){
+			callback(results);
+		});
+	}
+	
+	self.getChannelList = function(callback) {
+		self.pool.query("SELECT name, id FROM channels WHERE active=1",function(error, results, fields){
 			callback(results);
 		});
 	}
@@ -162,10 +157,20 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		});
 	}
 	
-	self.addChannel = function(channel, callback) {
-		self.ensureTablesExist(channel);
-		self.pool.query("INSERT INTO channels (name) VALUES (?)",[channel],function(error, results, fields){
-			callback();
+	self.addChannel = function(channelObj, callback) {
+		self.ensureTablesExist(channelObj);
+		self.pool.query("INSERT INTO channels (name, id) VALUES (?)",[channelObj.name, channelObj.id],function(error, result){
+			if(error) {
+				winston.error("Couldnt add channel! "+error);
+			} else {
+				self.poop.query("SELECT * FROM channels WHERE name=?",[channelObj.name], function(error, results, fields){
+					if(error || results.length == 0) {
+						winston.error("Channel wasnt added properly! "+(error || "No results returned..."));
+					} else {
+						callback(results[0]);
+					}
+				});
+			}
 		});
 	}
 	
@@ -181,8 +186,19 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		if(count !== false) self.pool.query("INSERT INTO ?? (nick,messages) VALUES (?,1) ON DUPLICATE KEY UPDATE messages = messages + 1",["users_"+channel, nick,nick]);
 	}
 	
-	self.addTimeout = function(channel, nick, time, message, callback) {
-		self.pool.query("INSERT INTO ?? (time,nick,text) VALUES (?,?,?)",["chat_"+channel, Math.floor(time/1000), nick, message], function(error, result){
+	self.addModLog = function(channel, nick, message, modlog, callback) {
+		// we use the pool for this instead of the pool
+		self.pool.query("INSERT INTO ?? (time,nick,text,modlog) VALUES (?,?,?,?)",["chat_"+channel, Math.floor(Date.now()/1000), nick, message, JSON.stringify(modlog)], function(error, result) {
+			if(error) {
+				winston.error("addModLog: Could not insert! "+error);
+				return;
+			}
+			if(callback) callback(result.insertId);
+		});
+	}
+	
+	self.addTimeout = function(channel, nick, time, message, modlog, callback) {
+		self.pool.query("INSERT INTO ?? (time,nick,text,modlog) VALUES (?,?,?,?)",["chat_"+channel, Math.floor(time/1000), nick, message,JSON.stringify(modlog)], function(error, result){
 			if(error) {
 				winston.error("addTimeout: Could not insert! "+error);
 				return;
@@ -192,36 +208,48 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		self.pool.query("INSERT INTO ?? (nick,timeouts) VALUES (?,1) ON DUPLICATE KEY UPDATE timeouts = timeouts + 1",["users_"+channel, nick, nick]);
 	}
 	
-	self.updateTimeout = function(channel, nick, id, time, message) {
+	self.updateTimeout = function(channel, nick, id, time, message, modlog) {
 		// we use the pool for this instead of the pool
-		self.pool.query("UPDATE ?? SET time=?, text=? WHERE nick=? AND id=?",["chat_"+channel, Math.floor(time/1000), message, nick, id]);
+		self.pool.query("UPDATE ?? SET time=?, text=?, modlog=? WHERE nick=? AND id=?",["chat_"+channel, Math.floor(time/1000), message, JSON.stringify(modlog), nick, id]);
 	}
 	
-	self.getLogsByNick = function(channel, nick, limit, callback) {
-		self.pool.query("SELECT id,time,nick,text FROM ?? WHERE nick=? ORDER BY time DESC LIMIT ?", ["chat_"+channel, nick, limit], function(error, results, fields) {
+	function parseModLogs(list){
+		for(var i=0;i<list.length;++i) {
+			let ml = list[i].modlog;
+			if(ml) {
+				if(ml) list[i].modlog = JSON.parse(ml);
+			}
+		}
+	}
+	
+	self.getLogsByNick = function(channel, nick, limit, modlogs, callback) {
+		self.pool.query("SELECT id,time,nick,text"+(modlogs?",modlog":"")+" FROM ?? WHERE nick=? ORDER BY time DESC LIMIT ?", ["chat_"+channel, nick, limit], function(error, results, fields) {
 			if(error) {
 				winston.error("getLogsByNick: Select failed! "+error);
 				return;
 			}
+			parseModLogs(results);
 			if(results) callback(results.reverse());
 			else callback([]);
 		});
 	}
 	
-	self.getLogsById = function(channel, id, nick, before, after, callback) {
+	self.getLogsById = function(channel, id, nick, before, after, modlogs, callback) {
 		var beforeRes = null;
 		var afterRes = null;
 		// before
 		if(before > 0) {
 			if(nick) {
-				self.pool.query("SELECT id,time,nick,text FROM ?? WHERE nick=? AND id < ? ORDER BY id DESC LIMIT ?", ["chat_"+channel, nick, id, before], function(error, results, fields) {
+				self.pool.query("SELECT id,time,nick,text"+(modlogs?",modlog":"")+" FROM ?? WHERE nick=? AND id < ? ORDER BY id DESC LIMIT ?", ["chat_"+channel, nick, id, before], function(error, results, fields) {
 					if(results) beforeRes = results.reverse();
+					parseModLogs(beforeRes);
 					if(afterRes !== null) callback(beforeRes, afterRes);
 				});
 			} else {
 				// we exclude twitchnotify when not checking a specific user
-				self.pool.query("SELECT id,time,nick,text FROM ?? WHERE id < ? AND nick != 'twitchnotify' ORDER BY id DESC LIMIT ?", ["chat_"+channel, id, before], function(error, results, fields) {
+				self.pool.query("SELECT id,time,nick,text"+(modlogs?",modlog":"")+" FROM ?? WHERE id < ? AND nick != 'twitchnotify' ORDER BY id DESC LIMIT ?", ["chat_"+channel, id, before], function(error, results, fields) {
 					if(results) beforeRes = results.reverse();
+					parseModLogs(beforeRes);
 					if(afterRes !== null) callback(beforeRes, afterRes);
 				});
 			}
@@ -229,18 +257,23 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		// after
 		if(after > 0) {
 			if(nick) {
-				self.pool.query("SELECT id,time,nick,text FROM ?? WHERE nick=? AND id > ? ORDER BY id ASC LIMIT ?", ["chat_"+channel, nick, id, after], function(error, results, fields) {
+				self.pool.query("SELECT id,time,nick,text"+(modlogs?",modlog":"")+" FROM ?? WHERE nick=? AND id > ? ORDER BY id ASC LIMIT ?", ["chat_"+channel, nick, id, after], function(error, results, fields) {
 					if(results) afterRes = results;
+					parseModLogs(afterRes);
 					if(beforeRes !== null) callback(beforeRes, afterRes);
 				});
 			} else {
 				// we exclude twitchnotify when not checking a specific user
-				self.pool.query("SELECT id,time,nick,text FROM ?? WHERE id > ? AND nick != 'twitchnotify' ORDER BY id ASC LIMIT ?", ["chat_"+channel, id, after], function(error, results, fields) {
+				self.pool.query("SELECT id,time,nick,text"+(modlogs?",modlog":"")+" FROM ?? WHERE id > ? AND nick != 'twitchnotify' ORDER BY id ASC LIMIT ?", ["chat_"+channel, id, after], function(error, results, fields) {
 					if(results) afterRes = results;
+					parseModLogs(afterRes);
 					if(beforeRes !== null) callback(beforeRes, afterRes);
 				});
 			}
-		} else { afterRes = []; if(beforeRes !== null) callback(beforeRes, afterRes); }
+		} else { 
+			afterRes = []; 
+			if(beforeRes !== null) callback(beforeRes, afterRes); 
+		}
 	}
 	
 	self.getUserStats = function(channel, nick, callback) {

@@ -38,6 +38,7 @@ app.controller("mainctrl", function($rootScope,$scope,$http,$location,$cookies,$
 	$rootScope.auth = { name: $cookies.get("login")||"", token: $cookies.get("token")||"" };
 	$scope.$stateParams = $stateParams;
 	$rootScope.$stateParams = $stateParams;
+	$rootScope.globalSettings = settings;
 	$scope.login = function() {
 		window.location.href = "https://api.twitch.tv/kraken/oauth2/authorize"
 			+"?response_type=code"
@@ -55,6 +56,7 @@ app.controller("mainctrl", function($rootScope,$scope,$http,$location,$cookies,$
 	
 	
 	$scope.showDialog = function(ev, tpl) {
+		console.log($rootScope.globalSettings);
 		$mdDialog.show({
 			controller: DialogController,
 			templateUrl: tpl,
@@ -76,8 +78,9 @@ app.controller("mainctrl", function($rootScope,$scope,$http,$location,$cookies,$
 });
 
 
-function DialogController($scope, $mdDialog, $location) {
+function DialogController($scope, $mdDialog, $location, $http, $stateParams) {
 	$scope.location = $location;
+	$scope.globalSettings = settings;
 	
 	$scope.hide = function() {
 		$mdDialog.hide();
@@ -88,6 +91,11 @@ function DialogController($scope, $mdDialog, $location) {
 	$scope.answer = function(answer) {
 		$mdDialog.hide(answer);
 	};
+	
+	// other functionality
+	$scope.checkModded = function() {
+		$http.get("/api/checkmodded/"+$stateParams.channel);
+	}
 }
 
 app.directive('clickOutside', function ($document) {

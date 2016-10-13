@@ -14,6 +14,7 @@
 	"bot": {
 		"server": "irc.chat.twitch.tv:80",
 		"nick": "",
+		"id": 123456,
 		"oauth": "",
 		"modcheckinterval": 2
 	},
@@ -21,10 +22,20 @@
 		"html": "/html/index.html"
 	},
 	"logging": {
-		"file": "logviewer.log"
+		"file": {
+			"filename": "logviewer.log",
+			"level": "info"
+		},
+		"console": {
+			"level": "debug"
+		}
 	},
 	"discord": {
 		"client_id": "",
 		"token": "", // Discord access token
+	},
+	"pubsub": {
+		"server": "wss://pubsub-edge.twitch.tv/v1",
+		"maxtopics": 49
 	}
 }

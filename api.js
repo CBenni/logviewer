@@ -94,21 +94,46 @@ API.prototype.getLevel = function(channel, token, callback) {
 }
 
 // updates a channel settings
-var allowedsettings = ["active","viewlogs","viewcomments","writecomments","deletecomments"];
-API.prototype.updateSettings = function(channel, user, settings, callback) {
+var allowedsettings = ["active","modlogs","viewlogs","viewmodlogs","viewcomments","writecomments","deletecomments"];
+API.prototype.updateSettings = function(channelObj, user, settings, callback) {
 	var self = this;
+	var error;
+	var async = false; // TODO: promises
+	console.log(settings);
+	
 	for(var i=0;i<allowedsettings.length;++i) {
 		var key = allowedsettings[i];
-		if(!isNaN(parseInt(settings[key]))) {
-			self.db.setSetting(channel, key, settings[key]);
-			self.adminLog(channel, user, "setting", key, settings[key]);
-		}
-		if(key === "active") {
-			if(settings.active == "1") self.bot.joinChannel(channel);
-			else self.bot.partChannel(channel);
+		if(settings[key] !== undefined && !isNaN(parseInt(settings[key]))) {
+			if(key === "active") {
+				self.db.setSetting(channelObj.name, key, settings[key]);
+				self.adminLog(channelObj.name, user, "setting", key, settings[key]);
+				if(settings.active == "1") self.bot.joinChannel(channelObj);
+				else self.bot.partChannel(channelObj);
+			} else if(key === "modlogs") {
+				if(settings.modlogs == "1") {
+					async = true;
+					self.bot.enableModLogs(channelObj, function(success) {
+						if(success) {
+							self.db.setSetting(channelObj.name, key, settings[key]);
+							self.adminLog(channelObj.name, user, "setting", key, settings[key]);
+							callback();
+						} else {
+							callback({status: 400, message: "The logviewer is not modded in your channel."});
+						}
+					});
+				}
+				else {
+					self.bot.disableModLogs(channelObj);
+					self.db.setSetting(channelObj.name, key, settings[key]);
+					self.adminLog(channelObj.name, user, "setting", key, settings[key]);
+				}
+			} else {
+				self.db.setSetting(channelObj.name, key, settings[key]);
+				self.adminLog(channelObj.name, user, "setting", key, settings[key]);
+			}
 		}
 	}
-	callback();
+	if(!async) callback(error);
 }
 
 // gets logs for a user.
@@ -117,19 +142,20 @@ API.prototype.updateSettings = function(channel, user, settings, callback) {
 // and the "after" messages (default 10) after the message with the given ID
 // otherwise, it gives the newest "before" messages
 // if a nick is specified, it only returns messages by that user
-API.prototype.getLogs = function(channel, query, callback) {
+API.prototype.getLogs = function(channelObj, query, modlogs, callback) {
 	var self = this;
 	if(query.id) { 
 		var id = parseInt(query.id);
-		self.db.getLogsById(channel, id, query.nick, Math.min(parseInt(query.before || 10),100), Math.min(parseInt(query.after || 10),100), function(before, after){
+		self.db.getLogsById(channelObj.name, id, query.nick, Math.min(parseInt(query.before || 10),100), Math.min(parseInt(query.after || 10),100), modlogs, function(before, after){
+			console.log("Got "+before.length+" before and "+after.length+" after - args: "+JSON.stringify(arguments));
 			for(var i=0;i<before.length;++i) {
-				before[i].text = messagecompressor.decompressMessage("#"+channel, before[i].nick, before[i].text);
+				before[i].text = messagecompressor.decompressMessage("#"+channelObj.name, before[i].nick, before[i].text);
 			}
 			for(var i=0;i<after.length;++i) {
-				after[i].text = messagecompressor.decompressMessage("#"+channel, after[i].nick, after[i].text);
+				after[i].text = messagecompressor.decompressMessage("#"+channelObj.name, after[i].nick, after[i].text);
 			}
 			if(query.nick) {
-				self.db.getUserStats(channel, query.nick, function(userobj) {
+				self.db.getUserStats(channelObj.name, query.nick, function(userobj) {
 					callback({id:id, user: userobj, before: before, after: after});
 				});
 			}
@@ -139,11 +165,13 @@ API.prototype.getLogs = function(channel, query, callback) {
 		});
 	}
 	else if(query.nick) {
-		self.db.getLogsByNick(channel, query.nick, Math.min(parseInt(query.before || 10), 100), function(before){
+		var c = Math.min(parseInt(query.before || 10), 100);
+		self.db.getLogsByNick(channelObj.name, query.nick, Math.min(parseInt(query.before || 10), 100), modlogs, function(before){
+			console.log(`Got ${before.length} before - args: ${channelObj.name},${query.nick},${c}`);
 			for(var i=0;i<before.length;++i) {
-				before[i].text = messagecompressor.decompressMessage("#"+channel, before[i].nick, before[i].text);
+				before[i].text = messagecompressor.decompressMessage("#"+channelObj.name, before[i].nick, before[i].text);
 			}
-			self.db.getUserStats(channel, query.nick, function(userobj) {
+			self.db.getUserStats(channelObj.name, query.nick, function(userobj) {
 				callback({id:id, user: userobj, before: before, after: []});
 			});
 		});

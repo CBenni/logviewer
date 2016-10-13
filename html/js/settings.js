@@ -27,9 +27,10 @@ function getListChanges(l1,l2) {
 	return res;
 }
 
-logviewerApp.controller("SettingsController", function($rootScope, $scope, $http, $stateParams, $mdToast, logviewerSocket){
+logviewerApp.controller("SettingsController", function($rootScope, $scope, $http, $stateParams, $mdToast, $mdDialog, logviewerSocket){
 	$scope.settings = {
 		active: 0,
+		modlogs: 0,
 		viewlogs: 0,
 		viewcomments: 5,
 		writecomments: 5,
@@ -146,8 +147,14 @@ logviewerApp.controller("SettingsController", function($rootScope, $scope, $http
 	
 	$scope.events = [];
 	
+	var prettyToggle = {
+		"active": "the logviewer",
+		"modlogs": "mod logs"
+	};
+	
 	var prettyPerm = {
 		"viewlogs": "view logs",
+		"viewmodlogs": "view mod logs",
 		"viewcomments": "view comments",
 		"writecomments": "write comments",
 		"deletecomments": "delete comments"
@@ -174,13 +181,13 @@ logviewerApp.controller("SettingsController", function($rootScope, $scope, $http
 			if(event.name == "add") return "added the logviewer to the channel.";
 		},
 		"setting": function(event) {
-			if(event.name == "active") {
+			if(prettyToggle[event.name]) {
 				if(event.data == "1") {
-					return "enabled the logviewer."
+					return "enabled "+prettyToggle[event.name]+"."
 				} else {
-					return "disabled the logviewer."
+					return "disabled "+prettyToggle[event.name]+"."
 				}
-			} else {
+			} else if(prettyPerm[event.name]) {
 				return "set "+prettyPerm[event.name]+" to "+(userGroup[event.data] || event.data)+(event.data > 0?"s and higher only":"");
 			}
 		},
@@ -195,6 +202,9 @@ logviewerApp.controller("SettingsController", function($rootScope, $scope, $http
 		},
 		"system": function(event) {
 			return event.data;
+		},
+		"command": function(event) {
+			return "used command "+event.data;
 		}
 	}
 	
@@ -217,12 +227,22 @@ logviewerApp.controller("SettingsController", function($rootScope, $scope, $http
 			console.log("Connected to socket.io");
 		});
 		logviewerSocket.emit("token",$rootScope.auth.token);
-		logviewerSocket.emit("subscribe",$stateParams.channel);
+		logviewerSocket.emit("subscribe","events-"+$stateParams.channel);
 		logviewerSocket.on("adminlog", addEvent);
+		logviewerSocket.on("ismodded", function(ismodded){
+			$scope.settings.isModded = ismodded;
+			oldsettings.isModded = ismodded;
+			if(ismodded) addEvent({time: Math.floor(Date.now()/1000), action: "system", user: "", "name": "ismodded", "data": "Moderator status detected."});
+			else {
+				addEvent({time: Math.floor(Date.now()/1000), action: "system", user: "", "name": "ismodded", "data": "Moderator status lost."});
+				$scope.settings.modlogs = 0;
+				oldsettings.modlogs = 0;
+			}
+		});
 	});
 	
 	$scope.$on('$destroy', function (event) {
-		logviewerSocket.emit("unsubscribe",$stateParams.channel);
+		logviewerSocket.emit("unsubscribe","events-"+$stateParams.channel);
 	});
 });
 
