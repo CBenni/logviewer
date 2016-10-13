@@ -217,7 +217,8 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		for(var i=0;i<list.length;++i) {
 			let ml = list[i].modlog;
 			if(ml) {
-				if(ml) list[i].modlog = JSON.parse(ml);
+				if(ml === "0") list[i].modlog = null;
+				else list[i].modlog = JSON.parse(ml);
 			}
 		}
 	}
