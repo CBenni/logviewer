@@ -128,7 +128,7 @@ pubsub.prototype.addConnection = function() {
 	
 	conn.ws.on("error", function(e) {
 		winston.error(e);
-	}
+	});
 	
 	self.connections.push(conn);
 	
