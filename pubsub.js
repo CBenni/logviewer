@@ -10,8 +10,6 @@ function pubsub(settings, db, io) {
 	this.connections = [];
 	this.currenthead = 0;
 	this.topics2conn = {};
-	
-	this.addConnection();
 }
 
 pubsub.prototype = new events.EventEmitter;
