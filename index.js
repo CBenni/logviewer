@@ -338,10 +338,14 @@ app.get('/api/channel/:channel', function(req, res, next) {
 	try {
 		API.getChannelObjAndLevel(req.params.channel, req.query.token, function(error, channelObj, level, username) {
 			// check if the logviewer bot is modded
-			bot.isModded(channelObj || {name: req.params.channel}, function(isModded){
-				channelObj.isModded = isModded;
+			if(channelObj) {
+				bot.isModded(channelObj || {name: req.params.channel}, function(isModded){
+					channelObj.isModded = isModded;
+					res.jsonp({"channel":channelObj,"me":{name:username, level:level, valid: !!username}});
+				});
+			} else {
 				res.jsonp({"channel":channelObj,"me":{name:username, level:level, valid: !!username}});
-			});
+			}
 		});
 	} 
 	catch(err) {
