@@ -95,7 +95,7 @@
 								{{messageBefore.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}
 							</span>
 							<span class="logviewer-message" ng-bind-html='messageBefore.text | chatLine'></span>
-							<span ng-if="messageBefore.modlog">(By: {{modLogList(messageBefore.modlog)}})
+							<span ng-show="messageBefore.modlog">(By: {{modLogList(messageBefore.modlog)}})
 								<md-tooltip md-direction="top">
 									<table>
 										<tr ng-repeat="(user, time) in messageBefore.modlog">

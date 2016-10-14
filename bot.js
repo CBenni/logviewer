@@ -483,6 +483,7 @@ function logviewerBot(settings, db, io) {
 	
 	// react to mod logs, if present
 	self.pubsub.on("MESSAGE", function(message, flags) {
+		winston.debug("Handling pubsub message "+JSON.stringify(message));
 		let topic = message.data.topic.split(".");
 		if(topic[0] == "chat_moderator_actions") {
 			var channelid = topic[2];
@@ -505,7 +506,7 @@ function logviewerBot(settings, db, io) {
 				db.addModLog(channel, "jtv", "djtv "+text, modlog, function(id) {
 					var time = Math.floor(Date.now()/1000);
 					io.to("logs-"+channel+"-"+user).emit("log-add", {id: id, time: time, nick: "jtv", text: `@display-name=jtv;color=;subscriber=0;turbo=0;user-type=;emotes=;badges= :jtv!jtv@jtv.tmi.twitch.tv PRIVMSG #${channel} :${text}`});
-					io.to("logs-"+channel+"-"+user+"-modlogs").emit("log-add", {id: id, time: time, nick: user, modlog: {}, text: `@display-name=jtv;color=;subscriber=0;turbo=0;user-type=;emotes=;badges= :${user}!${user}@${user}.tmi.twitch.tv PRIVMSG #${channel} :${text}`});
+					io.to("logs-"+channel+"-"+user+"-modlogs").emit("log-add", {id: id, time: time, nick: user, modlog: modlog, text: `@display-name=jtv;color=;subscriber=0;turbo=0;user-type=;emotes=;badges= :${user}!${user}@${user}.tmi.twitch.tv PRIVMSG #${channel} :${text}`});
 				});
 				self.API.adminLog(channel, user, "command", command.moderation_action, text);
 			}

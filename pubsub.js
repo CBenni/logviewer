@@ -32,12 +32,13 @@ function pubsubConnection(ps) {
 		self.buffer = [];
 	});
 	
-	setInterval(function(){
+	var pingInterval = setInterval(function(){
 		try {
 			self.ws.send(JSON.stringify({type: "PING"}));
 		}
 		catch(e) {
 			winston.error(e);
+			clearInterval(pingInterval);
 		}
 	}, 60*1000);
 }
