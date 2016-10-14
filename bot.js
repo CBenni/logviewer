@@ -285,11 +285,13 @@ function logviewerBot(settings, db, io) {
 		//:tmi.twitch.tv NOTICE #ox33 :The moderators of this room are: 0x33, andyroid, anoetictv
 		//@msg-id=msg_banned :tmi.twitch.tv NOTICE #frankerzbenni :You are permanently banned from talking in frankerzbenni.
 		let channel = data[PARAM].slice(1);
-		if(data[TAGS] && data[TAGS]["msg-id"] === "room_mods") {
+		if(data[TAGS] && (data[TAGS]["msg-id"] === "room_mods" || data[TAGS]["msg-id"] === "no_mods")) {
 			//console.log("Got mods response for channel "+channel+": "+data[0]);
-			
-			let m = /The moderators of this \w+ are: (.*)/.exec(data[TRAILING]);
-			let users = m[1].match(/\w+/g);
+			let users = [];
+			if(data[TAGS]["msg-id"] === "room_mods") {
+				let m = /The moderators of this \w+ are: (.*)/.exec(data[TRAILING]);
+				users = m[1].match(/\w+/g);
+			}
 			
 			
 			// check if the moderation status of the bot has changed
@@ -557,13 +559,13 @@ logviewerBot.prototype.checkMods = function(channelObj) {
 }
 
 // checks if the logviewer bot is modded in a channel
-logviewerBot.prototype.isModded = function(channelObj, callback, force) {
+logviewerBot.prototype.isModded = function(channelObj, callback, force, cacheonly) {
 	var self = this;
 	var channel = channelObj.name;
 	if(self.userlevels[channel] && !force) {
 		console.log("Used cached mod list for channel "+channel+": "+JSON.stringify(self.userlevels[channel]));
 		callback(self.userlevels[channel][self.nick] == 5);
-	} else {
+	} else if(!cacheonly) {
 		console.log("Waiting for mod list for channel "+channel);
 		if(force) self.checkMods(channelObj);
 		self.once("moderator-list-"+channel, function(list){
@@ -574,6 +576,8 @@ logviewerBot.prototype.isModded = function(channelObj, callback, force) {
 			}
 		});
 		self.checkMods(channelObj);
+	} else {
+		callback(false);
 	}
 	
 }
