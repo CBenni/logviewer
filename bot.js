@@ -244,7 +244,7 @@ function logviewerBot(settings, db, io) {
 				timeout.id = id;
 				// if the timeout was dirty, update it again...
 				if(timeout.dirty) {
-					db.updateTimeout(channel, user, id, timeout.time.getTime(), "djtv "+timeout.text);
+					db.updateTimeout(channel, user, id, timeout.time.getTime(), "djtv "+timeout.text, timeout.modlog);
 				}
 				// emit timeout via websockets
 				emitTimeout("log-add", channel, user, timeout);
