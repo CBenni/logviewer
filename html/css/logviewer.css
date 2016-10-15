@@ -41,6 +41,8 @@ div { outline-style:none; }
     padding: 8px;
     background-color: #53d910;
 	text-align: center;
+    width: 500px;
+    margin: 0px auto;
 }
 
 /* user view */
