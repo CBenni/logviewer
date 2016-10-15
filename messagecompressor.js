@@ -198,7 +198,7 @@ function parseIRCMessage(message) {
 	if (tagdata) {
 		var tags = {};
 		do {
-			m = rx2.exec(tagdata);
+			var m = rx2.exec(tagdata);
 			if (m) {
 				tags[m[1]] = m[2];
 			}

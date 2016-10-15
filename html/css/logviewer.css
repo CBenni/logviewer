@@ -37,6 +37,12 @@ div { outline-style:none; }
 	right: inherit;
 }
 
+.topbanner {
+    padding: 8px;
+    background-color: #53d910;
+	text-align: center;
+}
+
 /* user view */
 
 .userlogsview
