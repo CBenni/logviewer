@@ -597,11 +597,11 @@ logviewerApp.filter('secondsTimestamp', function() {
 	}
 });
 
-logviewerApp.filter('isEmpty', [function() {
+logviewerApp.filter('isntEmpty', function() {
 	return function(object) {
-		return angular.equals({}, object);
+		return !angular.equals({}, object);
 	}
-}])
+})
 
 logviewerApp.filter('orderObjectBy', function() {
 	return function(items, field, reverse) {
