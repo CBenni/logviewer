@@ -18,6 +18,10 @@ function IRCBot(host, port) {
 	self.client = new net.Socket();
 	
 	self.send = function(data) {
+		if(data.indexOf("\n") >= 0) {
+			winston.warn("Tried to send newline character!");
+			return;
+		}
 		winston.debug("--> "+data);
 		self.client.write(data+'\n');
 	}

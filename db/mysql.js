@@ -159,11 +159,11 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	
 	self.addChannel = function(channelObj, callback) {
 		self.ensureTablesExist(channelObj);
-		self.pool.query("INSERT INTO channels (name, id) VALUES (?)",[channelObj.name, channelObj.id],function(error, result){
+		self.pool.query("INSERT INTO channels (name, id) VALUES (?,?)",[channelObj.name, channelObj.id],function(error, result){
 			if(error) {
 				winston.error("Couldnt add channel! "+error);
 			} else {
-				self.poop.query("SELECT * FROM channels WHERE name=?",[channelObj.name], function(error, results, fields){
+				self.pool.query("SELECT * FROM channels WHERE name=?",[channelObj.name], function(error, results, fields){
 					if(error || results.length == 0) {
 						winston.error("Channel wasnt added properly! "+(error || "No results returned..."));
 					} else {

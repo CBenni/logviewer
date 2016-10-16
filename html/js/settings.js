@@ -32,6 +32,7 @@ logviewerApp.controller("SettingsController", function($rootScope, $scope, $http
 		active: 0,
 		modlogs: 0,
 		viewlogs: 0,
+		viewmodlogs: 5,
 		viewcomments: 5,
 		writecomments: 5,
 		deletecomments: 10
@@ -44,7 +45,7 @@ logviewerApp.controller("SettingsController", function($rootScope, $scope, $http
 	var oldlevels = angular.copy($scope.levels);
 	
 	$http.jsonp("/api/channel/"+$stateParams.channel+"/?token="+$rootScope.auth.token+"&callback=JSON_CALLBACK").then(function(response){
-		$scope.settings = response.data.channel || $scope.settings;
+		$scope.settings = angular.extend($scope.settings, response.data.channel);
 		$scope.userObject = response.data.me;
 		oldsettings = angular.copy($scope.settings);
 		$scope.loadStatus = response.data.channel==null?-1:1;

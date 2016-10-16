@@ -336,17 +336,28 @@ app.get('/api/logout',function(req,res,next) {
 // gets channel info
 app.get('/api/channel/:channel', function(req, res, next) {
 	try {
-		API.getChannelObjAndLevel(req.params.channel, req.query.token, function(error, channelObj, level, username) {
-			// check if the logviewer bot is modded
-			if(channelObj) {
-				bot.isModded(channelObj || {name: req.params.channel}, function(isModded){
+		var channelname = req.params.channel.toLowerCase();
+		if(/^[a-z]\w+$/.test(channelname)) {
+			API.getChannelObjAndLevel(channelname, req.query.token, function(error, channelObj, level, username) {
+				if(!channelObj) channelObj = {
+					name: channelname,
+					active: 0,
+					modlogs: 0,
+					viewlogs: 0,
+					viewmodlogs: 5,
+					viewcomments: 5,
+					writecomments: 5,
+					deletecomments: 10
+				}
+				// check if the logviewer bot is modded
+				bot.isModded(channelObj, function(isModded){
 					channelObj.isModded = isModded;
 					res.jsonp({"channel":channelObj,"me":{name:username, level:level, valid: !!username}});
 				});
-			} else {
-				res.jsonp({"channel":channelObj,"me":{name:username, level:level, valid: !!username}});
-			}
-		});
+			});
+		} else {
+			res.status(400).jsonp({error: "Invalid channel name "+channelname});
+		}
 	} 
 	catch(err) {
 		next(err);
@@ -357,12 +368,18 @@ app.get('/api/channel/:channel', function(req, res, next) {
 // checks if the user is a moderator
 app.get('/api/checkmodded/:channel', function(req, res, next) {
 	try {
-		API.getChannelObjAndLevel(req.params.channel, req.query.token, function(error, channelObj, level, username) {
-			// check if the logviewer bot is modded
-			bot.isModded(channelObj, function(isModded){
-				res.jsonp({isModded: isModded});
-			}, true);
-		});
+		var channelname = req.params.channel.toLowerCase();
+		if(/^[a-z]\w+$/.test(channelname)) {
+			API.getChannelObjAndLevel(channelname, req.query.token, function(error, channelObj, level, username) {
+				// check if the logviewer bot is modded
+				if(!channelObj) channelObj = {name: channelname}
+				bot.isModded(channelObj, function(isModded){
+					res.jsonp({isModded: isModded});
+				}, true);
+			});
+		} else {
+			res.status(400).jsonp({error: "Invalid channel name "+channelname});
+		}
 	} 
 	catch(err) {
 		next(err);
@@ -382,22 +399,27 @@ app.get('/api/channels', function(req, res, next) {
 
 app.get('/api/logs/:channel', function(req, res, next) {
 	try {
-		API.getChannelObjAndLevel(req.params.channel, req.query.token, function(error, channelObj, level, username) {
-			if(error) {
-				res.status(error.status).jsonp({"error": error.message});
-			} else if(channelObj.active) {
-				// level check.
-				if(level >= channelObj.viewlogs) {
-					API.getLogs(channelObj, req.query, level >= channelObj.viewmodlogs, function(logs){
-						res.jsonp(logs);
-					});
+		var channelname = req.params.channel.toLowerCase();
+		if(/^[a-z]\w+$/.test(channelname)) {
+			API.getChannelObjAndLevel(channelname, req.query.token, function(error, channelObj, level, username) {
+				if(error) {
+					res.status(error.status).jsonp({"error": error.message});
+				} else if(channelObj.active) {
+					// level check.
+					if(level >= channelObj.viewlogs) {
+						API.getLogs(channelObj, req.query, level >= channelObj.viewmodlogs, function(logs){
+							res.jsonp(logs);
+						});
+					} else {
+						res.status(403).end();
+					}
 				} else {
-					res.status(403).end();
+					res.status(505).jsonp({"error": "Channel "+channelname+" not found."});
 				}
-			} else {
-				res.status(505).jsonp({"error": "Channel "+channelObj.name+" not found."});
-			}
-		});
+			});
+		} else {
+			res.status(400).jsonp({error: "Invalid channel name "+channelname});
+		}
 	} 
 	catch(err) {
 		next(err);
@@ -423,7 +445,7 @@ function getChannelID(channelname, callback) {
 		} else {
 			try {
 				var id = JSON.parse(body)._id;
-				knownChannels[channel] = id;
+				knownChannels[channelname] = id;
 				callback(null, id);
 			} catch(e) {
 				winston.error("Error: "+e+" in getChannelID("+channelname+").");
@@ -441,44 +463,48 @@ function getChannelID(channelname, callback) {
 var allowedsettings = ["active","viewlogs","viewcomments","writecomments","deletecomments"];
 app.post('/api/settings/:channel', function(req, res, next) {
 	try {
-		API.getChannelObjAndLevel(req.params.channel, req.body.token, function(error, channelObj, level, username) {
-			if(level >= 10) {
-				if(!channelObj)
-				{
-					// add a new channel
-					var channelname = req.params.channel.toLowerCase();
-					getChannelID(channelname, function(e, id) {
-						if(e) {
-							winston.error(e);
-							res.status(500).jsonp({"error": e});
-						} else {
-							API.adminLog(channelname, username, "channel", "add", id);
-							db.addChannel({id: id, name: channelname}, function(channelObj) {
-								var newsettings = req.body.settings;
-								API.updateSettings(channelObj, username, newsettings, function(error) {
-									if(error) {
-										res.status(error.status).jsonp({"error": error.message});
-									} else {
-										res.status(200).end();
-									}
+		var channelname = req.params.channel.toLowerCase();
+		if(/^[a-z]\w+$/.test(channelname)) {
+			API.getChannelObjAndLevel(channelname, req.body.token, function(error, channelObj, level, username) {
+				if(level >= 10) {
+					if(!channelObj)
+					{
+						// add a new channel
+						getChannelID(channelname, function(e, id) {
+							if(e) {
+								winston.error(e);
+								res.status(500).jsonp({"error": e});
+							} else {
+								API.adminLog(channelname, username, "channel", "add", id);
+								db.addChannel({id: id, name: channelname}, function(channelObj) {
+									var newsettings = req.body.settings;
+									API.updateSettings(channelObj, username, newsettings, function(error) {
+										if(error) {
+											res.status(error.status).jsonp({"error": error.message});
+										} else {
+											res.status(200).end();
+										}
+									});
 								});
-							});
-						}
-					});
+							}
+						});
+					} else {
+						var newsettings = req.body.settings;
+						API.updateSettings(channelObj, username, newsettings, function(error) {
+							if(error) {
+								res.status(error.status).jsonp({"error": error.message});
+							} else {
+								res.status(200).end();
+							}
+						});
+					}
 				} else {
-					var newsettings = req.body.settings;
-					API.updateSettings(channelObj, username, newsettings, function(error) {
-						if(error) {
-							res.status(error.status).jsonp({"error": error.message});
-						} else {
-							res.status(200).end();
-						}
-					});
+					res.status(403).end();
 				}
-			} else {
-				res.status(403).end();
-			}
-		});
+			}); 
+		} else {
+			res.status(400).jsonp({error: "Invalid channel name "+channelname});
+		}
 	} 
 	catch(err) {
 		next(err);
@@ -488,23 +514,28 @@ app.post('/api/settings/:channel', function(req, res, next) {
 // gets the custom-set userlevels for the channel
 app.get('/api/levels/:channel',function(req,res,next){
 	try {
-		API.getChannelObjAndLevel(req.params.channel, req.query.token, function(error, channelObj, level, username){
-			if(error && error.status != 404) {
-				res.status(error.status).jsonp({"error": error.message});
-			} else {
-				if(level >= 10) {
-					if(channelObj) {
-						db.getLevels(channelObj.name,function(levels) {
-							res.jsonp(levels);
-						});
-					} else {
-						res.jsonp([]);
-					}
+		var channelname = req.params.channel.toLowerCase();
+		if(/^[a-z]\w+$/.test(channelname)) {
+			API.getChannelObjAndLevel(channelname, req.query.token, function(error, channelObj, level, username){
+				if(error && error.status != 404) {
+					res.status(error.status).jsonp({"error": error.message});
 				} else {
-					res.status(403).end();
+					if(level >= 10) {
+						if(channelObj) {
+							db.getLevels(channelObj.name,function(levels) {
+								res.jsonp(levels);
+							});
+						} else {
+							res.jsonp([]);
+						}
+					} else {
+						res.status(403).end();
+					}
 				}
-			}
-		});
+			});
+		} else {
+			res.status(400).jsonp({error: "Invalid channel name "+channelname});
+		}
 	}
 	catch(err) {
 		next(err);
@@ -514,32 +545,37 @@ app.get('/api/levels/:channel',function(req,res,next){
 // updates the custom userlevels on a channel
 app.post('/api/levels/:channel',function(req,res,next){
 	try {
-		API.getChannelObjAndLevel(req.params.channel, req.body.token, function(error, channelObj, level, username){
-			if(error) {
-				res.status(error.status).jsonp({"error": error.message});
-			} else {
-				if(level >= 10) {
-					var newlevels = req.body.levels;
-					for(var i=0;i<newlevels.length;++i) {
-						var userObject = newlevels[i];
-						if(Math.abs(userObject.level) <= level && /^\w+$/.test(userObject.nick)) {
-							API.adminLog(channelObj.name, username, "level", userObject.nick, userObject.level);
-							db.setLevel(channelObj.name,userObject.nick.toLowerCase(),userObject.level);
-						}
-					}
-					res.status(200).end();
+		var channelname = req.params.channel.toLowerCase();
+		if(/^[a-z]\w+$/.test(channelname)) {
+			API.getChannelObjAndLevel(channelname, req.body.token, function(error, channelObj, level, username){
+				if(error) {
+					res.status(error.status).jsonp({"error": error.message});
 				} else {
-					res.status(403).end();
+					if(level >= 10) {
+						var newlevels = req.body.levels;
+						for(var i=0;i<newlevels.length;++i) {
+							var userObject = newlevels[i];
+							if(Math.abs(userObject.level) <= level && /^\w+$/.test(userObject.nick)) {
+								API.adminLog(channelObj.name, username, "level", userObject.nick, userObject.level);
+								db.setLevel(channelObj.name,userObject.nick.toLowerCase(),userObject.level);
+							}
+						}
+						res.status(200).end();
+					} else {
+						res.status(403).end();
+					}
 				}
-			}
-		});
+			});
+		} else {
+			res.status(400).jsonp({error: "Invalid channel name "+channelname});
+		}
 	}
 	catch(err) {
 		next(err);
 	}
 	
 });
-
+/*
 app.get('/api/connections/:channel',function(req,res,next){
 	try {
 		API.getChannelObjAndLevel(req.params.channel, req.query.token, function(error, channelObj, level, username){
@@ -603,24 +639,29 @@ app.delete('/api/integrations/:channel',function(req,res,next){
 	catch(err) {
 		next(err);
 	}
-});
+});*/
 
 // comments
 app.get('/api/comments/:channel', function(req,res,next){
 	try {
-		API.getChannelObjAndLevel(req.params.channel, req.query.token, function(error, channelObj, level, username){
-			if(error) {
-				res.status(error.status).jsonp({"error": error.message});
-			} else {
-				if(level >= channelObj.viewcomments) {
-					db.getComments(channelObj.name,req.query.topic,function(comments) {
-						res.jsonp(comments || []);
-					});
+		var channelname = req.params.channel.toLowerCase();
+		if(/^[a-z]\w+$/.test(channelname)) {
+			API.getChannelObjAndLevel(req.params.channel, req.query.token, function(error, channelObj, level, username){
+				if(error) {
+					res.status(error.status).jsonp({"error": error.message});
 				} else {
-					res.status(403).end();
+					if(level >= channelObj.viewcomments) {
+						db.getComments(channelObj.name,req.query.topic,function(comments) {
+							res.jsonp(comments || []);
+						});
+					} else {
+						res.status(403).end();
+					}
 				}
-			}
-		});
+			});
+		} else {
+			res.status(400).jsonp({error: "Invalid channel name "+channelname});
+		}
 	}
 	catch(err) {
 		next(err);
@@ -629,20 +670,25 @@ app.get('/api/comments/:channel', function(req,res,next){
 
 app.post('/api/comments/:channel',function(req,res,next){
 	try {
-		API.getChannelObjAndLevel(req.params.channel, req.body.token, function(error, channelObj, level, username){
-			if(error) {
-				res.status(error.status).jsonp({"error": error.message});
-			} else {
-				var newcomment = req.body.comment;
-				API.setComment(channelObj, level, username, newcomment, function(error){
-					if(error) {
-						res.status(error.status).jsonp({"error": error.message});
-					} else {
-						res.status(200).end();
-					}
-				})
-			}
-		});
+		var channelname = req.params.channel.toLowerCase();
+		if(/^[a-z]\w+$/.test(channelname)) {
+			API.getChannelObjAndLevel(req.params.channel, req.body.token, function(error, channelObj, level, username){
+				if(error) {
+					res.status(error.status).jsonp({"error": error.message});
+				} else {
+					var newcomment = req.body.comment;
+					API.setComment(channelObj, level, username, newcomment, function(error){
+						if(error) {
+							res.status(error.status).jsonp({"error": error.message});
+						} else {
+							res.status(200).end();
+						}
+					})
+				}
+			});
+		} else {
+			res.status(400).jsonp({error: "Invalid channel name "+channelname});
+		}
 	}
 	catch(err) {
 		next(err);
@@ -651,27 +697,32 @@ app.post('/api/comments/:channel',function(req,res,next){
 
 app.delete('/api/comments/:channel',function(req,res,next){
 	try {
-		API.getChannelObjAndLevel(req.params.channel, req.query.token, function(error, channelObj, level, username){
-			if(error) {
-				res.status(error.status).jsonp({"error": error.message});
-			} else {
-				db.getComment(channelObj.name, req.query.id, function(comment){
-					if(!comment) {
-						res.status(404).jsonp({"error":"Comment not found"});
-						return;
-					}
-					// only people with the deletion permission can delete other peoples comments
-					if(level >= channelObj.deletecomments || comment.author == username) {
-						API.adminLog(channelObj.name, username, "comment", "delete", JSON.stringify(comment));
-						db.deleteComment(channelObj.name, req.query.id);
-						io.to("comments-"+channelObj.name+"-"+comment.topic).emit("comment-delete", comment);
-						res.status(200).end();
-					} else {
-						res.status(403).jsonp({"error":"Can only delete own comments"});
-					}
-				});
-			}
-		});
+		var channelname = req.params.channel.toLowerCase();
+		if(/^[a-z]\w+$/.test(channelname)) {
+			API.getChannelObjAndLevel(req.params.channel, req.query.token, function(error, channelObj, level, username){
+				if(error) {
+					res.status(error.status).jsonp({"error": error.message});
+				} else {
+					db.getComment(channelObj.name, req.query.id, function(comment){
+						if(!comment) {
+							res.status(404).jsonp({"error":"Comment not found"});
+							return;
+						}
+						// only people with the deletion permission can delete other peoples comments
+						if(level >= channelObj.deletecomments || comment.author == username) {
+							API.adminLog(channelObj.name, username, "comment", "delete", JSON.stringify(comment));
+							db.deleteComment(channelObj.name, req.query.id);
+							io.to("comments-"+channelObj.name+"-"+comment.topic).emit("comment-delete", comment);
+							res.status(200).end();
+						} else {
+							res.status(403).jsonp({"error":"Can only delete own comments"});
+						}
+					});
+				}
+			});
+		} else {
+			res.status(400).jsonp({error: "Invalid channel name "+channelname});
+		}
 	}
 	catch(err) {
 		next(err);
@@ -681,24 +732,29 @@ app.delete('/api/comments/:channel',function(req,res,next){
 
 app.get('/api/events/:channel', function(req, res, next) {
 	try {
-		API.getChannelObjAndLevel(req.params.channel, req.query.token, function(error, channelObj, level, username){
-			if(error && error.status != 404) {
-				res.status(error.status).jsonp({"error": error.message});
-			} else {
-				if(level >= 10) {
-					if(channelObj) {
-						var eventCount = Math.max(req.query.limit || 25, 50);
-						db.getEvents(channelObj.name,eventCount, function(events) {
-							res.jsonp(events);
-						});
-					} else {
-						res.jsonp([]);
-					}
+		var channelname = req.params.channel.toLowerCase();
+		if(/^[a-z]\w+$/.test(channelname)) {
+			API.getChannelObjAndLevel(req.params.channel, req.query.token, function(error, channelObj, level, username){
+				if(error && error.status != 404) {
+					res.status(error.status).jsonp({"error": error.message});
 				} else {
-					res.status(403).end();
+					if(level >= 10) {
+						if(channelObj) {
+							var eventCount = Math.max(req.query.limit || 25, 50);
+							db.getEvents(channelObj.name,eventCount, function(events) {
+								res.jsonp(events);
+							});
+						} else {
+							res.jsonp([]);
+						}
+					} else {
+						res.status(403).end();
+					}
 				}
-			}
-		});
+			});
+		} else {
+			res.status(400).jsonp({error: "Invalid channel name "+channelname});
+		}
 	}
 	catch(err) {
 		next(err);
@@ -706,30 +762,6 @@ app.get('/api/events/:channel', function(req, res, next) {
 });
 
 var badgeCache = {};
-var channelIDCache = {};
-
-function getChannelID(channel, callback) {
-	if(channelIDCache[channel]) {
-		callback(channelIDCache[channel]);
-	} else {
-		request.get({
-			url: "https://api.twitch.tv/kraken/channels/"+channel+"/?client_id="+settings.auth.client_id
-		},function(e,r,body){
-			if(body === undefined) {
-				winston.error("Error: "+r.statusCode);
-			} else {
-				try {
-					var channelInfo = JSON.parse(body);
-					channelIDCache[channel] = channelInfo._id;
-					callback(channelInfo._id);
-				} catch(e) {
-					winston.error("Error: not a json string in getChannelID. Returned HTTP status code: "+r.statusCode);
-					callback(0);
-				}
-			}
-		});
-	}
-}
 
 
 var defaultbadges = {"badge_sets":{"admin":{"versions":{"1":{"image_url_1x":"https://static-cdn.jtvnw.net/badges/v1/9ef7e029-4cdf-4d4d-a0d5-e2b3fb2583fe/1","image_url_2x":"https://static-cdn.jtvnw.net/badges/v1/9ef7e029-4cdf-4d4d-a0d5-e2b3fb2583fe/2","image_url_3x":"https://static-cdn.jtvnw.net/badges/v1/9ef7e029-4cdf-4d4d-a0d5-e2b3fb2583fe/3","description":"Twitch Admin","title":"Twitch Admin","click_action":"none","click_url":""}}},"broadcaster":{"versions":{"1":{"image_url_1x":"https://static-cdn.jtvnw.net/badges/v1/5527c58c-fb7d-422d-b71b-f309dcb85cc1/1","image_url_2x":"https://static-cdn.jtvnw.net/badges/v1/5527c58c-fb7d-422d-b71b-f309dcb85cc1/2","image_url_3x":"https://static-cdn.jtvnw.net/badges/v1/5527c58c-fb7d-422d-b71b-f309dcb85cc1/3","description":"Broadcaster","title":"Broadcaster","click_action":"none","click_url":""}}},"global_mod":{"versions":{"1":{"image_url_1x":"https://static-cdn.jtvnw.net/badges/v1/9384c43e-4ce7-4e94-b2a1-b93656896eba/1","image_url_2x":"https://static-cdn.jtvnw.net/badges/v1/9384c43e-4ce7-4e94-b2a1-b93656896eba/2","image_url_3x":"https://static-cdn.jtvnw.net/badges/v1/9384c43e-4ce7-4e94-b2a1-b93656896eba/3","description":"Global Moderator","title":"Global Moderator","click_action":"none","click_url":""}}},"moderator":{"versions":{"1":{"image_url_1x":"https://static-cdn.jtvnw.net/badges/v1/3267646d-33f0-4b17-b3df-f923a41db1d0/1","image_url_2x":"https://static-cdn.jtvnw.net/badges/v1/3267646d-33f0-4b17-b3df-f923a41db1d0/2","image_url_3x":"https://static-cdn.jtvnw.net/badges/v1/3267646d-33f0-4b17-b3df-f923a41db1d0/3","description":"Moderator","title":"Moderator","click_action":"none","click_url":""}}},"staff":{"versions":{"1":{"image_url_1x":"https://static-cdn.jtvnw.net/badges/v1/d97c37bd-a6f5-4c38-8f57-4e4bef88af34/1","image_url_2x":"https://static-cdn.jtvnw.net/badges/v1/d97c37bd-a6f5-4c38-8f57-4e4bef88af34/2","image_url_3x":"https://static-cdn.jtvnw.net/badges/v1/d97c37bd-a6f5-4c38-8f57-4e4bef88af34/3","description":"Twitch Staff","title":"Twitch Staff","click_action":"none","click_url":""}}},"subscriber":{"versions":{"1":{"image_url_1x":"https://static-cdn.jtvnw.net/badges/v1/19dd8673-124d-4f44-830c-b0f4f9d78635/1","image_url_2x":"https://static-cdn.jtvnw.net/badges/v1/19dd8673-124d-4f44-830c-b0f4f9d78635/2","image_url_3x":"https://static-cdn.jtvnw.net/badges/v1/19dd8673-124d-4f44-830c-b0f4f9d78635/3","description":"Subscriber","title":"Subscriber","click_action":"subscribe_to_channel","click_url":""}}},"turbo":{"versions":{"1":{"image_url_1x":"https://static-cdn.jtvnw.net/badges/v1/bd444ec6-8f34-4bf9-91f4-af1e3428d80f/1","image_url_2x":"https://static-cdn.jtvnw.net/badges/v1/bd444ec6-8f34-4bf9-91f4-af1e3428d80f/2","image_url_3x":"https://static-cdn.jtvnw.net/badges/v1/bd444ec6-8f34-4bf9-91f4-af1e3428d80f/3","description":"Turbo","title":"Turbo","click_action":"turbo","click_url":""}}},"warcraft":{"versions":{"alliance":{"image_url_1x":"https://static-cdn.jtvnw.net/badges/v1/c4816339-bad4-4645-ae69-d1ab2076a6b0/1","image_url_2x":"https://static-cdn.jtvnw.net/badges/v1/c4816339-bad4-4645-ae69-d1ab2076a6b0/2","image_url_3x":"https://static-cdn.jtvnw.net/badges/v1/c4816339-bad4-4645-ae69-d1ab2076a6b0/3","description":"For Lordaeron!","title":"Alliance","click_action":"visit_url","click_url":"http://warcraftontwitch.tv/"},"horde":{"image_url_1x":"https://static-cdn.jtvnw.net/badges/v1/de8b26b6-fd28-4e6c-bc89-3d597343800d/1","image_url_2x":"https://static-cdn.jtvnw.net/badges/v1/de8b26b6-fd28-4e6c-bc89-3d597343800d/2","image_url_3x":"https://static-cdn.jtvnw.net/badges/v1/de8b26b6-fd28-4e6c-bc89-3d597343800d/3","description":"For the Horde!","title":"Horde","click_action":"visit_url","click_url":"http://warcraftontwitch.tv/"}}}}};
@@ -768,12 +800,16 @@ function getBadges(resource, callback) {
 // badges. Fix for the crappy twitch API
 app.get('/api/badges/:channel', function(req,res,next){
 	try {
-		getChannelID(req.params.channel, function(id) {
-			getBadges("global", function(globalBadges){
-				getBadges("channels/"+id, function(channelBadges){
-					res.jsonp(_.merge(_.cloneDeep(globalBadges), channelBadges));
+		getChannelID(req.params.channel, function(error, id) {
+			if(error) {
+				res.status(400).jsonp({error: error});
+			} else {
+				getBadges("global", function(globalBadges){
+					getBadges("channels/"+id, function(channelBadges){
+						res.jsonp(_.merge(_.cloneDeep(globalBadges), channelBadges));
+					});
 				});
-			});
+			}
 		});
 	} 
 	catch(err) {

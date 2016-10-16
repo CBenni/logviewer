@@ -2,7 +2,7 @@
 	<md-dialog-content>
 		<h2>Why can't I enable mod logs?</h2>
 		In order to use the mod logs feature, you need to make the user <code>{{globalSettings.botname}}</code> a moderator of your channel.<br>
-		To do that, type <code>/mod {{globalSettings.botname}}</code> in your channel's chat or click <a href="https://cbenni.com/static/modme" target="_blank">here</a>.<br>
+		To do that, type <code>/mod {{globalSettings.botname}}</code> in your channel's chat or click <a href="https://api.twitch.tv/kraken/oauth2/authorize?response_type=token&client_id=6f50a62hkh5iden8j2myiq2gi8sygl7&redirect_uri=http%3A%2F%2Fcbenni.com%2Fstatic%2Fmodme&scope=chat_login" target="_blank">here</a>.<br>
 		Keep in mind that it can take up to several minutes to detect moderator status. <a href="#" ng-click="checkModded()">check now</a>
 		
 		<h2>Why that?</h2>

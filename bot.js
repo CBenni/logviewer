@@ -475,8 +475,10 @@ function logviewerBot(settings, db, io) {
 
 	var currentchannel = 0;
 	var checkNextMods = function() {
-		self.checkMods(self.channels[currentchannel%(self.channels.length)]);
-		currentchannel++;
+		if(self.channels.length > 0) {
+			self.checkMods(self.channels[currentchannel%(self.channels.length)]);
+			currentchannel++;
+		}
 	}
 	setInterval(checkNextMods,(settings.bot.modcheckinterval || 2) * 1000);
 
@@ -562,6 +564,10 @@ logviewerBot.prototype.checkMods = function(channelObj) {
 
 // checks if the logviewer bot is modded in a channel
 logviewerBot.prototype.isModded = function(channelObj, callback, force, cacheonly) {
+	if(!channelObj) {
+		callback(false);
+		return;
+	}
 	var self = this;
 	var channel = channelObj.name;
 	if(self.userlevels[channel] && !force) {
