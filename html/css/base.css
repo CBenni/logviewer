@@ -207,12 +207,15 @@ div[ng-include] {
 
 .donate-btn {
 	height: 100%;
-	width: 88px;
 	padding: 0 6px;
 }
 
-.donate-btn form {
+.donate-btn a {
 	height: 21px;
+}
+
+.donate-btn a img {
+	height: 100%;
 }
 
 .pixel {

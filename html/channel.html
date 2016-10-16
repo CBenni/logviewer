@@ -101,7 +101,7 @@
 								{{messageBefore.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}
 							</span>
 							<span class="logviewer-message" ng-bind-html='messageBefore.text | chatLine'></span>
-							<span ng-show="messageBefore.modlog">(By: {{modLogList(messageBefore.modlog)}})
+							<span ng-if="messageBefore.modlog | isntEmpty">(By: {{modLogList(messageBefore.modlog)}})
 								<md-tooltip md-direction="top">
 									<table>
 										<tr ng-repeat="(user, time) in messageBefore.modlog">
@@ -130,7 +130,7 @@
 								{{message.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}
 							</span>
 							<span class="logviewer-message" ng-bind-html='message.text | chatLine'></span>
-							<span ng-if="message.modlog">(By: {{modLogList(message.modlog)}})
+							<span ng-if="message.modlog | isntEmpty">(By: {{modLogList(message.modlog)}})
 								<md-tooltip md-direction="top">
 									<table>
 										<tr ng-repeat="(user, time) in message.modlog">
@@ -153,7 +153,7 @@
 								{{messageAfter.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}
 							</span>
 							<span class="logviewer-message" ng-bind-html='messageAfter.text | chatLine'></span>
-							<span ng-if="messageAfter.modlog">(By: {{modLogList(messageAfter.modlog)}})
+							<span ng-if="messageAfter.modlog | isntEmpty">(By: {{modLogList(messageAfter.modlog)}})
 								<md-tooltip md-direction="top">
 									<table>
 										<tr ng-repeat="(user, time) in messageAfter.modlog">

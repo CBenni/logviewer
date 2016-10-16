@@ -211,10 +211,6 @@ function logviewerBot(settings, db, io) {
 			
 			if(mod) oldtimeout.modlog[mod] = duration;
 			
-			oldtimeout.count += inc;
-			oldtimeout.text = formatTimeout(channel, user, oldtimeout);
-			// put it into the primary rotation again
-			self.timeouts[channel][user] = oldtimeout;
 			
 			var oldends = oldtimeout.time.getTime()+oldtimeout.duration*1000;
 			var newends = now.getTime()+duration*1000;
@@ -223,6 +219,11 @@ function logviewerBot(settings, db, io) {
 				oldtimeout.time = now;
 				oldtimeout.duration = duration;
 			}
+			
+			oldtimeout.count += inc;
+			oldtimeout.text = formatTimeout(channel, user, oldtimeout);
+			// put it into the primary rotation again
+			self.timeouts[channel][user] = oldtimeout;
 			
 			// update the database
 			if(oldtimeout.id) {
