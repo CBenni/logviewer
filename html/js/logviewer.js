@@ -599,6 +599,7 @@ logviewerApp.filter('secondsTimestamp', function() {
 
 logviewerApp.filter('isntEmpty', function() {
 	return function(object) {
+		if(!object) return false;
 		return !angular.equals({}, object);
 	}
 })
