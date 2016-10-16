@@ -65,6 +65,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	}
 	
 	$scope.modLogList = function(modlogs) {
+		if(!modlogs) return [];
 		return Object.keys(modlogs).join(", ");
 	}
 	
