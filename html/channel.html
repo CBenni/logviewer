@@ -24,7 +24,12 @@
 	</div>
 </div>
 <div class="content" ng-cloak ng-show="loadStatus == 1 && userObject.level >= channelsettings.viewlogs">
-	<div class="topbanner">NEW: Moderator audit log support! Enable it in the <a ui-sref="settings({channel: $stateParams.channel})">settings</a></div>
+	<div class="topbanner" ng-if="!userSettings.hidemodlogbanner">
+		NEW: Moderator audit log support! Enable it in the <a ui-sref="settings({channel: $stateParams.channel})">settings</a>
+		<md-button class="editing-button md-icon-button" ng-click="userSettings.hidemodlogbanner = true; saveMode();">
+			<md-icon md-svg-src="/html/img/close.svg"></md-icon>
+		</md-button>
+	</div>
 	<h2 class="hide-s">Chat logs for channel {{::channelsettings.name}}</h2>
 	<h2 class="hide-gt-s">Logs for channel {{::channelsettings.name}}</h2>
 	<div id="adduserform">
