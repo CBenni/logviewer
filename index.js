@@ -337,7 +337,7 @@ app.get('/api/logout',function(req,res,next) {
 app.get('/api/channel/:channel', function(req, res, next) {
 	try {
 		var channelname = req.params.channel.toLowerCase();
-		if(/^[a-z]\w+$/.test(channelname)) {
+		if(/^\w+$/.test(channelname)) {
 			API.getChannelObjAndLevel(channelname, req.query.token, function(error, channelObj, level, username) {
 				if(!channelObj) channelObj = {
 					name: channelname,
@@ -369,7 +369,7 @@ app.get('/api/channel/:channel', function(req, res, next) {
 app.get('/api/checkmodded/:channel', function(req, res, next) {
 	try {
 		var channelname = req.params.channel.toLowerCase();
-		if(/^[a-z]\w+$/.test(channelname)) {
+		if(/^\w+$/.test(channelname)) {
 			API.getChannelObjAndLevel(channelname, req.query.token, function(error, channelObj, level, username) {
 				// check if the logviewer bot is modded
 				if(!channelObj) channelObj = {name: channelname}
@@ -400,7 +400,7 @@ app.get('/api/channels', function(req, res, next) {
 app.get('/api/logs/:channel', function(req, res, next) {
 	try {
 		var channelname = req.params.channel.toLowerCase();
-		if(/^[a-z]\w+$/.test(channelname)) {
+		if(/^\w+$/.test(channelname)) {
 			API.getChannelObjAndLevel(channelname, req.query.token, function(error, channelObj, level, username) {
 				if(error) {
 					res.status(error.status).jsonp({"error": error.message});
@@ -464,7 +464,7 @@ var allowedsettings = ["active","viewlogs","viewcomments","writecomments","delet
 app.post('/api/settings/:channel', function(req, res, next) {
 	try {
 		var channelname = req.params.channel.toLowerCase();
-		if(/^[a-z]\w+$/.test(channelname)) {
+		if(/^\w+$/.test(channelname)) {
 			API.getChannelObjAndLevel(channelname, req.body.token, function(error, channelObj, level, username) {
 				if(level >= 10) {
 					if(!channelObj)
@@ -515,7 +515,7 @@ app.post('/api/settings/:channel', function(req, res, next) {
 app.get('/api/levels/:channel',function(req,res,next){
 	try {
 		var channelname = req.params.channel.toLowerCase();
-		if(/^[a-z]\w+$/.test(channelname)) {
+		if(/^\w+$/.test(channelname)) {
 			API.getChannelObjAndLevel(channelname, req.query.token, function(error, channelObj, level, username){
 				if(error && error.status != 404) {
 					res.status(error.status).jsonp({"error": error.message});
@@ -546,7 +546,7 @@ app.get('/api/levels/:channel',function(req,res,next){
 app.post('/api/levels/:channel',function(req,res,next){
 	try {
 		var channelname = req.params.channel.toLowerCase();
-		if(/^[a-z]\w+$/.test(channelname)) {
+		if(/^\w+$/.test(channelname)) {
 			API.getChannelObjAndLevel(channelname, req.body.token, function(error, channelObj, level, username){
 				if(error) {
 					res.status(error.status).jsonp({"error": error.message});
@@ -555,7 +555,7 @@ app.post('/api/levels/:channel',function(req,res,next){
 						var newlevels = req.body.levels;
 						for(var i=0;i<newlevels.length;++i) {
 							var userObject = newlevels[i];
-							if(Math.abs(userObject.level) <= level && /^\w+$/.test(userObject.nick)) {
+							if(Math.abs(userObject.level) <= level &&     .test(userObject.nick)) {
 								API.adminLog(channelObj.name, username, "level", userObject.nick, userObject.level);
 								db.setLevel(channelObj.name,userObject.nick.toLowerCase(),userObject.level);
 							}
@@ -645,7 +645,7 @@ app.delete('/api/integrations/:channel',function(req,res,next){
 app.get('/api/comments/:channel', function(req,res,next){
 	try {
 		var channelname = req.params.channel.toLowerCase();
-		if(/^[a-z]\w+$/.test(channelname)) {
+		if(/^\w+$/.test(channelname)) {
 			API.getChannelObjAndLevel(req.params.channel, req.query.token, function(error, channelObj, level, username){
 				if(error) {
 					res.status(error.status).jsonp({"error": error.message});
@@ -671,7 +671,7 @@ app.get('/api/comments/:channel', function(req,res,next){
 app.post('/api/comments/:channel',function(req,res,next){
 	try {
 		var channelname = req.params.channel.toLowerCase();
-		if(/^[a-z]\w+$/.test(channelname)) {
+		if(/^\w+$/.test(channelname)) {
 			API.getChannelObjAndLevel(req.params.channel, req.body.token, function(error, channelObj, level, username){
 				if(error) {
 					res.status(error.status).jsonp({"error": error.message});
@@ -698,7 +698,7 @@ app.post('/api/comments/:channel',function(req,res,next){
 app.delete('/api/comments/:channel',function(req,res,next){
 	try {
 		var channelname = req.params.channel.toLowerCase();
-		if(/^[a-z]\w+$/.test(channelname)) {
+		if(/^\w+$/.test(channelname)) {
 			API.getChannelObjAndLevel(req.params.channel, req.query.token, function(error, channelObj, level, username){
 				if(error) {
 					res.status(error.status).jsonp({"error": error.message});
@@ -733,7 +733,7 @@ app.delete('/api/comments/:channel',function(req,res,next){
 app.get('/api/events/:channel', function(req, res, next) {
 	try {
 		var channelname = req.params.channel.toLowerCase();
-		if(/^[a-z]\w+$/.test(channelname)) {
+		if(/^\w+$/.test(channelname)) {
 			API.getChannelObjAndLevel(req.params.channel, req.query.token, function(error, channelObj, level, username){
 				if(error && error.status != 404) {
 					res.status(error.status).jsonp({"error": error.message});
