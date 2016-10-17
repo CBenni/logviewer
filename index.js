@@ -555,7 +555,7 @@ app.post('/api/levels/:channel',function(req,res,next){
 						var newlevels = req.body.levels;
 						for(var i=0;i<newlevels.length;++i) {
 							var userObject = newlevels[i];
-							if(Math.abs(userObject.level) <= level &&     .test(userObject.nick)) {
+							if(Math.abs(userObject.level) <= level && /^\w+$/.test(userObject.nick)) {
 								API.adminLog(channelObj.name, username, "level", userObject.nick, userObject.level);
 								db.setLevel(channelObj.name,userObject.nick.toLowerCase(),userObject.level);
 							}
