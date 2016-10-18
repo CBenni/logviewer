@@ -20,7 +20,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		// create the channels table if it doesnt exist
 		connection.query("CREATE TABLE IF NOT EXISTS channels ("
 			+"id int(10) unsigned,"
-			+"name varchar(32) COLLATE utf8_unicode_ci PRIMARY KEY,"
+			+"name varchar(32) PRIMARY KEY,"
 			+"active tinyint(4) unsigned NOT NULL DEFAULT '0',"
 			+"modlogs tinyint(4) unsigned NOT NULL DEFAULT '0',"
 			+"viewlogs tinyint(4) unsigned NOT NULL DEFAULT '0',"
@@ -44,7 +44,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			+"channel VARCHAR(32) NULL,"
 			+"author VARCHAR(32) NULL,"
 			+"topic VARCHAR(64) NULL,"
-			+"text TEXT NULL,"
+			+"text TEXT NULL COLLATE utf8mb4_unicode_ci,"
 			+"PRIMARY KEY (id),"
 			+"INDEX comments_by_channel_and_topic (channel ASC, topic ASC)"
 		+")");
@@ -97,7 +97,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			+"id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,"
 			+"time BIGINT UNSIGNED NOT NULL,"
 			+"nick VARCHAR(32) NOT NULL,"
-			+"text VARCHAR(2047) NOT NULL,"
+			+"text VARCHAR(2047) COLLATE utf8mb4_unicode_ci NOT NULL,"
 			+"modlog VARCHAR(1024) DEFAULT NULL,"
 			+"INDEX (nick, time)"
 		+")");
