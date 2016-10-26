@@ -80,22 +80,22 @@ io.sockets.on('connection', function(socket){
 					}
 					if(level >= channelObj.viewmodlogs) {
 						var logsroom = "logs-"+channelObj.name+"-"+user+"-modlogs";
-						winston.info('joining room', logsroom);
+						winston.debug('joining room', logsroom);
 						socket.join(logsroom); 
 					} else if(level >= channelObj.viewlogs) {
 						var logsroom = "logs-"+channelObj.name+"-"+user;
-						winston.info('joining room', logsroom);
+						winston.debug('joining room', logsroom);
 						socket.join(logsroom); 
 					} else {
-						winston.info("Access to logs denied. "+socket.logviewer_token);
+						winston.debug("Access to logs denied. "+socket.logviewer_token);
 						// ignore the join
 					}
 					if(level >= channelObj.viewcomments) {
 						var commentsroom = "comments-"+channelObj.name+"-"+user;
-						winston.info('joining room', commentsroom);
+						winston.debug('joining room', commentsroom);
 						socket.join(commentsroom); 
 					} else {
-						winston.info("Access to comments denied. "+socket.logviewer_token);
+						winston.debug("Access to comments denied. "+socket.logviewer_token);
 						// ignore the join request
 					}
 				});
@@ -104,10 +104,10 @@ io.sockets.on('connection', function(socket){
 				API.getChannelObjAndLevel(channel, socket.logviewer_token, function(error, channelObj, level){
 					if(level >= 10) {
 						var logsroom = "events-"+(channelObj?channelObj.name:channel);
-						winston.info('joining room', logsroom);
+						winston.debug('joining room', logsroom);
 						socket.join(logsroom); 
 					} else {
-						winston.info("Access to events denied. "+socket.logviewer_token);
+						winston.debug("Access to events denied. "+socket.logviewer_token);
 						// ignore the join
 					}
 				});
