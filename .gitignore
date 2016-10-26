@@ -32,3 +32,6 @@ tools/
 settings.json
 run_forever
 mods.json
+*.concat.js
+*.concat.html
+*.concat.css
