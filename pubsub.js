@@ -76,8 +76,8 @@ pubsub.prototype.listen = function(oauth, topics) {
 	for(var i=0;i<topics.length;++i) {
 		var connection;
 		// find a connection to use
-		for(var i=0;i<self.connections.length;++i) {
-			var index = (self.currenthead+i)%self.connections.length;
+		for(var j=0;j<self.connections.length;++j) {
+			var index = (self.currenthead+j)%self.connections.length;
 			var conn = self.connections[index];
 			if(conn.topics.length < (self.settings.pubsub.maxtopics || 49)) { // by default, we can listen to max. 49 topics per connection >_<
 				connection = conn;

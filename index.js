@@ -185,8 +185,8 @@ function checkAuth(req, res, callback) {
 	if(user !== undefined && token !== undefined) {
 		db.checkAndRefreshToken(user, token, ~~(Date.now()/1000)+32*24*3600, function(ok){
 			if(ok) {
-				res.cookie('token',token,{ maxAge: 32*24*3600000 });
-				res.cookie('login',user,{ maxAge: 32*24*3600000 });
+				res.cookie('token',token,{ maxAge: 32*24*3600000, secure: true });
+				res.cookie('login',user,{ maxAge: 32*24*3600000, secure: true });
 			} else {
 				res.clearCookie('token');
 				res.clearCookie('login');
@@ -247,8 +247,8 @@ function generateToken(res, username, callback) {
 		var token = buffer.toString("hex");
 		// expires in 31 days
 		db.storeToken(username, token, Math.floor(Date.now()/1000)+31*24*3600);
-		res.cookie('token',token,{ maxAge: 32*24*3600000 });
-		res.cookie('login',username,{ maxAge: 32*24*3600000 });
+		res.cookie('token',token,{ maxAge: 32*24*3600000, secure: true });
+		res.cookie('login',username,{ maxAge: 32*24*3600000, secure: true });
 		callback();
 	});
 }

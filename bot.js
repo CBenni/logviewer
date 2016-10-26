@@ -500,11 +500,11 @@ function logviewerBot(settings, db, io) {
 			console.log(command);
 			var user = command.created_by;
 			if(command.moderation_action == "timeout") {
-				doTimeout(channel, user, command.args[0], command.args[1] || 600, command.args[2] || "", 0);
+				doTimeout(channel, user, command.args[0].toLowerCase(), command.args[1] || 600, command.args[2] || "", 0);
 			} else if(command.moderation_action == "ban") {
-				doTimeout(channel, user, command.args[0], Infinity, command.args[1] || "", 0);
+				doTimeout(channel, user, command.args[0].toLowerCase(), Infinity, command.args[1] || "", 0);
 			} else if(command.moderation_action == "unban") {
-				doUnban(channel, user, command.args[0]);
+				doUnban(channel, user, command.args[0].toLowerCase());
 			} else {
 				var text = "/"+command.moderation_action;
 				if(command.args) text += " "+command.args.join(" ");
