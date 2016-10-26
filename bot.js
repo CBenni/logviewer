@@ -257,10 +257,10 @@ function logviewerBot(settings, db, io) {
 		}
 	}
 	
-	function doUnban(channel, mod, user) {
+	function doUnban(channel, mod, type, user) {
 		var modlog = {};
 		modlog[mod] = -1;
-		var text = `<${user} has been unbanned>`;
+		var text = `<${user} has been ${type}>`;
 		db.addModLog(channel, user, "djtv "+text, modlog, function(id){
 			var irccmd = `@display-name=jtv;color=;subscriber=0;turbo=0;user-type=;emotes=;badges= :${user}!${user}@${user}.tmi.twitch.tv PRIVMSG #${channel} :${text}`;
 			io.to("logs-"+channel+"-"+user).emit("log-add", {id: id, time: Math.floor(Date.now()/1000), nick: user, text: irccmd});
@@ -504,7 +504,9 @@ function logviewerBot(settings, db, io) {
 			} else if(command.moderation_action == "ban") {
 				doTimeout(channel, user, command.args[0].toLowerCase(), Infinity, command.args[1] || "", 0);
 			} else if(command.moderation_action == "unban") {
-				doUnban(channel, user, command.args[0].toLowerCase());
+				doUnban(channel, user, "unbanned", command.args[0].toLowerCase());
+			} else if(command.moderation_action == "untimeout") {
+				doUnban(channel, user, "untimed out", command.args[0].toLowerCase());
 			} else {
 				var text = "/"+command.moderation_action;
 				if(command.args) text += " "+command.args.join(" ");
