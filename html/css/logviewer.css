@@ -194,6 +194,10 @@ img.emote {
 	margin-bottom: -0.25em;
 }
 
+.logviewer-chat-message {
+	min-height: 20px;
+}
+
 .logviewer-disabled-message {
 	opacity: 0.3;
 }
