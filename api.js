@@ -147,7 +147,7 @@ API.prototype.getLogs = function(channelObj, query, modlogs, callback) {
 	if(query.id) { 
 		var id = parseInt(query.id);
 		self.db.getLogsById(channelObj.name, id, query.nick, Math.min(parseInt(query.before || 10),100), Math.min(parseInt(query.after || 10),100), modlogs, function(before, after){
-			winston.debug("Got "+before.length+" before and "+after.length+" after - args: "+JSON.stringify(arguments));
+			//winston.debug("Got "+before.length+" before and "+after.length+" after - args: "+JSON.stringify(arguments));
 			for(var i=0;i<before.length;++i) {
 				before[i].text = messagecompressor.decompressMessage("#"+channelObj.name, before[i].nick, before[i].text);
 			}
@@ -180,7 +180,7 @@ API.prototype.getLogs = function(channelObj, query, modlogs, callback) {
 		var time = parseInt(query.time);
 		// function(          channel,         time, before,                                     after,                                     modlogs, callback)
 		self.db.getLogsByTime(channelObj.name, time, Math.min(parseInt(query.before || 10),100), Math.min(parseInt(query.after || 10),100), modlogs, function(before, after){
-			winston.debug("Got "+before.length+" before and "+after.length+" after - args: "+JSON.stringify(arguments));
+			//winston.debug("Got "+before.length+" before and "+after.length+" after - args: "+JSON.stringify(arguments));
 			for(var i=0;i<before.length;++i) {
 				before[i].text = messagecompressor.decompressMessage("#"+channelObj.name, before[i].nick, before[i].text);
 			}
