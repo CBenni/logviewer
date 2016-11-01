@@ -250,7 +250,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 				});
 			} else {
 				// we exclude twitchnotify when not checking a specific user
-				self.pool.query("SELECT id,time,nick,text"+(modlogs?",modlog":"")+" FROM ?? WHERE id < ? AND nick != 'twitchnotify' ORDER BY id DESC LIMIT ?", ["chat_"+channel, id, before], function(error, results, fields) {
+				self.pool.query("SELECT id,time,nick,text"+(modlogs?",modlog":"")+" FROM ?? WHERE id < ? ORDER BY id DESC LIMIT ?", ["chat_"+channel, id, before], function(error, results, fields) {
 					if(results) beforeRes = results.reverse();
 					else beforeRes = [];
 					parseModLogs(beforeRes);
@@ -269,7 +269,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 				});
 			} else {
 				// we exclude twitchnotify when not checking a specific user
-				self.pool.query("SELECT id,time,nick,text"+(modlogs?",modlog":"")+" FROM ?? WHERE id > ? AND nick != 'twitchnotify' ORDER BY id ASC LIMIT ?", ["chat_"+channel, id, after], function(error, results, fields) {
+				self.pool.query("SELECT id,time,nick,text"+(modlogs?",modlog":"")+" FROM ?? WHERE id > ? ORDER BY id ASC LIMIT ?", ["chat_"+channel, id, after], function(error, results, fields) {
 					if(results) afterRes = results;
 					else afterRes = [];
 					parseModLogs(afterRes);

@@ -44,3 +44,15 @@ md-icon svg {
     padding: 8px;
     background-color: #258920;
 }
+
+md-tabs .md-tab {
+	color: rgba(255,255,255,0.54);
+}
+
+md-tabs .md-tab.md-active {
+	color: white;
+}
+
+.md-datepicker-input {
+	color: white;
+}
