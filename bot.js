@@ -334,6 +334,7 @@ function logviewerBot(settings, db, io) {
 		} else if(data[TAGS] && data[TAGS]["msg-id"] === "msg_banned"){
 			// we were banned from the channel, leave it.
 			let channelObj = self.findChannelObj({name: channel});
+			self.emit("moderator-list-"+channel, [] // emit an empty mod list in case we were waiting for those);
 			db.setSetting(channel, "active", "0");
 			self.partChannel(channelObj);
 			if(self.API) {
