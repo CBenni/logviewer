@@ -158,7 +158,7 @@ function renderMessage(messageinfo, badges) {
 		emote = emotes[i];
 		result += escapeHtml(message.substring(position,emote.start));
 		position = emote.end+1;
-		result += '<img class="emote emote-'+emote.id+'" alt="'+emote.name+'" title="'+emote.name+'" src="http://static-cdn.jtvnw.net/emoticons/v1/'+emote.id+'/3.0"></img>';
+		result += '<img class="emote emote-'+emote.id+'" alt="'+emote.name+'" title="'+emote.name+'" src="//static-cdn.jtvnw.net/emoticons/v1/'+emote.id+'/3.0"></img>';
 	}
 	result += escapeHtml(message.substring(position));
 	// close span tag
