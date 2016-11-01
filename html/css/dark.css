@@ -53,6 +53,10 @@ md-tabs .md-tab.md-active {
 	color: white;
 }
 
+md-datepicker {
+	background: none;
+}
+
 .md-datepicker-input {
 	color: white;
 }
