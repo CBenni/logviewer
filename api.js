@@ -147,7 +147,7 @@ API.prototype.getLogs = function(channelObj, query, modlogs, callback) {
 	if(query.id) { 
 		var id = parseInt(query.id);
 		self.db.getLogsById(channelObj.name, id, query.nick, Math.min(parseInt(query.before || 10),100), Math.min(parseInt(query.after || 10),100), modlogs, function(before, after){
-			console.log("Got "+before.length+" before and "+after.length+" after - args: "+JSON.stringify(arguments));
+			winston.debug("Got "+before.length+" before and "+after.length+" after - args: "+JSON.stringify(arguments));
 			for(var i=0;i<before.length;++i) {
 				before[i].text = messagecompressor.decompressMessage("#"+channelObj.name, before[i].nick, before[i].text);
 			}
@@ -167,7 +167,7 @@ API.prototype.getLogs = function(channelObj, query, modlogs, callback) {
 	else if(query.nick) {
 		var c = Math.min(parseInt(query.before || 10), 100);
 		self.db.getLogsByNick(channelObj.name, query.nick, Math.min(parseInt(query.before || 10), 100), modlogs, function(before){
-			console.log(`Got ${before.length} before - args: ${channelObj.name},${query.nick},${c}`);
+			winston.debug(`Got ${before.length} before - args: ${channelObj.name},${query.nick},${c}`);
 			for(var i=0;i<before.length;++i) {
 				before[i].text = messagecompressor.decompressMessage("#"+channelObj.name, before[i].nick, before[i].text);
 			}
@@ -176,9 +176,28 @@ API.prototype.getLogs = function(channelObj, query, modlogs, callback) {
 			});
 		});
 	}
-	else 
-	{
-		callback({"error":"Missing both parameters nick and id."});
+	else if(query.time) {
+		var time = parseInt(query.time);
+		// function(          channel,         time, before,                                     after,                                     modlogs, callback)
+		self.db.getLogsByTime(channelObj.name, time, Math.min(parseInt(query.before || 10),100), Math.min(parseInt(query.after || 10),100), modlogs, function(before, after){
+			winston.debug("Got "+before.length+" before and "+after.length+" after - args: "+JSON.stringify(arguments));
+			for(var i=0;i<before.length;++i) {
+				before[i].text = messagecompressor.decompressMessage("#"+channelObj.name, before[i].nick, before[i].text);
+			}
+			for(var i=0;i<after.length;++i) {
+				after[i].text = messagecompressor.decompressMessage("#"+channelObj.name, after[i].nick, after[i].text);
+			}
+			if(query.nick) {
+				self.db.getUserStats(channelObj.name, query.nick, function(userobj) {
+					callback({time:time, user: userobj, before: before, after: after});
+				});
+			}
+			else {
+				callback({time:time, before: before, after: after});
+			}
+		});
+	} else {
+		callback({"error":"Missing parameters (either nick and/or id or time)."});
 	}
 }
 

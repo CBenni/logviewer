@@ -7,7 +7,7 @@ if (!String.prototype.startsWith) {
 }
 
 var logviewerApp = angular.module("logviewerApp", ['ngSanitize','ngAnimate','btford.socket-io','linkify']);
-logviewerApp.controller("ChannelController", function($scope, $http, $stateParams, $rootScope, $sce, logviewerSocket, $q){
+logviewerApp.controller("ChannelController", function($scope, $http, $stateParams, $rootScope, $sce, logviewerSocket, $mdDialog, $timeout){
 	$scope.channel = $stateParams.channel.toLowerCase();
 	$scope.channelsettings = null;
 	$scope.userObject = null;
@@ -531,9 +531,139 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 		var messageIDs = Object.keys($scope.messages);
 		for(var i=0;i<messageIDs.length;++i) {
 			var msg = $scope.messages[messageIDs[i]];
-			msg.video = getVideo(msg.time);
+			if(msg) msg.video = getVideo(msg.time);
 		}
 	}
+	
+	
+	// virtualRepeat model
+	var infiniteScroller = function () {
+		this.PAGE_SIZE = 100;
+		this.totallength = 200;
+		this.endoflogs = null;
+		this.topindex = 0;
+		this.error = "";
+	}
+	
+	infiniteScroller.prototype.getItemAtIndex = function(index) {
+		// update the datepicker
+		if($scope.messages[this.topindex]) {
+			var newDate = new Date($scope.messages[this.topindex].time*1000);
+			if(!$scope.chosendate || newDate.getFullYear() != $scope.chosendate.getFullYear() || newDate.getMonth() != $scope.chosendate.getMonth() || newDate.getDate() != $scope.chosendate.getDate()) {
+				$scope.chosendate = newDate;
+			}
+		}
+		
+		var messageid = index+1;
+		var pageindex = messageid-(messageid%this.PAGE_SIZE);
+		//console.log("Getting item at "+index);
+		var msg = $scope.messages[messageid];
+		if (msg) {
+			return msg;
+		} else if(msg !== null) {
+			this.loadById(pageindex-1, 0, this.PAGE_SIZE); // we read the messages after the message prior to the first one were getting.... T.T
+		}
+		// always make sure we have the next page loaded
+		if($scope.messages[messageid+(this.PAGE_SIZE>>1)] === undefined) {
+			this.loadById(pageindex+this.PAGE_SIZE-1, 0, this.PAGE_SIZE);
+		}
+	}
+	
+	infiniteScroller.prototype.getLength = function() {
+		if(this.endoflogs) return this.totallength;
+		else return this.totallength+10;
+	};
+	
+	infiniteScroller.prototype.loadById = function(id, before, after) {
+		var self = this;
+		console.log("Getting logs at "+id);
+		for(var i=id-before;i<id;++i) {
+			if(!$scope.messages[i]) $scope.messages[i] = null;
+		}
+		for(var i=id+1;i<=id+after;++i) {
+			if(!$scope.messages[i]) $scope.messages[i] = null;
+		}
+		$http.get("/api/logs/" + $scope.channel,{
+			params: {
+				id: id, 
+				before: before, 
+				after: after,
+				token: $rootScope.auth.token
+			}
+		}).then(function(response){
+			console.log("Got logs at "+id);
+			for(var i=0;i<response.data.before.length;++i) {
+				var message = response.data.before[i];
+				if(!$scope.messages[message.id]) {
+					$scope.messages[message.id] = message;
+				}
+				self.totallength = Math.max(self.totallength, message.id);
+			}
+			addVideoForAll(response.data.before);
+			for(var i=0;i<response.data.after.length;++i) {
+				var message = response.data.after[i];
+				if(!$scope.messages[message.id]) {
+					$scope.messages[message.id] = message;
+				}
+				self.totallength = Math.max(self.totallength, message.id);
+			}
+			addVideoForAll(response.data.after);
+			if(response.data.after.length < after && response.data.after.length > 0) {
+				console.log("End of logs reached");
+				self.endoflogs = response.data.after[response.data.after.length-1].id;
+			}
+		},function(response){
+			console.log(response);
+		});
+	}
+	
+	infiniteScroller.prototype.gotoDate = function(date) {
+		var self = this;
+		self.error = "";
+		console.log("Jumping to date "+date);
+		$http.get("/api/logs/" + $scope.channel,{
+			params: {
+				time: Math.floor(date.getTime()/1000),
+				before: this.PAGE_SIZE,
+				after: this.PAGE_SIZE,
+				token: $rootScope.auth.token
+			}
+		}).then(function(response){
+			for(var i=0;i<response.data.after.length;++i) {
+				var message = response.data.after[i];
+				if(!$scope.messages[message.id]) {
+					$scope.messages[message.id] = message;
+				}
+				self.totallength = Math.max(self.totallength, message.id);
+			}
+			addVideoForAll(response.data.after);
+			for(var i=0;i<response.data.before.length;++i) {
+				var message = response.data.before[i];
+				if(!$scope.messages[message.id]) {
+					$scope.messages[message.id] = message;
+				}
+				self.totallength = Math.max(self.totallength, message.id);
+			}
+			addVideoForAll(response.data.before);
+			if(response.data.after.length > 0) {
+				console.log("Got logs at "+self.topindex);
+				if(response.data.after.length < this.PAGE_SIZE) {
+					console.log("End of logs reached");
+					self.endoflogs = response.data.after[response.data.after.length-1].id;
+				}
+				$timeout(()=>{self.topindex = response.data.after[0].id;},1);
+			} else {
+				console.log("Got logs at "+self.topindex);
+				console.log("Tried to jump past the end of logs");
+				self.endoflogs = response.data.before[response.data.before.length-1].id;
+				$timeout(()=>{self.topindex = response.data.before[response.data.before.length-1].id;},1);
+			}
+		},function(response){
+			console.log(response);
+		});
+	}
+	
+	$scope.allLines = new infiniteScroller();
 });
 
 logviewerApp.filter('ifEmpty', function() {
@@ -549,7 +679,7 @@ logviewerApp.filter('ifEmpty', function() {
 
 logviewerApp.filter('chatLine', function($sce) {
 	return function(input, defaultValue) {
-		console.log("chatLine called with "+input);
+		//console.log("chatLine called with "+input);
 		// parse IRC message
 		parsedmessage = parseIRCMessage(input);
 		// render PRIVMSGS
@@ -594,7 +724,7 @@ logviewerApp.filter('commentAge', function($sce, $filter) {
 
 logviewerApp.filter('secondsTimestamp', function() {
 	return function(input, defaultValue) {
-		return ""+(parseInt(input)*1000);
+		return isNaN(input) ? "" : ""+(parseInt(input)*1000);
 	}
 });
 

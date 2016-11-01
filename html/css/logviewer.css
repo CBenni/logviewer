@@ -245,7 +245,7 @@ img.emote {
 	font-size: 12px;
 }
 
-a.md-primary.md-icon-button.videobutton.md-button.md-ink-ripple {
+a.videobutton.md-button.md-icon-button {
 	height: 20px;
 	margin: -3px 0;
 	padding: 0;
@@ -279,4 +279,10 @@ a.md-primary.md-icon-button.videobutton.md-button.md-ink-ripple {
 md-tooltip .md-content.md-show, md-tooltip .md-content.md-show-add-active {
 	height: auto;
 	font-size: 12px;
+}
+
+.infinite-scroll-container {
+}
+
+.infinite-scroll-item {
 }

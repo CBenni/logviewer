@@ -99,7 +99,8 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			+"nick VARCHAR(32) NOT NULL,"
 			+"text VARCHAR(2047) COLLATE utf8mb4_unicode_ci NOT NULL,"
 			+"modlog VARCHAR(1024) DEFAULT NULL,"
-			+"INDEX (nick, time)"
+			+"INDEX (nick, time),"
+			+"INDEX (time)"
 		+")");
 		self.pool.query("CREATE TABLE IF NOT EXISTS users_"+channelObj.name+" ("
 			+"nick VARCHAR(32) NOT NULL PRIMARY KEY,"
@@ -243,6 +244,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			if(nick) {
 				self.pool.query("SELECT id,time,nick,text"+(modlogs?",modlog":"")+" FROM ?? WHERE nick=? AND id < ? ORDER BY id DESC LIMIT ?", ["chat_"+channel, nick, id, before], function(error, results, fields) {
 					if(results) beforeRes = results.reverse();
+					else beforeRes = [];
 					parseModLogs(beforeRes);
 					if(afterRes !== null) callback(beforeRes, afterRes);
 				});
@@ -250,6 +252,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 				// we exclude twitchnotify when not checking a specific user
 				self.pool.query("SELECT id,time,nick,text"+(modlogs?",modlog":"")+" FROM ?? WHERE id < ? AND nick != 'twitchnotify' ORDER BY id DESC LIMIT ?", ["chat_"+channel, id, before], function(error, results, fields) {
 					if(results) beforeRes = results.reverse();
+					else beforeRes = [];
 					parseModLogs(beforeRes);
 					if(afterRes !== null) callback(beforeRes, afterRes);
 				});
@@ -260,6 +263,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			if(nick) {
 				self.pool.query("SELECT id,time,nick,text"+(modlogs?",modlog":"")+" FROM ?? WHERE nick=? AND id > ? ORDER BY id ASC LIMIT ?", ["chat_"+channel, nick, id, after], function(error, results, fields) {
 					if(results) afterRes = results;
+					else afterRes = [];
 					parseModLogs(afterRes);
 					if(beforeRes !== null) callback(beforeRes, afterRes);
 				});
@@ -267,10 +271,38 @@ module.exports = function MySQLDatabaseConnector(settings) {
 				// we exclude twitchnotify when not checking a specific user
 				self.pool.query("SELECT id,time,nick,text"+(modlogs?",modlog":"")+" FROM ?? WHERE id > ? AND nick != 'twitchnotify' ORDER BY id ASC LIMIT ?", ["chat_"+channel, id, after], function(error, results, fields) {
 					if(results) afterRes = results;
+					else afterRes = [];
 					parseModLogs(afterRes);
 					if(beforeRes !== null) callback(beforeRes, afterRes);
 				});
 			}
+		} else { 
+			afterRes = []; 
+			if(beforeRes !== null) callback(beforeRes, afterRes); 
+		}
+	}
+	
+	self.getLogsByTime = function(channel, time, before, after, modlogs, callback) {
+		var beforeRes = null;
+		var afterRes = null;
+		// before
+		if(before > 0) {
+			self.pool.query("SELECT id,time,nick,text"+(modlogs?",modlog":"")+" FROM ?? WHERE time < ? ORDER BY time DESC LIMIT ?", ["chat_"+channel, time, before], function(error, results, fields) {
+				if(results) beforeRes = results.reverse();
+				else beforeRes = [];
+				parseModLogs(beforeRes);
+				if(afterRes !== null) callback(beforeRes, afterRes);
+			});
+		} else { beforeRes = []; }
+		// after
+		if(after > 0) {
+			// we exclude twitchnotify when not checking a specific user
+			self.pool.query("SELECT id,time,nick,text"+(modlogs?",modlog":"")+" FROM ?? WHERE time >= ? ORDER BY time ASC LIMIT ?", ["chat_"+channel, time, after], function(error, results, fields) {
+				if(results) afterRes = results;
+				else afterRes = [];
+				parseModLogs(afterRes);
+				if(beforeRes !== null) callback(beforeRes, afterRes);
+			});
 		} else { 
 			afterRes = []; 
 			if(beforeRes !== null) callback(beforeRes, afterRes); 
@@ -374,8 +406,6 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	}
 	
 	self.getEvents = function(channel, limit, callback) {
-		console.log(channel)
-		console.log(limit)
 		self.pool.query("SELECT * FROM (SELECT * FROM adminlog WHERE channel=? ORDER BY id DESC LIMIT ?) sub ORDER BY id ASC",[channel,limit], function(error,results,fields) {
 			if(error) {
 				winston.error("getEvents: Select failed! "+error);

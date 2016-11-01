@@ -50,7 +50,7 @@ function logviewerBot(settings, db, io) {
 			for(var i=0;i<channels.length;++i) {
 				self.joinChannel(channels[i]);
 				if(channels[i].modlogs == "1") {
-					console.log("Channel "+channels[i].name+" has mod logs enabled");
+					winston.debug("Channel "+channels[i].name+" has mod logs enabled");
 					self.enableModLogs(channels[i]);
 				}
 			}
@@ -306,10 +306,9 @@ function logviewerBot(settings, db, io) {
 				self.io.to("events-"+channel).emit("ismodded", ismodded);
 				
 				if(!ismodded) {
-					console.log(self.name2channelObj);
 					let channelObj = self.findChannelObj({name: channel});
 					// disable mod log setting
-					console.log("Got unmodded in "+channel+" - "+JSON.stringify(channelObj)+" unlistening from mod logs");
+					winston.info("Got unmodded in "+channel+" - "+JSON.stringify(channelObj)+" unlistening from mod logs");
 					self.disableModLogs(channelObj);
 					self.db.setSetting(channel, "modlogs", "0");
 					self.API.adminLog(channel, "", "system", "modlogs-disabled", "Detected that the bot is no longer modded in your channel. Disabled mod logs.");
@@ -536,7 +535,7 @@ logviewerBot.prototype.findChannelObj = function(channel) {
 }
 	
 logviewerBot.prototype.joinChannel = function(channelObj) {
-	console.log("Joining channel "+JSON.stringify(channelObj));
+	winston.info("Joining channel "+JSON.stringify(channelObj));
 	var self = this;
 	if(self.findChannelObj(channelObj)) return;
 	self.channels.push(channelObj);
@@ -551,7 +550,7 @@ logviewerBot.prototype.partChannel = function(channelObj) {
 	var self = this;
 	channelObj = self.findChannelObj(channelObj);
 	let index = self.channels.indexOf(channelObj);
-	console.log("Leaving channel "+JSON.stringify(channelObj));
+	winston.info("Leaving channel "+JSON.stringify(channelObj));
 	if(index >= 0) {
 		self.channels.splice(index,1)[0];
 		self.bot.send("PART #"+channelObj.name);
@@ -577,10 +576,10 @@ logviewerBot.prototype.isModded = function(channelObj, callback, force, cacheonl
 	var self = this;
 	var channel = channelObj.name;
 	if(self.userlevels[channel] && !force) {
-		console.log("Used cached mod list for channel "+channel+": "+JSON.stringify(self.userlevels[channel]));
+		winston.debug("Used cached mod list for channel "+channel+": "+JSON.stringify(self.userlevels[channel]));
 		callback(self.userlevels[channel][self.nick] == 5);
 	} else if(!cacheonly) {
-		console.log("Waiting for mod list for channel "+channel);
+		winston.debug("Waiting for mod list for channel "+channel);
 		if(force) self.checkMods(channelObj);
 		self.once("moderator-list-"+channel, function(list){
 			if(list.indexOf(self.nick) >= 0) {
@@ -602,12 +601,12 @@ logviewerBot.prototype.enableModLogs = function(channelObj, callback) {
 	self.isModded(channelObj, function(isModded) {
 		if(isModded) {
 			// we gucci, subscribe to pubsub
-			console.log("Enabling mod logs for "+JSON.stringify(channelObj));
+			winston.debug("Enabling mod logs for "+JSON.stringify(channelObj));
 			self.pubsub.listenModLogs(channelObj);
 			channelObj.modlogs = "1";
 			if(callback) callback(true);
 		} else {
-			console.log("Bot is not modded in "+channelObj.name);
+			winston.debug("Bot is not modded in "+channelObj.name);
 			if(callback) callback(false);
 		}
 	});
