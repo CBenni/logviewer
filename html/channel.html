@@ -247,7 +247,7 @@
 									<!-- timestamp -->
 									{{message.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}
 								</span>
-								<span class="logviewer-message" ng-bind-html='message.text | chatLine'></span>
+								<span class="logviewer-message" compile='message.text | chatLine'></span>
 								<span ng-if="message.modlog | isntEmpty">(By: {{modLogList(message.modlog)}})
 									<md-tooltip md-direction="top">
 										<table>
