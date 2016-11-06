@@ -185,8 +185,8 @@ function checkAuth(req, res, callback) {
 	if(user !== undefined && token !== undefined) {
 		db.checkAndRefreshToken(user, token, ~~(Date.now()/1000)+32*24*3600, function(ok){
 			if(ok) {
-				res.cookie('token',token,{ maxAge: 32*24*3600000, secure: true });
-				res.cookie('login',user,{ maxAge: 32*24*3600000, secure: true });
+				res.cookie('token',token,{ maxAge: 32*24*3600000, secure: settings.auth.secure_cookies });
+				res.cookie('login',user,{ maxAge: 32*24*3600000, secure: settings.auth.secure_cookies });
 			} else {
 				res.clearCookie('token');
 				res.clearCookie('login');
@@ -247,8 +247,8 @@ function generateToken(res, username, callback) {
 		var token = buffer.toString("hex");
 		// expires in 31 days
 		db.storeToken(username, token, Math.floor(Date.now()/1000)+31*24*3600);
-		res.cookie('token',token,{ maxAge: 32*24*3600000, secure: true });
-		res.cookie('login',username,{ maxAge: 32*24*3600000, secure: true });
+		res.cookie('token',token,{ maxAge: 32*24*3600000, secure: settings.auth.secure_cookies });
+		res.cookie('login',username,{ maxAge: 32*24*3600000, secure: settings.auth.secure_cookies });
 		callback();
 	});
 }
@@ -266,9 +266,13 @@ app.get('/api/login', function(req, res, next) {
 				request.get({
 					url: "https://api.twitch.tv/kraken/?oauth_token="+token+"&client_id="+settings.auth.client_id
 				},function(e,r,body2){
-					if(e || body2 === undefined || r.statusCode != 200) {
-						winston.error("Error getting oauth token: "+r.statusCode+"\r\n"+e);
-						res.end("Error getting oauth token: "+r.statusCode+"\r\n"+e);
+					if(e || body2 === undefined || !r || r.statusCode != 200) {
+						if(r) {
+							winston.error("Error getting oauth token: "+r.statusCode+"\r\n"+e);
+							res.end("Error getting oauth token: "+r.statusCode+"\r\n"+e);
+						} else {
+							winston.error("Error getting oauth token: \r\n"+e);
+						}
 					} else {
 						var auth = JSON.parse(body2).token;
 						if(auth.valid) {

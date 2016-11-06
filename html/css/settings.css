@@ -62,3 +62,7 @@ md-select.inlineselect {
 .settings-column {
 	min-width: 300px;
 }
+
+.hint-text {
+	font-style: italic;
+}
