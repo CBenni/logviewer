@@ -7,7 +7,7 @@ if (!String.prototype.startsWith) {
 }
 
 var logviewerApp = angular.module("logviewerApp", ['ngSanitize','ngAnimate','btford.socket-io','linkify']);
-logviewerApp.controller("ChannelController", function($scope, $http, $stateParams, $rootScope, $sce, logviewerSocket, $mdDialog, $timeout){
+logviewerApp.controller("ChannelController", function($scope, $http, $stateParams, $rootScope, $sce, logviewerSocket, $mdDialog, $timeout, $q){
 	$scope.channel = $stateParams.channel.toLowerCase();
 	$scope.channelsettings = null;
 	$scope.userObject = null;
@@ -26,7 +26,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	$scope.typedUserSearch = "";
 	$scope.userid = 0;
 	
-	$http.jsonp("/api/channel/"+$scope.channel+"/?token="+$rootScope.auth.token+"&callback=JSON_CALLBACK").then(function(response){
+	$http.get("/api/channel/"+$scope.channel+"/?token="+$rootScope.auth.token).then(function(response){
 		$scope.channelsettings = response.data.channel;
 		$scope.userObject = response.data.me;
 		$scope.loadStatus = response.data.channel==null?-1:-1+2*response.data.channel.active;
@@ -60,7 +60,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	$scope.modLogDisplay = function(time) {
 		if(time === null) return "ban";
 		else if(time === -1) return "unban";
-		else if(isNaN(parseInt(time))) return "";
+		else if(isNaN(parseInt(time))) return time;
 		else return time+"s";
 	}
 	
@@ -76,14 +76,14 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	
 	var getComments = function(user) {
 		if($rootScope.auth.token) {
-			$http.jsonp("/api/comments/" + $scope.channel + "/?token="+$rootScope.auth.token+"&topic="+user+"&callback=JSON_CALLBACK").then(function(response) {
+			$http.get("/api/comments/" + $scope.channel + "/?token="+$rootScope.auth.token+"&topic="+user).then(function(response) {
 				$scope.users[user].comments = response.data;
 				for(var i=0;i<response.data.length;++i) {
 					getProfilePic(response.data[i].author);
 				}
 			});
 		} else {
-			$http.jsonp("/api/comments/" + $scope.channel + "/?topic="+user+"&token="+$rootScope.auth.token+"&callback=JSON_CALLBACK").then(function(response) {
+			$http.get("/api/comments/" + $scope.channel + "/?topic="+user+"&token="+$rootScope.auth.token).then(function(response) {
 				$scope.users[user].comments = response.data;
 				for(var i=0;i<response.data.length;++i) {
 					getProfilePic(response.data[i].author);
@@ -111,11 +111,10 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 				}
 			};
 		}
-		$http.jsonp("/api/logs/" + $scope.channel,{
+		$http.get("/api/logs/" + $scope.channel,{
 			params: {
 				nick: nick,
-				token: $rootScope.auth.token,
-				callback: "JSON_CALLBACK"
+				token: $rootScope.auth.token
 			}
 		}).then(function(response){
 			$scope.users[nick].data = response.data.user;
@@ -149,13 +148,12 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	{
 		if($scope.users[nick].isloading) return;
 		$scope.users[nick].isloading = true;
-		$http.jsonp("/api/logs/" + $scope.channel,{
+		$http.get("/api/logs/" + $scope.channel,{
 			params: {
 				nick: nick,
 				id: $scope.users[nick].messages[0].id,
 				after: 0,
-				token: $rootScope.auth.token,
-				callback: "JSON_CALLBACK"
+				token: $rootScope.auth.token
 			}
 		}).then(function(response){
 			$scope.users[nick].isloading = false;
@@ -208,13 +206,12 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 			$scope.selectedID = id;
 			if($scope.messages[id].before.length == 0 && $scope.messages[id].after.length == 0) {
 				// populate if empty
-				$http.jsonp("/api/logs/" + $scope.channel,{
+				$http.get("/api/logs/" + $scope.channel,{
 					params: {
 						id: id, 
 						before: 10, 
 						after: 10,
-						token: $rootScope.auth.token,
-						callback: "JSON_CALLBACK"
+						token: $rootScope.auth.token
 					}
 				}).then(function(response){
 					user.isloadingContext["before"] = false;
@@ -257,13 +254,12 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 		else {
 			user.isloadingContext[position] = true;
 			//?id=" + newestID + "/?callback=JSON_CALLBACK&" + position + "=" + count
-			$http.jsonp("/api/logs/" + $scope.channel,{
+			$http.get("/api/logs/" + $scope.channel,{
 				params: {
 					id: newestID, 
 					before: (position=="before")?10:0, 
 					after: (position=="after")?10:0,
-					token: $rootScope.auth.token,
-					callback: "JSON_CALLBACK"
+					token: $rootScope.auth.token
 				}
 			}).then(function(response){
 				if(position == "before") {
@@ -351,7 +347,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	});
 	
 	logviewerSocket.on("log-update", function(message){
-		console.log("Message updated: "+message);
+		console.log("Message updated: "+JSON.stringify(message));
 		var msgs = $scope.users[message.nick].messages;
 		// we iterate backwards since usually, the newest messages get updated
 		for(var i=msgs.length-1;i>=0;--i) {
@@ -359,12 +355,14 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 				msgs[i].time = message.time;
 				msgs[i].text = message.text;
 				msgs[i].nick = message.nick;
+				msgs[i].modlog = message.modlog;
 				break;
 			}
 		}
 		$scope.messages[message.id].time = message.time;
 		$scope.messages[message.id].text = message.text;
 		$scope.messages[message.id].nick = message.nick;
+		$scope.messages[message.id].modlog = message.modlog;
 	});
 	
 	logviewerSocket.on("comment-add", function(comment){
@@ -451,8 +449,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 		else return $http.jsonp(endpoint+"/?callback=JSON_CALLBACK&client_id="+settings.auth.client_id);
 	}
 	
-	// actually, this stuff doesnt work until they fix the api...
-	$http.jsonp("/api/badges/"+$scope.channel+"/?callback=JSON_CALLBACK").then(function(response){
+	$http.get("/api/badges/"+$scope.channel+"/").then(function(response){
 		_badges = response.data;
 	});
 	

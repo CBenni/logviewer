@@ -78,7 +78,7 @@ function decompressEmotes(emotes) {
 
 
 var copykeys = ["color","emotes","display-name","badges"];
-var badgesdecompress = { "t": "turbo", "b": "broadcaster", "m": "moderator", "a": "admin", "s": "staff", "g": "global_mod", "h": "horde", "l": "alliance", "w": "warcraft" };
+var badgesdecompress = { "t": "turbo", "b": "broadcaster", "m": "moderator", "a": "admin", "s": "staff", "g": "global_mod", "h": "horde", "l": "alliance", "w": "warcraft", "p": "premium", "u": "subscriber" };
 var badgescompress = {};
 var badgekeys = Object.keys(badgesdecompress);
 for(var i=0;i<badgekeys.length;++i) {

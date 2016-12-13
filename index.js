@@ -765,6 +765,39 @@ app.get('/api/events/:channel', function(req, res, next) {
 	}
 });
 
+
+app.get('/api/leaderboard/:channel', function(req, res, next) {
+	try {
+		var channelname = req.params.channel.toLowerCase();
+		if(/^\w+$/.test(channelname)) {
+			API.getChannelObjAndLevel(req.params.channel, req.query.token, function(error, channelObj, level, username){
+				if(error && error.status != 404) {
+					res.status(error.status).jsonp({"error": error.message});
+				} else {
+					if(level >= 10) {
+						if(channelObj) {
+							var limit = Math.max(req.query.limit || 25, 50);
+							var offset = Math.max(req.query.offset || 0, 50);
+							db.getLeaderboard(channelObj.name, offset, limit, function(events) {
+								res.jsonp(events);
+							});
+						} else {
+							res.jsonp([]);
+						}
+					} else {
+						res.status(403).end();
+					}
+				}
+			});
+		} else {
+			res.status(400).jsonp({error: "Invalid channel name "+channelname});
+		}
+	}
+	catch(err) {
+		next(err);
+	}
+});
+
 var badgeCache = {};
 
 

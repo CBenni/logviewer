@@ -54,6 +54,7 @@
 		<a ui-sref="index()" ng-if="$stateParams.channel" ui-sref-active="active">Home</a>
 		<a ui-sref="channel({channel: $stateParams.channel})" ng-if="$stateParams.channel" ui-sref-active="active">Logs</a>
 		<a ui-sref="settings({channel: $stateParams.channel})" ng-if="$stateParams.channel" ui-sref-active="active">Settings</a>
+		<!--<a ui-sref="l({channel: $stateParams.channel})" ng-if="$stateParams.channel" ui-sref-active="active">Leaderboard</a>-->
 	</div>
 	<div layout="row" layout-align="end center" flex="none">
 		<div ng-show="auth.name" flex="none">

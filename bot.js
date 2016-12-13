@@ -95,11 +95,22 @@ function logviewerBot(settings, db, io) {
 		
 		
 		var time = Math.floor(Date.now()/1000);
-		db.addLine(channel, user, messagecompressor.compressMessage(user, data), true, function(id) {
-			var emittedMsg = {id: id, time: time, nick: user, text: data[0]};
-			io.to("logs-"+channel+"-"+user).emit("log-add", emittedMsg);
-			io.to("logs-"+channel+"-"+user+"-modlogs").emit("log-add", emittedMsg);
-		});
+		
+		setTimeout(()=>{				
+			var modlog;
+			if(data[TAGS] && data[TAGS]["id"]) {
+				var allowedMessage = allowedMessages[data[TAGS]["id"]] || oldAllowedMessages[data[TAGS]["id"]];
+				if(allowedMessage) {
+					modlog = allowedMessage.modlog;
+				}
+			}
+			db.addModLog(channel, user, messagecompressor.compressMessage(user, data), true, modlog, function(id) {
+				var emittedMsg = {id: id, time: time, nick: user, text: data[0]};
+				io.to("logs-"+channel+"-"+user).emit("log-add", emittedMsg);
+				emittedMsg.modlog = modlog;
+				io.to("logs-"+channel+"-"+user+"-modlogs").emit("log-add", emittedMsg);
+			});
+		}, 10);
 		if(user === "twitchnotify" || user === "gdqsubs") {
 			var m = newsubregex.exec(text) || resubregex.exec(text);
 			if(m) {
@@ -245,7 +256,7 @@ function logviewerBot(settings, db, io) {
 			timeout.text = formatTimeout(channel, user, timeout);
 			// add the timeout to the cache with an empty id
 			self.timeouts[channel][user] = timeout;
-			db.addTimeout(channel, user, now.getTime(), "djtv "+timeout.text, modlog, function(id){
+			db.addTimeout(channel, user, now.getTime(), "djtv "+timeout.text, modlog, true, function(id){
 				timeout.id = id;
 				// if the timeout was dirty, update it again...
 				if(timeout.dirty) {
@@ -261,12 +272,70 @@ function logviewerBot(settings, db, io) {
 		var modlog = {};
 		modlog[mod] = -1;
 		var text = `<${user} has been ${type}>`;
-		db.addModLog(channel, user, "djtv "+text, modlog, function(id){
+		db.addModLog(channel, user, "djtv "+text, false, modlog, function(id){
 			var irccmd = `@display-name=jtv;color=;subscriber=0;turbo=0;user-type=;emotes=;badges= :${user}!${user}@${user}.tmi.twitch.tv PRIVMSG #${channel} :${text}`;
 			io.to("logs-"+channel+"-"+user).emit("log-add", {id: id, time: Math.floor(Date.now()/1000), nick: user, text: irccmd});
 			io.to("logs-"+channel+"-"+user+"-modlogs").emit("log-add", {id: id, time: Math.floor(Date.now()/1000), nick: user, modlog: modlog, text: irccmd});
 		});
 	}
+	
+	function emitRejectedMessage(type, channel, command) {
+		var user = command.args[0];
+		var message = command.args[1];
+		var irccmd = `@display-name=twitchbot;color=;subscriber=0;turbo=0;user-type=;emotes=;badges= :${user}!${user}@${user}.tmi.twitch.tv PRIVMSG #${channel} :${message}`
+
+		var emittedMsg = {id: command.id, time: Math.floor(command.time/1000), nick: user, text: irccmd};
+		io.to("logs-"+channel+"-"+user).emit(type, emittedMsg);
+		emittedMsg.modlog = command.modlog;
+		console.log("Emitting "+JSON.stringify(emittedMsg));
+		console.log("to logs-"+channel+"-"+user+"-modlogs")
+		io.to("logs-"+channel+"-"+user+"-modlogs").emit(type, emittedMsg);
+	}
+	
+	var rejectedMessages = {};
+	var oldRejectedMessages = {};
+	var allowedMessages = {};
+	var oldAllowedMessages = {};
+	function doReject(channel, user, command) {
+		command.time = Date.now();
+		command.modlog = {};
+		command.modlog[user] = "reject";
+		db.addTimeout(channel, command.args[0], command.time, "dtwitchbot " + command.args[1], command.modlog, false, function(id){
+			console.log("added rejected message for channel="+channel+", user="+user+", id="+id+"!");
+			command.id = id;
+			emitRejectedMessage("log-add", channel, command);
+			if(command.dirty) {
+				db.updateTimeout(channel, command.args[0], command.id, command.time, "dtwitchbot " + command.args[1] , command.modlog);
+			}
+		});
+		rejectedMessages[command.msg_id] = command;
+	}
+	
+	function doModerate(channel, user, command) {
+		var action = command.moderation_action.split("_")[0];
+		var oldModlog = rejectedMessages[command.msg_id] || oldRejectedMessages[command.msg_id];
+		if(oldModlog) {
+			oldModlog.modlog[user] = action;
+			if(oldModlog.id) {
+				db.updateTimeout(channel, oldModlog.args[0], oldModlog.id, oldModlog.time, "dtwitchbot " + oldModlog.args[1], oldModlog.modlog);
+				emitRejectedMessage("log-update", channel, oldModlog);
+			} else {
+				oldModlog.dirty = true;
+			}
+		} else {
+			command.time = Date.now();
+			command.modlog = {};
+			command.modlog[user] = action;
+			allowedMessages[command.msg_id] = command;
+		}
+	}
+	
+	setInterval(function() {
+		oldRejectedMessages = rejectedMessages;
+		oldAllowedMessages = allowedMessages;
+		rejectedMessages = {};
+		allowedMessages = {};
+	}, 300000);
 
 
 	self.bot.on("CLEARCHAT", function(data){
@@ -281,7 +350,7 @@ function logviewerBot(settings, db, io) {
 			doTimeout(channel, undefined, user, duration, reason, 1);
 		} else {
 			winston.debug("#"+channel + " <chat was cleared by a moderator>");
-			db.addTimeout(channel, "jtv", Date.now(), "djtv <chat was cleared by a moderator>");
+			db.addTimeout(channel, "jtv", Date.now(), "djtv <chat was cleared by a moderator>", true);
 		}
 	});
 
@@ -291,7 +360,6 @@ function logviewerBot(settings, db, io) {
 		//@msg-id=msg_banned :tmi.twitch.tv NOTICE #frankerzbenni :You are permanently banned from talking in frankerzbenni.
 		let channel = data[PARAM].slice(1);
 		if(data[TAGS] && (data[TAGS]["msg-id"] === "room_mods" || data[TAGS]["msg-id"] === "no_mods")) {
-			//console.log("Got mods response for channel "+channel+": "+data[0]);
 			let users = [];
 			if(data[TAGS]["msg-id"] === "room_mods") {
 				let m = /The moderators of this \w+ are: (.*)/.exec(data[TRAILING]);
@@ -327,7 +395,6 @@ function logviewerBot(settings, db, io) {
 			
 			if(Date.now() - lastSave > 60*1000) {
 				// write to file every minute
-				console.log("Writing mods.json");
 				lastSave = Date.now();
 				fs.writeFile("mods.json", JSON.stringify(self.userlevels), "utf-8");
 			}
@@ -497,7 +564,7 @@ function logviewerBot(settings, db, io) {
 			var channelObj = self.findChannelObj({id: channelid});
 			var channel = channelObj.name;
 			var command = JSON.parse(message.data.message).data;
-			console.log(command);
+			winston.debug(command);
 			var user = command.created_by;
 			if(command.moderation_action == "timeout") {
 				doTimeout(channel, user, command.args[0].toLowerCase(), command.args[1] || 600, command.args[2] || "", 0);
@@ -507,12 +574,16 @@ function logviewerBot(settings, db, io) {
 				doUnban(channel, user, "unbanned", command.args[0].toLowerCase());
 			} else if(command.moderation_action == "untimeout") {
 				doUnban(channel, user, "untimed out", command.args[0].toLowerCase());
+			} else if(command.moderation_action == "twitchbot_rejected") {
+				doReject(channel, user, command);
+			} else if(command.moderation_action == "approved_twitchbot_message" || command.moderation_action == "denied_twitchbot_message") {
+				doModerate(channel, user, command);
 			} else {
 				var text = "/"+command.moderation_action;
 				if(command.args) text += " "+command.args.join(" ");
 				var modlog = {};
 				modlog[user] = "";
-				db.addModLog(channel, "jtv", "djtv "+text, modlog, function(id) {
+				db.addModLog(channel, "jtv", "djtv "+text, false, modlog, function(id) {
 					var time = Math.floor(Date.now()/1000);
 					io.to("logs-"+channel+"-"+user).emit("log-add", {id: id, time: time, nick: "jtv", text: `@display-name=jtv;color=;subscriber=0;turbo=0;user-type=;emotes=;badges= :jtv!jtv@jtv.tmi.twitch.tv PRIVMSG #${channel} :${text}`});
 					io.to("logs-"+channel+"-"+user+"-modlogs").emit("log-add", {id: id, time: time, nick: user, modlog: modlog, text: `@display-name=jtv;color=;subscriber=0;turbo=0;user-type=;emotes=;badges= :${user}!${user}@${user}.tmi.twitch.tv PRIVMSG #${channel} :${text}`});

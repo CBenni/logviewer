@@ -26,6 +26,8 @@ app.config(function($stateProvider, $urlRouterProvider, $urlMatcherFactoryProvid
 		});
 });
 
+if(!ga) ga = function(){};
+
 app.run(function($rootScope, $state) {
 	var stateChange = $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams, options) {
 		$rootScope.title = toParams.channel || toState.title;

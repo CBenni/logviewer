@@ -106,7 +106,8 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			+"nick VARCHAR(32) NOT NULL PRIMARY KEY,"
 			+"messages INT UNSIGNED DEFAULT '0',"
 			+"timeouts INT UNSIGNED DEFAULT '0',"
-			+"level INT DEFAULT '0'"
+			+"level INT DEFAULT '0',"
+			+"INDEX (messages DESC)"
 		+")");
 	}
 	
@@ -187,18 +188,19 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		if(count !== false) self.pool.query("INSERT INTO ?? (nick,messages) VALUES (?,1) ON DUPLICATE KEY UPDATE messages = messages + 1",["users_"+channel, nick,nick]);
 	}
 	
-	self.addModLog = function(channel, nick, message, modlog, callback) {
+	self.addModLog = function(channel, nick, message, count, modlog, callback) {
 		// we use the pool for this instead of the pool
-		self.pool.query("INSERT INTO ?? (time,nick,text,modlog) VALUES (?,?,?,?)",["chat_"+channel, Math.floor(Date.now()/1000), nick, message, JSON.stringify(modlog)], function(error, result) {
+		self.pool.query("INSERT INTO ?? (time,nick,text,modlog) VALUES (?,?,?,?)",["chat_"+channel, Math.floor(Date.now()/1000), nick, message, modlog?JSON.stringify(modlog):null], function(error, result) {
 			if(error) {
 				winston.error("addModLog: Could not insert! "+error);
 				return;
 			}
 			if(callback) callback(result.insertId);
 		});
+		if(count === true) self.pool.query("INSERT INTO ?? (nick,messages) VALUES (?,1) ON DUPLICATE KEY UPDATE messages = messages + 1",["users_"+channel, nick,nick]);
 	}
 	
-	self.addTimeout = function(channel, nick, time, message, modlog, callback) {
+	self.addTimeout = function(channel, nick, time, message, modlog, count, callback) {
 		self.pool.query("INSERT INTO ?? (time,nick,text,modlog) VALUES (?,?,?,?)",["chat_"+channel, Math.floor(time/1000), nick, message,JSON.stringify(modlog)], function(error, result){
 			if(error) {
 				winston.error("addTimeout: Could not insert! "+error);
@@ -206,7 +208,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			}
 			if(callback)callback(result.insertId);
 		});
-		self.pool.query("INSERT INTO ?? (nick,timeouts) VALUES (?,1) ON DUPLICATE KEY UPDATE timeouts = timeouts + 1",["users_"+channel, nick, nick]);
+		if(count) self.pool.query("INSERT INTO ?? (nick,timeouts) VALUES (?,1) ON DUPLICATE KEY UPDATE timeouts = timeouts + 1",["users_"+channel, nick, nick]);
 	}
 	
 	self.updateTimeout = function(channel, nick, id, time, message, modlog) {
@@ -409,6 +411,16 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		self.pool.query("SELECT * FROM (SELECT * FROM adminlog WHERE channel=? ORDER BY id DESC LIMIT ?) sub ORDER BY id ASC",[channel,limit], function(error,results,fields) {
 			if(error) {
 				winston.error("getEvents: Select failed! "+error);
+				callback([]);
+			}
+			else callback(results);
+		});
+	}
+	
+	self.getLeaderboard = function(channel, offset, limit, callback) {
+		self.pool.query("SELECT * FROM ?? ORDER BY messages DESC LIMIT ? OFFSET ?",["users_"+channel,limit,offset], function(error,results,fields) {
+			if(error) {
+				winston.error("getLeaderboard: Select failed! "+error);
 				callback([]);
 			}
 			else callback(results);

@@ -290,3 +290,7 @@ md-tooltip .md-content.md-show, md-tooltip .md-content.md-show-add-active {
 
 .infinite-scroll-item {
 }
+
+span.twitchbot, span.logviewer-modlog-text {
+	font-style: italic;
+}

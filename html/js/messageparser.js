@@ -141,6 +141,9 @@ function renderMessage(messageinfo, badges) {
 	if(display_name == "jtv" || display_name == "twitchnotify" || display_name == "Twitchnotify") {
 		result += '<span class="text logviewer-chat-text status-msg">'
 	}
+	else if (display_name == "twitchbot") {
+		result += '<span class="text logviewer-chat-text status-msg"><span class="twitchbot">Message was flagged for moderator attention: </span>'
+	}
 	else if(messageinfo.isaction) {
 		result += '<span class="nick logviewer-chat-action" style="color: '+color+'">'+display_name+'</span> <span class="text logviewer-chat-text logviewer-chat-action" style="color: '+color+'">'
 	}
