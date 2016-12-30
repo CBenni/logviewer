@@ -28,6 +28,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			+"viewcomments tinyint(4) unsigned NOT NULL DEFAULT '5',"
 			+"writecomments tinyint(4) unsigned NOT NULL DEFAULT '5',"
 			+"deletecomments tinyint(4) unsigned NOT NULL DEFAULT '10',"
+			+"color varchar(32) NULL,"
 			+"`max-age` int(10) unsigned NOT NULL DEFAULT '2678400'"
 		+")");
 		// create the auth table if it doesnt exist
@@ -118,7 +119,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	}
 	
 	self.getChannelList = function(callback) {
-		self.pool.query("SELECT name, id FROM channels WHERE active=1",function(error, results, fields){
+		self.pool.query("SELECT name, id, color FROM channels WHERE active=1",function(error, results, fields){
 			callback(results);
 		});
 	}

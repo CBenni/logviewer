@@ -22,15 +22,14 @@ logviewerApp.controller("ChannelListController", function($rootScope, $scope, $h
 	calcChannellimit();
 	
 	var updateChannels = function(){
-		$http.jsonp("/api/channels/?callback=JSON_CALLBACK").then(function(response) {
-			var newchannels = [];
+		$http.get("/api/channels/").then(function(response) {
 			var channelnames = "";
 			var channelDict = {};
 			for(var i=0;i<response.data.length;++i) {
-				var name = response.data[i].name.toLowerCase();
-				var channelObj = {name: name, live: false};
+				var channelObj = response.data[i]
+				var name = channelObj.name.toLowerCase();
+				channelObj.live = false;
 				channelDict[name] = channelObj;
-				newchannels.push(channelObj);
 				if(channelnames) channelnames += ",";
 				channelnames += name;
 			}
@@ -39,7 +38,7 @@ logviewerApp.controller("ChannelListController", function($rootScope, $scope, $h
 				for(var j=0;j<streams.length;++j) {
 					channelDict[streams[j].channel.name].live = true;
 				}
-				$scope.channels = newchannels;
+				$scope.channels = response.data;
 			});
 		});
 	}

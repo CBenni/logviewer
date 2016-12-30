@@ -643,14 +643,14 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 			}
 			addVideoForAll(response.data.before);
 			if(response.data.after.length > 0) {
-				console.log("Got logs at "+self.topindex);
+				console.log("Got logs at "+response.data.after[0].id);
 				if(response.data.after.length < this.PAGE_SIZE) {
 					console.log("End of logs reached");
 					self.endoflogs = response.data.after[response.data.after.length-1].id;
 				}
 				$timeout(()=>{self.topindex = response.data.after[0].id;},1);
 			} else {
-				console.log("Got logs at "+self.topindex);
+				console.log("Got logs at "+response.data.before[response.data.before.length-1].id);
 				console.log("Tried to jump past the end of logs");
 				self.endoflogs = response.data.before[response.data.before.length-1].id;
 				$timeout(()=>{self.topindex = response.data.before[response.data.before.length-1].id;},1);
