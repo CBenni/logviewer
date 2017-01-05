@@ -123,8 +123,9 @@ pubsub.prototype.addConnection = function() {
 		winston.warn("pubsub connection closed");
 		self.connections.splice(self.connections.indexOf(conn),1);
 		for(var i=0;i<conn.topics.length;++i) {
-			winston.info("Re-listening to topic "+conn.topics[i])
+			winston.info("Re-listening to topic "+conn.topics[i]);
 		}
+		self.listen(conn.topics);
 	});
 	
 	conn.ws.on("error", function(e) {
