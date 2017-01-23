@@ -55,7 +55,7 @@
 		<a ui-sref="index()" ng-if="$stateParams.channel" ui-sref-active="active">Home</a>
 		<a ui-sref="channel({channel: $stateParams.channel})" ng-if="$stateParams.channel" ui-sref-active="active">Logs</a>
 		<a ui-sref="settings({channel: $stateParams.channel || auth.name})" ng-if="$stateParams.channel || auth.name" ui-sref-active="active">Settings</a>
-		<a ui-sref="leaderboard({channel: $stateParams.channel})" ng-if="$stateParams.channel" ui-sref-active="active">Leaderboard</a>
+		<a ui-sref="leaderboard({channel: $stateParams.channel})" ng-if="$stateParams.channel" ui-sref-active="active">Leaderboard <sup class="betatag">new!</sup></a>
 		<!--<a ui-sref="l({channel: $stateParams.channel})" ng-if="$stateParams.channel" ui-sref-active="active">Leaderboard</a>-->
 	</div>
 	<div layout="row" layout-align="end center" flex="none">

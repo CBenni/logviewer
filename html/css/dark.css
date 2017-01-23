@@ -60,3 +60,7 @@ md-datepicker {
 .md-datepicker-input {
 	color: white;
 }
+
+.logviewer-user-row.even {
+	background-color: #1E1E1E;
+}
