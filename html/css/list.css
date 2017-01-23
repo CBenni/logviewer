@@ -7,19 +7,8 @@
 	display: inline-block;
 }
 
-.channel-live-indicator::before {
-	content: "";
-	display: inline-block;
-	width:1em;
-	height:1em;
-	margin-right: 0.25em;
-	margin-bottom: -0.25em;
-	background-color: grey;
-	border-radius: 1em;
-}
-
-.channel-live-indicator.live::before {
-  background-color: red;
+.channel-live-indicator.live md-icon svg {
+	fill: red;
 }
 
 h1.bigtitle {

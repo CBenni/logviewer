@@ -771,9 +771,13 @@ app.get('/api/leaderboard/:channel', function(req, res, next) {
 		var channelname = req.params.channel.toLowerCase();
 		if(/^\w+$/.test(channelname)) {
 			API.getChannelObjAndLevel(req.params.channel, req.query.token, function(error, channelObj, level, username){
-				if(error && error.status != 404) {
+				if(error) {
 					res.status(error.status).jsonp({"error": error.message});
 				} else {
+					if(!channelObj) {
+						res.status(404).jsonp({"error":"Channel not found"});
+						return;
+					}
 					if(level >= channelObj.viewlogs) {
 						if(channelObj) {
 							var limit = Math.min(parseInt(req.query.limit) || 100, 250);
