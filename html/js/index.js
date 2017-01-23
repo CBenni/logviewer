@@ -19,10 +19,15 @@ app.config(function($stateProvider, $urlRouterProvider, $urlMatcherFactoryProvid
 			templateUrl: "/html/settings.html",
 			controller: "SettingsController"
 		})
-		.state("connect", {
+		/*.state("connect", {
 			url: "/:channel/connect",
 			templateUrl: "/html/connect.html",
 			controller: "SettingsController"
+		});*/
+		.state("leaderboard", {
+			url: "/:channel/leaderboard",
+			templateUrl: "/html/leaderboard.html",
+			controller: "LeaderboardController"
 		});
 });
 

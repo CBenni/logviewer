@@ -1,0 +1,44 @@
+<div id="main" layout="column" layout-align="space-between center" ng-cloak>
+<div class="content" ng-cloak ng-if="loadStatus == 0" layout="row" layout-align="center center">
+	<md-progress-circular md-mode="indeterminate"></md-progress-circular> loading...
+</div>
+<div ng-if="loadStatus != 0 && userObject.level < channelsettings.viewlogs"><!-- empty div for space-between centering --></div>
+<div class="content" ng-cloak ng-if="loadStatus != 0 && userObject.level < channelsettings.viewlogs" layout="row" layout-align="center center" layout-xs="column">
+	<div flex="none" class="big-error-icon">
+		<md-icon md-svg-src="/html/img/error.svg"></md-icon>
+	</div>
+	<div style="font-size: 20px;" flex="none">
+		 You currently do not have access to change settings of the channel {{channel}}.<br>
+		<span ng-if="userObject.valid == false">If you have {{channelsettings.viewlogs | aAnAccountType }} account, then you can <md-button ng-click="login()" class="md-raised twitch-button md-small">Login with twitch</md-button></span>
+	</div>
+</div>
+
+
+<div class="content leaderboardbox" ng-cloak ng-show="loadStatus != 0 && userObject.level >= channelsettings.viewlogs" layout="column" flex="100">
+	<h3>Leaderboards</h3>
+	<div class="infinite-scroll-container panel panel-default logview z-depth-1 layout-padding" flex="100" layout="column">
+		<div layout="row" class="layout-padding">
+			<div flex="10"></div>
+			<div flex="45" class="table-header">User</div>
+			<div flex="15" class="table-header" hide-xs>Messages</div>
+			<div flex="15" class="table-header" hide-xs>Timeouts</div>
+			<div flex="15" class="table-header" hide-xs>Bans</div>
+			<div flex="15" hide-gt-xs><md-icon md-svg-src="/html/img/messages.svg"><md-tooltip>Messages</md-tooltip></md-icon></div>
+			<div flex="15" hide-gt-xs><md-icon md-svg-src="/html/img/timeout.svg"><md-tooltip>Timeouts</md-tooltip></md-icon></div>
+			<div flex="15" hide-gt-xs><md-icon md-svg-src="/html/img/ban.svg"><md-tooltip>Bans</md-tooltip></md-icon></div>
+		</div>
+		<md-virtual-repeat-container md-top-index="allUsers.topindex" flex="100" layout="column">
+			<div md-virtual-repeat="row in allUsers" ng-class="{'logviewer-user-row': true, 'infinite-scroll-item': true, 'layout-padding': true, 'even': row.index%2==0}" md-on-demand="" layout="row">
+				<div flex="10" ng-if="row.index !== undefined">{{row.index+1}}</div>
+				<div flex="45"><a ui-sref="channel({channel: $stateParams.channel, user: row.user.nick})">{{row.user.nick}}</a></div>
+				<div flex="15">{{row.user.messages}}</div>
+				<div flex="15">{{row.user.timeouts}}</div>
+				<div flex="15">{{row.user.bans}}</div>
+			</div>
+		</md-virtual-repeat-container>
+	</div>
+</div>
+
+
+<div ng-include="'/html/footer.html'"></div>
+</div>

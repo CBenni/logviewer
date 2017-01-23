@@ -57,20 +57,25 @@
 					</form>
 				</div>
 				<div class="userlogsview layout-padding">
-					<div ng-repeat="user in users | orderObjectBy:'id':true" class="panel panel-default logview z-depth-1">
-						<div class="panel-heading" layout="column">
-							<md-button class="btn-close md-primary md-icon-button" ng-click="delUser(user.data.nick)">
-								<md-icon class="md-primary" md-svg-src="/html/img/close.svg"></md-icon>
-							</md-button>
-							<div flex="none" layout="column" layout-align="center center">
-								<span class="username" flex="none">{{user.data.nick}} </span>
-								<div layout="row" layout-align="center center" flex="1">
-									<span class="userstats" flex="none" style="text-align: right;">Messages: {{user.data.messages}}</span>
-									<span class="userstats" flex="none">Timeouts: {{user.data.timeouts}}</span>
+					<div ng-repeat="user in users | orderObjectBy:'id':true" class="panel panel-default logview z-depth-1" layout="column">
+						<div class="panel-heading" layout="row" flex="none" layout-align="space-between stretch">
+							<div><!-- empty div for centering --></div>
+							<div flex layout="column" layout-align="center stretch" class="userheader">
+								<span class="userstats username" layout="row" flex="100" layout-align="space-around center">{{user.data.nick}}</span>
+								<div layout="row" layout-align="space-around center" flex="100">
+									<span class="userstats" flex="33" hide-xs>Messages: {{user.data.messages}}</span>
+									<span class="userstats" flex="33" hide-xs>Timeouts: {{user.data.timeouts}}</span>
+									<span class="userstats" flex="33" hide-xs>Bans: {{user.data.bans}}</span>
+									<span flex="33" hide-gt-xs class="userstats"><md-icon md-svg-src="/html/img/messages.svg"><md-tooltip>Messages</md-tooltip></md-icon> {{user.data.messages}}</span>
+									<span flex="33" hide-gt-xs class="userstats"><md-icon md-svg-src="/html/img/timeout.svg"><md-tooltip>Timeouts</md-tooltip></md-icon> {{user.data.timeouts}}</span>
+									<span flex="33" hide-gt-xs class="userstats"><md-icon md-svg-src="/html/img/ban.svg"><md-tooltip>Bans</md-tooltip></md-icon> {{user.data.bans}}</span>
 								</div>
 							</div>
+							<md-button class="btn-close md-primary md-icon-button" ng-click="delUser(user.data.nick)" flex="none">
+								<md-icon class="md-primary" md-svg-src="/html/img/close.svg"></md-icon>
+							</md-button>
 						</div>
-						<div class="panel-body">
+						<div class="panel-body" flex="none">
 							<div ng-if="user.messages.length > 0">
 								<div class="logviewer-more-messages" ng-class="{'logviewer-loading': user.isloading}" align="center" ng-if="user.allloaded == false">
 									<md-button class="btn md-raised md-primary logviewer-spin-icon logviewer-round-button" ng-click="moreUser(user.data.nick)">
@@ -181,8 +186,8 @@
 								<div flex="none">
 									<img ng-src="{{::profilePics[comment.author]}}">
 								</div>
-								<div flex="1" layout="column">
-									<div flex="1" layout="row" layout-align="space-between start">
+								<div flex="100" layout="column">
+									<div flex="100" layout="row" layout-align="space-between start">
 										<div flex="none">
 											<span class="author">{{::comment.author}}</span> <span class="age">{{comment|commentAge}}</span>
 										</div>

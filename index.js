@@ -774,10 +774,10 @@ app.get('/api/leaderboard/:channel', function(req, res, next) {
 				if(error && error.status != 404) {
 					res.status(error.status).jsonp({"error": error.message});
 				} else {
-					if(level >= 10) {
+					if(level >= channelObj.viewlogs) {
 						if(channelObj) {
-							var limit = Math.max(req.query.limit || 25, 50);
-							var offset = Math.max(req.query.offset || 0, 50);
+							var limit = Math.min(parseInt(req.query.limit) || 100, 250);
+							var offset = parseInt(req.query.offset) || 0;
 							db.getLeaderboard(channelObj.name, offset, limit, function(events) {
 								res.jsonp(events);
 							});

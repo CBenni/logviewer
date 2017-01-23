@@ -52,12 +52,15 @@ div { outline-style:none; }
 	margin: 15px 0;
 }
 
+.logview .userheader {
+	max-width: 500px;
+}
+
 .logview .username
 {
 	font-size: large;
 	font-weight: bold;
 }
-
 
 .logview
 {
@@ -66,16 +69,8 @@ div { outline-style:none; }
 	margin-bottom: 10px;
 }
 
-.button-row {
-}
-
 .btn-close:hover {
 	color: #999;
-}
-
-.btn-close {
-	position: absolute;
-	right: 0;
 }
 
 .panel-heading {
@@ -83,7 +78,7 @@ div { outline-style:none; }
 }
 
 .userstats {
-	width: 200px;
+	text-align: center;
 	margin: 0 5px;
 }
 
@@ -283,12 +278,6 @@ a.videobutton.md-button.md-icon-button {
 md-tooltip .md-content.md-show, md-tooltip .md-content.md-show-add-active {
 	height: auto;
 	font-size: 12px;
-}
-
-.infinite-scroll-container {
-}
-
-.infinite-scroll-item {
 }
 
 span.twitchbot, span.logviewer-modlog-text {

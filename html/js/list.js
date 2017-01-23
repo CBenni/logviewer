@@ -1,5 +1,6 @@
 var logviewerApp = angular.module("logviewerApp");
 
+
 logviewerApp.controller("ChannelListController", function($rootScope, $scope, $http, $stateParams, $window){
 	$scope.channels = [];
 	$scope.channellimit = 80;
@@ -64,4 +65,17 @@ logviewerApp.controller("ChannelListController", function($rootScope, $scope, $h
 		$scope.emote = allemotes[Math.floor(Math.random()*allemotes.length)];
 		$scope.emote.url = "//static-cdn.jtvnw.net/emoticons/v1/" + $scope.emote.id + "/3.0";
 	});
+});
+
+logviewerApp.filter("orderChannels", function() {
+	return function(channels) {
+		return channels.slice().sort((a,b)=>{
+			if(a.live < b.live) return 1;
+			if(a.live > b.live) return -1;
+			if(a.ispremium < b.ispremium) return 1;
+			if(a.ispremium > b.ispremium) return -1;
+			if(a.name > b.name) return 1;
+			if(a.name < b.name) return -1;
+		});
+	}
 });

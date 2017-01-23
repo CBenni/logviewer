@@ -14,6 +14,7 @@
 	<link href="/html/css/logviewer.css" rel="stylesheet">
 	<link href="/html/css/settings.css" rel="stylesheet">
 	<link href="/html/css/list.css" rel="stylesheet">
+	<link href="/html/css/leaderboard.css" rel="stylesheet">
 	<link href="/html/css/dark.css" disabled ng-disabled="!userSettings.dark" rel="stylesheet">
 	
 	
@@ -53,7 +54,8 @@
 		</span>
 		<a ui-sref="index()" ng-if="$stateParams.channel" ui-sref-active="active">Home</a>
 		<a ui-sref="channel({channel: $stateParams.channel})" ng-if="$stateParams.channel" ui-sref-active="active">Logs</a>
-		<a ui-sref="settings({channel: $stateParams.channel})" ng-if="$stateParams.channel" ui-sref-active="active">Settings</a>
+		<a ui-sref="settings({channel: $stateParams.channel || auth.name})" ng-if="$stateParams.channel || auth.name" ui-sref-active="active">Settings</a>
+		<a ui-sref="leaderboard({channel: $stateParams.channel})" ng-if="$stateParams.channel" ui-sref-active="active">Leaderboard</a>
 		<!--<a ui-sref="l({channel: $stateParams.channel})" ng-if="$stateParams.channel" ui-sref-active="active">Leaderboard</a>-->
 	</div>
 	<div layout="row" layout-align="end center" flex="none">
@@ -61,7 +63,7 @@
 			<md-button class="md-raised twitch-button md-small-xs" ng-click="logout()">Log out<span class="hide-s"> ({{::auth.name}})</span></md-button>
 		</div>
 		<div ng-hide="auth.name" flex="none">
-			<md-button ng-click="login()" class="md-raised twitch-button md-small-xs">Login with twitch</md-button>
+			<md-button ng-click="login()" class="md-raised twitch-button md-small-xs">Login<span hide-xs> with twitch</span></md-button>
 		</div>
 	</div>
 	
@@ -91,6 +93,7 @@ function getGlobalSettings(data) {
 
 <script src="/html/js/logviewer.js"></script>
 <script src="/html/js/settings.js"></script>
+<script src="/html/js/leaderboard.js"></script>
 <script src="/html/js/list.js"></script>
 <script src="/html/js/messageparser.js"></script>
 <script src="/html/js/index.js"></script>

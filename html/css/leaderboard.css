@@ -1,0 +1,15 @@
+.logviewer-user-row {
+	height: 51px;
+}
+
+.logviewer-user-row.even {
+	background-color: #E3E3E6;
+}
+
+.leaderboardbox {
+	max-width: 800px;
+}
+
+.table-header {
+	font-weight: bold;
+}
