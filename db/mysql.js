@@ -437,7 +437,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	}
 	
 	self.getLeaderboard = function(channel, offset, limit, callback) {
-		self.pool.query("SELECT * FROM ?? ORDER BY messages DESC, nick ASC LIMIT ? OFFSET ?",["users_"+channel,limit,offset], function(error,results,fields) {
+		self.pool.query("SELECT nick, messages, timeouts, bans FROM ?? ORDER BY messages DESC LIMIT ? OFFSET ?",["users_"+channel,limit,offset], function(error,results,fields) {
 			if(error) {
 				winston.error("getLeaderboard: Select failed! "+error);
 				callback([]);

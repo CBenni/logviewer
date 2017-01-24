@@ -69,7 +69,7 @@ logviewerApp.controller("ChannelListController", function($rootScope, $scope, $h
 
 logviewerApp.filter("orderChannels", function() {
 	return function(channels) {
-		return channels.slice().sort((a,b)=>{
+		return channels.slice().sort(function(a,b){
 			if(a.live < b.live) return 1;
 			if(a.live > b.live) return -1;
 			if(a.ispremium < b.ispremium) return 1;
