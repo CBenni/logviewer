@@ -155,7 +155,7 @@ API.prototype.getLogs = function(channelObj, query, modlogs, callback) {
 				after[i].text = messagecompressor.decompressMessage("#"+channelObj.name, after[i].nick, after[i].text);
 			}
 			if(query.nick) {
-				self.db.getUserStats(channelObj.name, query.nick, function(userobj) {
+				self.db.getUserStats(channelObj.name, query.nick, query.ranking == "1", function(userobj) {
 					callback({id:id, user: userobj, before: before, after: after});
 				});
 			}
@@ -171,7 +171,7 @@ API.prototype.getLogs = function(channelObj, query, modlogs, callback) {
 			for(var i=0;i<before.length;++i) {
 				before[i].text = messagecompressor.decompressMessage("#"+channelObj.name, before[i].nick, before[i].text);
 			}
-			self.db.getUserStats(channelObj.name, query.nick, function(userobj) {
+			self.db.getUserStats(channelObj.name, query.nick, query.ranking == "1", function(userobj) {
 				callback({id:id, user: userobj, before: before, after: []});
 			});
 		});
@@ -188,7 +188,7 @@ API.prototype.getLogs = function(channelObj, query, modlogs, callback) {
 				after[i].text = messagecompressor.decompressMessage("#"+channelObj.name, after[i].nick, after[i].text);
 			}
 			if(query.nick) {
-				self.db.getUserStats(channelObj.name, query.nick, function(userobj) {
+				self.db.getUserStats(channelObj.name, query.nick, query.ranking == "1", function(userobj) {
 					callback({time:time, user: userobj, before: before, after: after});
 				});
 			}

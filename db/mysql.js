@@ -330,9 +330,17 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		}
 	}
 	
-	self.getUserStats = function(channel, nick, callback) {
+	self.getUserStats = function(channel, nick, ranking, callback) {
 		self.pool.query("SELECT nick, messages, timeouts, bans FROM ?? WHERE nick = ?", ["users_"+channel, nick], function(error, results, fields) {
-			callback(results[0] || {nick: nick, timeouts:0, messages: 0});
+			var stats = results[0] || {nick: nick, timeouts:0, messages: 0}
+			if(ranking) {
+				console.log(stats);
+				self.pool.query("SELECT COUNT(*)+1 as rank FROM ?? WHERE messages > ?", ["users_"+channel, stats.messages], function(error, results, fields) {
+					stats.rank = results[0].rank;
+					callback(stats);
+				});
+			}
+			else callback(stats);
 		});
 	}
 	

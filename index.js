@@ -418,7 +418,40 @@ app.get('/api/logs/:channel', function(req, res, next) {
 						res.status(403).end();
 					}
 				} else {
-					res.status(505).jsonp({"error": "Channel "+channelname+" not found."});
+					res.status(404).jsonp({"error": "Channel "+channelname+" not found."});
+				}
+			});
+		} else {
+			res.status(400).jsonp({error: "Invalid channel name "+channelname});
+		}
+	} 
+	catch(err) {
+		next(err);
+	}
+});
+
+app.get('/api/user/:channel', function(req, res, next) {
+	try {
+		var channelname = req.params.channel.toLowerCase();
+		if(/^\w+$/.test(channelname)) {
+			API.getChannelObjAndLevel(channelname, req.query.token, function(error, channelObj, level, username) {
+				if(error) {
+					res.status(error.status).jsonp({"error": error.message});
+				} else if(channelObj.active) {
+					// level check.
+					if(req.query.nick) {
+						if(level >= channelObj.viewlogs) {
+							db.getUserStats(channelObj.name, req.query.nick, true, function(logs){
+								res.jsonp(logs);
+							});
+						} else {
+							res.status(403).end();
+						}
+					} else {
+						res.status(400).jsonp({"error": "Missing parameter nick"});
+					}
+				} else {
+					res.status(404).jsonp({"error": "Channel "+channelname+" not found."});
 				}
 			});
 		} else {
