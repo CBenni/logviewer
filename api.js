@@ -1,4 +1,5 @@
 var winston = require('winston');
+var request = require('request');
 var messagecompressor = require('./messagecompressor');
 
 function API(settings, db, bot, io) {
@@ -6,6 +7,9 @@ function API(settings, db, bot, io) {
 	this.db = db;
 	this.bot = bot;
 	this.io = io;
+	this.streaming = {};
+	this.checkStreams();
+	setInterval(API.prototype.checkStreams.bind(this), 60*1000);
 }
 
 // generic helpers
@@ -23,6 +27,19 @@ function absMinMax(){
 
 
 // start of API
+
+API.prototype.twitchGet = function(url, headers, token) {
+	headers = headers || {};
+	headers["Client-ID"] = this.settings.auth.client_id;
+	if(token) headers["Authorization"] = "OAuth "+token;
+	console.log("Getting "+url);
+	return new Promise((r,j)=>{
+		request.get({url: url, headers: headers}, function (error, response, body) {
+			if(error) j(error, response);
+			else r(JSON.parse(body), response);
+		});
+	});
+}
 
 API.prototype.adminLog = function(channel, user, action, key, data) {
 	var t = Math.floor(Date.now()/1000);
@@ -142,7 +159,7 @@ API.prototype.updateSettings = function(channelObj, user, settings, callback) {
 // and the "after" messages (default 10) after the message with the given ID
 // otherwise, it gives the newest "before" messages
 // if a nick is specified, it only returns messages by that user
-API.prototype.getLogs = function(channelObj, query, modlogs, callback) {
+API.prototype.getLogs = function(channelObj, query, modlogs, comments, callback) {
 	var self = this;
 	if(query.id) { 
 		var id = parseInt(query.id);
@@ -154,14 +171,7 @@ API.prototype.getLogs = function(channelObj, query, modlogs, callback) {
 			for(var i=0;i<after.length;++i) {
 				after[i].text = messagecompressor.decompressMessage("#"+channelObj.name, after[i].nick, after[i].text);
 			}
-			if(query.nick) {
-				self.db.getUserStats(channelObj.name, query.nick, query.ranking == "1", function(userobj) {
-					callback({id:id, user: userobj, before: before, after: after});
-				});
-			}
-			else {
-				callback({id:id, before: before, after: after});
-			}
+			callback({id:id, before: before, after: after});
 		});
 	}
 	else if(query.nick) {
@@ -172,7 +182,14 @@ API.prototype.getLogs = function(channelObj, query, modlogs, callback) {
 				before[i].text = messagecompressor.decompressMessage("#"+channelObj.name, before[i].nick, before[i].text);
 			}
 			self.db.getUserStats(channelObj.name, query.nick, query.ranking == "1", function(userobj) {
-				callback({id:id, user: userobj, before: before, after: []});
+				if(comments) {
+					db.getComments(channelObj.name,req.query.topic,function(comments) {
+						callback({id:id, user: userobj, before: before, after: [], comments: comments || []});
+					});
+				}
+				else {
+					callback({id:id, user: userobj, before: before, after: []});
+				}
 			});
 		});
 	}
@@ -187,14 +204,7 @@ API.prototype.getLogs = function(channelObj, query, modlogs, callback) {
 			for(var i=0;i<after.length;++i) {
 				after[i].text = messagecompressor.decompressMessage("#"+channelObj.name, after[i].nick, after[i].text);
 			}
-			if(query.nick) {
-				self.db.getUserStats(channelObj.name, query.nick, query.ranking == "1", function(userobj) {
-					callback({time:time, user: userobj, before: before, after: after});
-				});
-			}
-			else {
-				callback({time:time, before: before, after: after});
-			}
+			callback({time:time, before: before, after: after});
 		});
 	} else {
 		callback({"error":"Missing parameters (either nick and/or id or time)."});
@@ -291,6 +301,39 @@ API.prototype.setComment = function(channelObj, level, username, newcomment, cal
 			return;
 		}
 	}
+}
+
+API.prototype.getChannels = function(callback){
+	var self = this;
+	self.db.getChannelList(function(channels) {
+		for(var i=0;i<channels.length;++i) {
+			var channel = channels[i];
+			channel.live = self.streaming[channel.name];
+		}
+		callback(channels);
+	});
+}
+
+// keep a list of live channels
+API.prototype.checkStreams = function() {
+	var self = this;
+	// get an up-to-date list of channels
+	self.db.getChannels(function(channels) {
+		// iterate 100 channels at once
+		var chunkSize = 10;
+		for(let i=0;i<channels.length;i+=chunkSize) {
+			let channelChunk = channels.slice(i,i+chunkSize).map((x)=>x.name);
+			self.twitchGet("https://api.twitch.tv/kraken/streams?limit=100&channel="+channelChunk.join(",")).then(function(data){
+				// reset streams
+				for(let j=0;j<channelChunk.length;++j) self.streaming[channelChunk[j]] = false;
+				for(let j=0;j<data.streams.length;++j) {
+					self.streaming[data.streams[j].channel.name] = true;
+				}
+			}).catch(function(error) {
+				winston.error("Couldnt load streams list: "+error);
+			});
+		}
+	});
 }
 
 

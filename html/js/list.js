@@ -24,23 +24,7 @@ logviewerApp.controller("ChannelListController", function($rootScope, $scope, $h
 	
 	var updateChannels = function(){
 		$http.get("/api/channels/").then(function(response) {
-			var channelnames = "";
-			var channelDict = {};
-			for(var i=0;i<response.data.length;++i) {
-				var channelObj = response.data[i]
-				var name = channelObj.name.toLowerCase();
-				channelObj.live = false;
-				channelDict[name] = channelObj;
-				if(channelnames) channelnames += ",";
-				channelnames += name;
-			}
-			$http.jsonp("https://api.twitch.tv/kraken/streams?channel="+channelnames+"&callback=JSON_CALLBACK&client_id="+settings.auth.client_id).then(function(response2){
-				var streams = response2.data.streams;
-				for(var j=0;j<streams.length;++j) {
-					channelDict[streams[j].channel.name].live = true;
-				}
-				$scope.channels = response.data;
-			});
+			$scope.channels = response.data;
 		});
 	}
 	

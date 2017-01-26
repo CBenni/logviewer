@@ -392,9 +392,7 @@ app.get('/api/checkmodded/:channel', function(req, res, next) {
 
 app.get('/api/channels', function(req, res, next) {
 	try {
-		db.getChannelList(function(r) {
-			res.jsonp(r);
-		});
+		API.getChannels((r)=>res.jsonp(r));
 	} 
 	catch(err) {
 		next(err);
@@ -411,7 +409,7 @@ app.get('/api/logs/:channel', function(req, res, next) {
 				} else if(channelObj.active) {
 					// level check.
 					if(level >= channelObj.viewlogs) {
-						API.getLogs(channelObj, req.query, level >= channelObj.viewmodlogs, function(logs){
+						API.getLogs(channelObj, req.query, level >= channelObj.viewmodlogs, level >= channelObj.viewcomments, function(logs){
 							res.jsonp(logs);
 						});
 					} else {
@@ -973,7 +971,7 @@ function getSlackLogs(channel, user, limit, token, cb, ecb) {
 					var logtext = false;
 					var commenttext = false;
 					var seemoretext = 'See ' + settings.auth.baseurl + "/" + encodeURIComponent(channel) + "/?user=" + encodeURIComponent(user);
-					API.getLogs(channelObj, query, false, function(logs){
+					API.getLogs(channelObj, query, false, false, function(logs){
 						logtext = plainTextify(channel, user, logs)
 						if(commenttext !== false) cb(logtext+"\n"+commenttext+"\n"+seemoretext);
 					});
