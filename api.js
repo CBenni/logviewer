@@ -320,7 +320,7 @@ API.prototype.checkStreams = function() {
 	// get an up-to-date list of channels
 	self.db.getChannels(function(channels) {
 		// iterate 100 channels at once
-		var chunkSize = 10;
+		var chunkSize = 100;
 		for(let i=0;i<channels.length;i+=chunkSize) {
 			let channelChunk = channels.slice(i,i+chunkSize).map((x)=>x.name);
 			self.twitchGet("https://api.twitch.tv/kraken/streams?limit=100&channel="+channelChunk.join(",")).then(function(data){
