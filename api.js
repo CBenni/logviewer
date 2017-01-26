@@ -183,7 +183,7 @@ API.prototype.getLogs = function(channelObj, query, modlogs, comments, callback)
 			}
 			self.db.getUserStats(channelObj.name, query.nick, query.ranking == "1", function(userobj) {
 				if(comments) {
-					self.db.getComments(channelObj.name,query.topic,function(comments) {
+					self.db.getComments(channelObj.name,query.nick,function(comments) {
 						callback({id:id, user: userobj, before: before, after: [], comments: comments || []});
 					});
 				}

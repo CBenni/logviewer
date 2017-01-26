@@ -28,7 +28,8 @@ logviewerApp.controller("ChannelListController", function($rootScope, $scope, $h
 		});
 	}
 	
-	var interval = setInterval(updateChannels,30000);
+	// update every 2 minutes
+	var interval = setInterval(updateChannels,2*60000);
 	
 	$scope.$on('$destroy', function() {
 		clearInterval(interval);

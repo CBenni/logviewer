@@ -118,6 +118,13 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 			}
 		}).then(function(response){
 			$scope.users[nick].data = response.data.user;
+			var comments = response.data.comments;
+			if(comments) {
+				$scope.users[nick].comments = comments;
+				for(var i=0;i<comments.length;++i) {
+					getProfilePic(comments[i].author);
+				}
+			}
 			var messagesToAdd = response.data.before || [];
 			for(var i=0;i<messagesToAdd.length;++i) {
 				var message = messagesToAdd[i];
@@ -141,7 +148,6 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 		},function(response){
 			console.log(response);
 		});
-		getComments(nick);
 	}
 	
 	$scope.moreUser = function(nick)
@@ -648,12 +654,12 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 					console.log("End of logs reached");
 					self.endoflogs = response.data.after[response.data.after.length-1].id;
 				}
-				$timeout(()=>{self.topindex = response.data.after[0].id;},1);
+				$timeout(function(){self.topindex = response.data.after[0].id;},1);
 			} else {
 				console.log("Got logs at "+response.data.before[response.data.before.length-1].id);
 				console.log("Tried to jump past the end of logs");
 				self.endoflogs = response.data.before[response.data.before.length-1].id;
-				$timeout(()=>{self.topindex = response.data.before[response.data.before.length-1].id;},1);
+				$timeout(function(){self.topindex = response.data.before[response.data.before.length-1].id;},1);
 			}
 		},function(response){
 			console.log(response);
