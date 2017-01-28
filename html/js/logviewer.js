@@ -163,7 +163,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 			}
 		}).then(function(response){
 			$scope.users[nick].isloading = false;
-			$scope.users[nick].data = response.data.user;
+			if(response.data.user) $scope.users[nick].data = response.data.user;
 			var messagesToAdd = response.data.before;
 			for(var i=messagesToAdd.length-1;i>=0;--i) {
 				var message = messagesToAdd[i];
@@ -659,6 +659,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 				console.log("Got logs at "+response.data.before[response.data.before.length-1].id);
 				console.log("Tried to jump past the end of logs");
 				self.endoflogs = response.data.before[response.data.before.length-1].id;
+				$timeout(function(){self.topindex = response.data.before[response.data.before.length-1].id;},1);
 				$timeout(function(){self.topindex = response.data.before[response.data.before.length-1].id;},1);
 			}
 		},function(response){
