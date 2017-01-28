@@ -12,7 +12,7 @@
 		</div>
 		<div ng-repeat="channelObj in channels | orderChannels | filter: channelSearch | limitTo: channellimit as filteredChannels" class="channel-list-item">
 			<md-button ng-class="{live: channelObj.live, 'channel-live-indicator':true}" ui-sref="channel({channel: channelObj.name})" ng-style="{color: channelObj.color}">
-				<md-icon md-svg-src="{{ '/html/img/'+['circle.svg','star.svg'][channelObj.ispremium] }}"></md-icon>
+				<md-icon md-svg-src="{{ '/html/img/'+['circle.svg','star.svg'][channelObj.ispremium] }}"><md-tooltip ng-show="channelObj.ispremium">Premium channel</md-tooltip></md-icon>
 				{{channelObj.name}}
 			</md-button>
 		</div>
