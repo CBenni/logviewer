@@ -171,7 +171,14 @@ API.prototype.getLogs = function(channelObj, query, modlogs, comments, callback)
 			for(var i=0;i<after.length;++i) {
 				after[i].text = messagecompressor.decompressMessage("#"+channelObj.name, after[i].nick, after[i].text);
 			}
-			callback({id:id, before: before, after: after});
+			if(query.nick) {
+				self.db.getUserStats(channelObj.name, query.nick, query.ranking == "1", function(userobj) {
+					callback({id:id, user: userobj, before: before, after: []});
+				});
+			}
+			else {
+				callback({id:id, before: before, after: []});
+			}
 		});
 	}
 	else if(query.nick) {
