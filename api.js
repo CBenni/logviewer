@@ -173,11 +173,11 @@ API.prototype.getLogs = function(channelObj, query, modlogs, comments, callback)
 			}
 			if(query.nick) {
 				self.db.getUserStats(channelObj.name, query.nick, query.ranking == "1", function(userobj) {
-					callback({id:id, user: userobj, before: before, after: []});
+					callback({id:id, user: userobj, before: before, after: after});
 				});
 			}
 			else {
-				callback({id:id, before: before, after: []});
+				callback({id:id, before: before, after: after});
 			}
 		});
 	}
