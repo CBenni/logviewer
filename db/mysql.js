@@ -108,7 +108,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		self.pool.query("CREATE TABLE IF NOT EXISTS users_"+channelObj.name+" ("
 			+"nick VARCHAR(32) NOT NULL PRIMARY KEY,"
 			+"messages INT UNSIGNED DEFAULT '0',"
-			+"timeouts INT UNSIGNED DEFAULT '0',"
+			+"timeouts INT DEFAULT '0',"
 			+"bans INT UNSIGNED DEFAULT '0',"
 			+"level INT DEFAULT '0',"
 			+"INDEX (messages DESC),"
@@ -220,14 +220,18 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			params.timeouts = values.timeouts;
 		}
 		if(values.bans) {
+			if(changes) changes += ",";
 			changes += " bans = bans + "+parseInt(values.bans);
 			params.bans = values.bans;
 		}
 		if(values.messages) {
+			if(changes) changes += ",";
 			changes += " messages = messages + "+parseInt(values.messages);
 			params.messages = values.messages;
 		}
-		self.pool.query("INSERT INTO ?? SET ? ON DUPLICATE KEY UPDATE"+changes,["users_"+channel, params]);
+		self.pool.query("INSERT INTO ?? SET ? ON DUPLICATE KEY UPDATE"+changes,["users_"+channel, params], function(error, result) {
+			if(error) winston.error(error);
+		});
 	};
 	
 	self.updateTimeout = function(channel, nick, id, time, message, modlog) {

@@ -7,8 +7,16 @@ var strftime = require('strftime');
 winston.level = 'debug';
 winston.remove(winston.transports.Console);
 winston.add(winston.transports.Console, { level: settings.logging.console.level, handleExceptions: true, humanReadableUnhandledException: true });
-if(settings.logging.file) winston.add(winston.transports.File, { filename: strftime(settings.logging.file.filename), level: settings.logging.file.level, handleExceptions: true, humanReadableUnhandledException: true });
-
+var fileloggers = settings.logging.file;
+if(fileloggers) {
+	if(!fileloggers instanceof Array) {
+		fileloggers = [fileloggers];
+	}
+	for(var i=0; i < fileloggers.length; ++i) {
+		var filelogger = fileloggers[i];
+		winston.add(winston.transports.File, { filename: strftime(filelogger.filename), level: filelogger.level, handleExceptions: true, humanReadableUnhandledException: true });
+	}
+}
 var request = require('request');
 var url = require('url');
 var _ = require("lodash");

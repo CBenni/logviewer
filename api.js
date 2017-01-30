@@ -36,7 +36,13 @@ API.prototype.twitchGet = function(url, headers, token) {
 	return new Promise((r,j)=>{
 		request.get({url: url, headers: headers}, function (error, response, body) {
 			if(error) j(error, response);
-			else r(JSON.parse(body), response);
+			else {
+				try {
+					r(JSON.parse(body), response);
+				} catch(e) {
+					j(e, response);
+				}
+			}
 		});
 	});
 }
