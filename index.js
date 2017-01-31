@@ -14,7 +14,8 @@ if(fileloggers) {
 	}
 	for(var i=0; i < fileloggers.length; ++i) {
 		var filelogger = fileloggers[i];
-		winston.add(winston.transports.File, { filename: strftime(filelogger.filename), level: filelogger.level, handleExceptions: true, humanReadableUnhandledException: true });
+		var logname = filelogger.name || "file-"+i;
+		winston.add(winston.transports.File, { filename: strftime(filelogger.filename), level: filelogger.level, handleExceptions: true, humanReadableUnhandledException: true, name: logname });
 	}
 }
 var request = require('request');
@@ -1088,6 +1089,12 @@ app.post('/api/token', function(req, res, next) {
 
 function serveOnePage(req, res, next) {
 	try {
+		if(req.params.channel) {
+			if(! /^\w+$/.test(req.params.channel)) {
+				res.status(400).end("Bad channel name");
+				return;
+			}
+		}
 		checkAuth(req, res, function(){
 			res.sendFile(__dirname + settings.index.html);
 		});
