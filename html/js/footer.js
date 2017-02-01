@@ -1,2 +1,0 @@
-logviewerApp.controller("footerCtrl", function() {
-});
