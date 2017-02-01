@@ -33,11 +33,15 @@ app.config(function($stateProvider, $urlRouterProvider, $urlMatcherFactoryProvid
 
 if(!ga) ga = function(){};
 
-app.run(function($rootScope, $state) {
+app.run(function($rootScope, $state, $http) {
 	var stateChange = $rootScope.$on('$stateChangeStart', function(event, toState, toParams, fromState, fromParams, options) {
 		$rootScope.title = toParams.channel || toState.title;
 		ga('set', 'page', $state.href(toState, toParams));
 		ga('send', 'pageview');
+		
+		$rootScope.globalEmotes.then((globalEmotes)=>{
+			$rootScope.emote = globalEmotes[Math.floor(Math.random()*globalEmotes.length)];
+		});
 	});
 });
 
@@ -80,8 +84,23 @@ app.controller("mainctrl", function($rootScope,$scope,$http,$location,$cookies,$
 		localStorage.logviewerUserSettings = JSON.stringify($scope.userSettings);
 	}
 	
-	// preload this
-	$http.get("https://api.twitch.tv/kraken/chat/emoticon_images?emotesets=0,33,457&client_id="+settings.auth.client_id, {cache: true});
+	// preload the global emotes
+	$rootScope.globalEmotes = new Promise((r,j)=>{
+		$http.get("https://api.twitch.tv/kraken/chat/emoticon_images?emotesets=0,33,457&client_id="+settings.auth.client_id, {cache: true}).then(function(result) {
+			var allemotes = [];
+			var emotesets = Object.keys(result.data.emoticon_sets);
+			// flatten response
+			for(var i=0;i<emotesets.length;++i) {
+				var emoteset = result.data.emoticon_sets[emotesets[i]];
+				for(var j=0;j<emoteset.length;++j) {
+					emoteset[j].code = emoteset[j].code.replace(/\\(.)/g,"$1").replace(/(.)\?/g,"$1").replace(/\[(.)[^\\\]]*\]/g,"$1").replace(/\((.)\|[^\)]*\)/g,"$1").replace(/&gt;/g,">");
+					emoteset[j].url = "//static-cdn.jtvnw.net/emoticons/v1/" + emoteset[j].id + "/3.0"
+					allemotes.push(emoteset[j]);
+				}
+			}
+			r(allemotes);
+		});
+	});
 });
 
 
