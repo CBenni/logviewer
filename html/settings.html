@@ -1,9 +1,9 @@
 <div id="main" layout="column" layout-align="space-between center" ng-cloak>
-<div class="content" ng-cloak ng-if="loadStatus == 0" layout="row" layout-align="center center">
+<div class="content" ng-cloak ng-if="loadStatus == 0" layout="row" layout-align="center center" flex=100>
 	<md-progress-circular md-mode="indeterminate"></md-progress-circular> loading...
 </div>
-<div ng-if="loadStatus != 0 && userObject.level < 10"><!-- empty div for space-between centering --></div>
-<div class="content" ng-cloak ng-if="loadStatus != 0 && userObject.level < 10" layout="row" layout-align="center center" layout-xs="column">
+<div ng-if="loadStatus != 0 && userObject.level < 10" flex="none"><!-- empty div for space-between centering --></div>
+<div class="content" ng-cloak ng-if="loadStatus != 0 && userObject.level < 10" layout="row" layout-align="center center" layout-xs="column" flex=100>
 	<div flex="none" class="big-error-icon">
 		<md-icon md-svg-src="/html/img/error.svg"></md-icon>
 	</div>
@@ -12,12 +12,12 @@
 		<span ng-if="userObject.valid == false">If you have {{10 | aAnAccountType }} account, then you can <md-button ng-click="login()" class="md-raised twitch-button md-small">Login with twitch</md-button></span>
 	</div>
 </div>
-<div class="content" ng-cloak ng-show="loadStatus != 0 && userObject.level >= 10" layout="column">
+<div class="content" ng-cloak ng-show="loadStatus != 0 && userObject.level >= 10" layout="column" flex=100>
 	<div flex="50">
 		<h3>Event log</h3>
 		<div class="event-log" scroll-to-bottom layout-padding>
 			<div class="event-item" ng-repeat="event in events">
-				<span class="event-time" hide-xs>{{event.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}</span> <span ng-class="{'event-icon': true, 'event-{{event.action}}': true}">{{event.action}}</span> <span class="eventDescription">{{event.user}} {{event.desc}}</span>
+				<span class="event-time" hide-xs>{{event.time | secondsTimestamp | date : 'yyyy/MM/dd hh:mm a'}}</span> <span ng-class="{'event-icon': true, 'event-{{event.action}}': true}">{{event.action}}</span> <span class="eventDescription">{{event.user}} {{event.desc}}</span>
 			</div>
 			<div class="event-item" ng-show="!events.length">
 				No items found.
@@ -111,5 +111,5 @@
 		</md-button>
 	</div>
 </div>
-<div ng-include="'/html/footer.html'"></div>
+<div ng-include="'/html/footer.html'" flex="none"></div>
 </div>

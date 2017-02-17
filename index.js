@@ -470,6 +470,42 @@ app.get('/api/user/:channel', function(req, res, next) {
 	}
 });
 
+app.get('/api/modlogs/:channel', function(req, res, next) {
+	try {
+		var channelname = req.params.channel.toLowerCase();
+		if(/^\w+$/.test(channelname)) {
+			API.getChannelObjAndLevel(channelname, req.query.token, function(error, channelObj, level, username) {
+				if(error) {
+					res.status(error.status).jsonp({"error": error.message});
+				} else if(channelObj.active) {
+					// level check.
+					if(level >= channelObj.viewmodlogs) {
+						var filters = {
+							commands: (req.query.commands || "").exec(/\b\w+\b/g),
+							include: (req.query.include || "").exec(/\b\w+\b/g),
+							exclude: (req.query.exclude || "").exec(/\b\w+\b/g)
+						}
+						db.getModLogs(channelObj.name, filters, parseInt(req.query.start) || 0, parseInt(req.query.end) || Math.floor(Date.now()/1000), Math.max(250 , parseInt(req.query.limit) || 100), parseInt(req.query.offset) || 0, function(logs){
+							res.jsonp(logs);
+						});
+					} else {
+						res.status(403).end();
+					}
+				} else {
+					res.status(404).jsonp({"error": "Channel "+channelname+" not found."});
+				}
+			});
+		} else {
+			res.status(400).jsonp({error: "Invalid channel name "+channelname});
+		}
+	} 
+	catch(err) {
+		next(err);
+	}
+});
+
+(channel, filters, limit, starttime, endtime, offset, callback)
+
 
 var knownChannels = {};
 function getChannelID(channelname, callback) {

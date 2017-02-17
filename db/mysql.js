@@ -83,14 +83,39 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		/* create the admin log table if it doesnt exist */
 		connection.query("CREATE TABLE IF NOT EXISTS adminlog ("
 			+"id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,"
-			+"time BIGINT UNSIGNED NOT NULL,"
 			+"channel VARCHAR(32) NULL,"
+			+"time BIGINT UNSIGNED NOT NULL,"
 			+"user VARCHAR(32) NULL,"
 			+"action VARCHAR(32) NULL,"
 			+"name VARCHAR(256) NULL,"
 			+"data TEXT NULL,"
 			+"INDEX adminlog_channel (channel ASC)"
 		+")");
+		
+		/*CREATE TABLE `logviewer`.`modlogs` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT,
+  `channelid` VARCHAR(32) NOT NULL,
+  `time` BIGINT NULL,
+  `user` VARCHAR(32) NULL,
+  `command` VARCHAR(32) NULL,
+  `args` VARCHAR(256) NULL,
+  PRIMARY KEY (`id`),
+  INDEX `user` (`channelid` ASC, `user` ASC, `time` ASC),
+  INDEX `channel` (`channelid` ASC, `time` ASC));
+*/
+		/* create the modlog table if it doesnt exist */
+		connection.query("CREATE TABLE IF NOT EXISTS modlog ("
+			+"id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,"
+			+"channel VARCHAR(32) NULL,"
+			+"time BIGINT UNSIGNED NOT NULL,"
+			+"user VARCHAR(32) NULL,"
+			+"command VARCHAR(32) NULL,"
+			+"args TEXT NULL,"
+			+"INDEX modlog_channel (channel ASC, id ASC),"
+			+"INDEX modlog_user (channel ASC, id ASC, user ASC),"
+			+"INDEX modlog_command (channel ASC, id ASC, command ASC),"
+		+")");
+		
 
 	});
 	
@@ -200,6 +225,26 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			}
 			if(callback) callback(result.insertId);
 		});
+	}
+	
+	self.getModLogs = function(channel, filters, id, limit, offset, callback) {
+		if(filters.include.length > 0) {
+			self.pool.query("SELECT * FROM modlogs WHERE channel=? AND command IN (?) AND user IN (?) AND id < ? LIMIT ? ORDER BY id DESC", [channel, filters.commands, limit, filters.include, offset], function(error, results) {
+				if(error) {
+					winston.error("getModLogs: Error retrieving mod logs! "+error);
+					return;
+				}
+				callback(results);
+			});
+		} else {
+			self.pool.query("SELECT * FROM modlogs WHERE channel=? AND command IN (?) AND user NOT IN (?) LIMIT ? OFFSET ?", [channel, allowed_commands, limit, filters.exclude, offset], function(error, results) {
+				if(error) {
+					winston.error("getModLogs: Error retrieving mod logs! "+error);
+					return;
+				}
+				callback(results);
+			});
+		}
 	}
 	
 	self.addTimeout = function(channel, nick, time, message, modlog, callback) {
@@ -336,7 +381,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	
 	self.getUserStats = function(channel, nick, ranking, callback) {
 		self.pool.query("SELECT nick, messages, timeouts, bans FROM ?? WHERE nick = ?", ["users_"+channel, nick], function(error, results, fields) {
-			var stats = results[0] || {nick: nick, timeouts:0, messages: 0};
+			var stats = results[0] || {nick: nick, timeouts:0, messages: 0, bans: 0};
 			if(ranking) {
 				console.log(stats);
 				self.pool.query("SELECT COUNT(*)+1 as rank FROM ?? WHERE messages > ?", ["users_"+channel, stats.messages], function(error, results, fields) {

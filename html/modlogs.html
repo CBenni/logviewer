@@ -1,0 +1,75 @@
+<div id="main" layout="column" layout-align="space-between center" ng-cloak>
+<div class="content" ng-cloak ng-if="loadStatus == 0" layout="row" layout-align="center center">
+	<md-progress-circular md-mode="indeterminate"></md-progress-circular> loading...
+</div>
+<div ng-if="loadStatus != 0 && userObject.level < channelsettings.viewmodlogs"><!-- empty div for space-between centering --></div>
+<div class="content" ng-cloak ng-if="loadStatus != 0 && userObject.level < channelsettings.viewmodlogs" layout="row" layout-align="center center" layout-xs="column">
+	<div flex="none" class="big-error-icon">
+		<md-icon md-svg-src="/html/img/error.svg"></md-icon>
+	</div>
+	<div style="font-size: 20px;" flex="none">
+		 You currently do not have access to change settings of the channel {{channel}}.<br>
+		<span ng-if="userObject.valid == false">If you have {{channelsettings.viewmodlogs | aAnAccountType }} account, then you can <md-button ng-click="login()" class="md-raised twitch-button md-small">Login with twitch</md-button></span>
+	</div>
+</div>
+
+
+<div class="content leaderboardbox" ng-cloak ng-show="loadStatus != 0 && userObject.level >= channelsettings.viewmodlogs" layout="column" flex="100">
+	<md-tabs layout="column" flex="100" md-selected="selectedTab">
+		<md-tab label="Mod logs" flex="100">
+			<md-tab-content flex="100">
+				<h3>Moderator activity log</h3>
+				<div ng-class="{'modlogs-filters':true, 'modlogs-filters-expanded': modlogsFiltersExpanded}" flex="100" layout="column">
+					<div class="modlogs-filters-header" flex="100">Filters</div>
+					<div class="modlogs-filters-body" flex="100">
+						<h4>Commands</h4>
+						<div ng-repeat="command in commands" class="modlogs-filters-command" flex="none">
+							<md-checkbox ng-model="filters.commands[command]" ng-true-value="1" ng-false-value="undefined">{{command}}</md-checkbox>
+						</div>
+						<h4>User</h4>
+						Include: <md-autocomplete class="form-control" type="text" style="min-width: 10em"
+										md-input-name="usernameField"
+										md-items="item in moderatorSearch(typedUserSearch)"
+										md-search-text="typedUserSearch"
+										md-selected-item="username"
+										md-item-text="item"
+										md-min-length="4"
+										md-autoselect="true"
+										md-no-cache="true"
+										md-select-on-match="true"
+										md-match-case-insensitive="true"
+										md-floating-label="User name">
+									<span md-highlight-text="typedUserSearch" md-highlight-flags="^i">{{item}}</span>
+								</md-autocomplete>
+						Exclude: <md-textbox type="text" ng-model="filters.mods.exclude"></md-textbox>
+					</div>
+				</div>
+				<div class="infinite-scroll-container panel panel-default logview z-depth-1 layout-padding" flex="100" layout="column">
+					<div layout="row" class="layout-padding">
+						<div flex="16" class="table-header">Time</div>
+						<div flex="28" class="table-header">Moderator</div>
+						<div flex="28" class="table-header">Command</div>
+						<div flex="28" class="table-header">Arguments</div>
+					</div>
+					<md-virtual-repeat-container md-top-index="allUsers.topindex" flex="100" layout="column">
+						<div md-virtual-repeat="row in allUsers" ng-class="{'logviewer-user-row': true, 'infinite-scroll-item': true, 'layout-padding': true, 'even': row.index%2==0}" md-on-demand="" layout="row">
+							<div flex="16" class="table-header">{{row.time | secondsTimestamp | date : 'yyyy/MM/dd hh:mm a'}}</div>
+							<div flex="28" class="table-header">{{row.user}}</div>
+							<div flex="28" class="table-header">{{row.command}}</div>
+							<div flex="28" class="table-header">{{row.args}}</div>
+						</div>
+					</md-virtual-repeat-container>
+				</div>
+			</md-tab-content>
+		</md-tab>
+		<md-tab ng-disabled="true">
+			<md-tab-label>
+				Performance analysis <span class="betatag">Coming soon</span>
+			</md-tab-label>
+		</md-tab>
+	</md-tabs>
+</div>
+
+
+<div ng-include="'/html/footer.html'"></div>
+</div>

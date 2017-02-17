@@ -100,7 +100,7 @@
 												<md-icon class="md-primary" md-svg-src="/html/img/vod.svg"></md-icon>
 											</md-button>
 											<!-- timestamp -->
-											{{messageBefore.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}
+											{{messageBefore.time | secondsTimestamp | date : 'yyyy/MM/dd hh:mm a'}}
 										</span>
 										<span class="logviewer-message" ng-bind-html='messageBefore.text | chatLine'></span>
 										<span ng-if="messageBefore.modlog | isntEmpty" class="logviewer-modlog-text">(By: {{modLogList(messageBefore.modlog)}})
@@ -129,7 +129,7 @@
 												<md-icon class="md-primary" md-svg-src="/html/img/vod.svg"></md-icon>
 											</md-button>
 											<!-- timestamp -->
-											{{message.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}
+											{{message.time | secondsTimestamp | date : 'yyyy/MM/dd hh:mm a'}}
 										</span>
 										<span class="logviewer-message" ng-bind-html='message.text | chatLine'></span>
 										<span ng-if="message.modlog | isntEmpty">(By: {{modLogList(message.modlog)}})
@@ -152,7 +152,7 @@
 												<md-icon class="md-primary" md-svg-src="/html/img/vod.svg"></md-icon>
 											</md-button>
 											<!-- timestamp -->
-											{{messageAfter.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}
+											{{messageAfter.time | secondsTimestamp | date : 'yyyy/MM/dd hh:mm a'}}
 										</span>
 										<span class="logviewer-message" ng-bind-html='messageAfter.text | chatLine'></span>
 										<span ng-if="messageAfter.modlog | isntEmpty">(By: {{modLogList(messageAfter.modlog)}})
@@ -250,7 +250,7 @@
 										<md-icon class="md-primary" md-svg-src="/html/img/vod.svg"></md-icon>
 									</md-button>
 									<!-- timestamp -->
-									{{message.time | secondsTimestamp | date : 'MM/dd/yyyy hh:mm a'}}
+									{{message.time | secondsTimestamp | date : 'yyyy/MM/dd hh:mm a'}}
 								</span>
 								<span class="logviewer-message" ng-bind-html='message.text | chatLine'></span>
 								<span ng-if="message.modlog | isntEmpty">(By: {{modLogList(message.modlog)}})
