@@ -50,7 +50,7 @@ io.sockets.on('connection', function(socket){
 		if(query.user && query.user.length > 3) {
 			var channel = query.channel.toLowerCase();
 			var user = query.user.toLowerCase();
-			db.getActiveChannel(channel, function(channelObj) {
+			API.getChannelObjAndLevel(channel, socket.logviewer_token, function(error, channelObj, level){
 				if(!channelObj)
 				{
 					// bad search. will disconnect the client (since this channel doesnt exist/isnt active)
@@ -58,17 +58,14 @@ io.sockets.on('connection', function(socket){
 					socket.disconnect();
 					return;
 				}
-				var requiredlevel;
-				API.getLevel(channelObj.name, socket.logviewer_token, function(level){
-					if(level >= channelObj.viewlogs) {
-						db.findUser(channelObj.name, user, function(users){
-							if(users && users.length < 10) socket.emit("search", {search: query.user, users: users});
-							else socket.emit("search", {search: query.user, users: null});
-						});
-					} else {
-						winston.debug("Access to user search denied. "+socket.logviewer_token);
-					}
-				});
+				if(level >= channelObj.viewlogs) {
+					db.findUser(channelObj.name, user, function(users){
+						if(users && users.length < 10) socket.emit("search", {search: query.user, users: users});
+						else socket.emit("search", {search: query.user, users: null});
+					});
+				} else {
+					winston.debug("Access to user search denied. "+socket.logviewer_token);
+				}
 			});
 		}
 	});
@@ -131,7 +128,7 @@ io.sockets.on('connection', function(socket){
 			if(room_split[0] == "logs") {
 				var channel = room_split[1].toLowerCase();
 				var user = room_split[2].toLowerCase();
-				db.getChannel(channel, function(channelObj) {
+				db.getChannel({name: channel}, function(channelObj) {
 					if(channelObj) channel = channelObj.name;
 					var logsroom = "logs-"+channel+"-"+user;
 					var modlogsroom = "logs-"+channel+"-"+user+"-modlogs";
@@ -145,7 +142,7 @@ io.sockets.on('connection', function(socket){
 				});
 			} else if (room_split[0] == "events") {
 				var channel = room_split[1].toLowerCase();
-				db.getChannel(channel, function(channelObj) {
+				db.getChannel({name: channel}, function(channelObj) {
 					if(channelObj) channel = channelObj.name;
 					var logsroom = "events-"+channel;
 					winston.debug('leaving room', logsroom);
@@ -485,7 +482,7 @@ app.get('/api/modlogs/:channel', function(req, res, next) {
 							include: (req.query.include || "").exec(/\b\w+\b/g),
 							exclude: (req.query.exclude || "").exec(/\b\w+\b/g)
 						}
-						db.getModLogs(channelObj.name, filters, parseInt(req.query.start) || 0, parseInt(req.query.end) || Math.floor(Date.now()/1000), Math.max(250 , parseInt(req.query.limit) || 100), parseInt(req.query.offset) || 0, function(logs){
+						db.getModLogs(channelObj, filters, parseInt(req.query.start) || 0, parseInt(req.query.end) || Math.floor(Date.now()/1000), Math.max(250 , parseInt(req.query.limit) || 100), parseInt(req.query.offset) || 0, function(logs){
 							res.jsonp(logs);
 						});
 					} else {

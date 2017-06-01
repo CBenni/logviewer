@@ -31,6 +31,7 @@ function absMinMax(){
 API.prototype.twitchGet = function(url, headers, token) {
 	headers = headers || {};
 	headers["Client-ID"] = this.settings.auth.client_id;
+	if(!headers["Accept"]) headers["Accept"] = "application/vnd.twitchtv.v5+json";
 	if(token) headers["Authorization"] = "OAuth "+token;
 	console.log("Getting "+url);
 	return new Promise((r,j)=>{
@@ -54,18 +55,23 @@ API.prototype.adminLog = function(channel, user, action, key, data) {
 	winston.debug("Emitting adminlog: "+action+" on channel "+channel);
 }
 
-// helper function: gets both the channel object and the user level of the specified token
-API.prototype.getChannelObjAndLevel = function(channel, token, callback) {
+API.prototype.getChannelID = function(channelname) {
 	var self = this;
-	var channel = channel.toLowerCase();
-	self.db.getChannel(channel, function(channelObj) {
+	return self.twitchGet("https://api.twitch.tv/kraken/users?login="+channelname)
+}
+
+// helper function: gets both the channel object and the user level of the specified token
+API.prototype.getChannelObjAndLevel = function(channelname, token, callback) {
+	var self = this;
+	channelname = channelname.toLowerCase();
+	self.db.getChannel({name: channelname}, function(channelObj) {
 		if(channelObj) {
-			self.getLevel(channelObj.name, token, function(level, username){
+			self.getLevel(channelObj, token, function(level, username){
 				callback(null, channelObj, level, username);
 			});
 		} else {
-			self.getLevel(channel, token, function(level, username){
-				callback({status: 404, message: "Channel "+channel+" not found."}, null, level, username);
+			self.getLevel({name: channelname, id: }, token, function(level, username){
+				callback({status: 404, message: "Channel "+channelname+" not found."}, null, level, username);
 			});
 			
 		}
@@ -74,15 +80,15 @@ API.prototype.getChannelObjAndLevel = function(channel, token, callback) {
 
 
 // gets the level of a user by name
-API.prototype.getUserLevel = function(channel,name,callback) {
+API.prototype.getUserLevel = function(channelObj,id,callback) {
 	var self = this;
 	var reslvl = null;
 	var templvl = 0;
 	if(name) {
-		if(channel) {
-			if(self.bot.userlevels[channel] && self.bot.userlevels[channel][name]) templvl = self.bot.userlevels[channel][name];
-			if(channel === name) templvl = 10;
-			self.db.getUserLevel(channel, name, function(lv){
+		if(channelObj) {
+			if(self.bot.userlevels[channelObj.id] && self.bot.userlevels[channelObj.id][name]) templvl = self.bot.userlevels[channelObj.id][name];
+			if(channelObj.id === id) templvl = 10;
+			self.db.getUserLevel(channelObj, id, function(lv){
 				if(reslvl === null) {
 					reslvl = lv;
 				} else {
@@ -93,7 +99,7 @@ API.prototype.getUserLevel = function(channel,name,callback) {
 			reslvl = 0;
 		}
 		
-		self.db.getUserLevel("logviewer", name, function(lv){
+		self.db.getUserLevel({id: self.settings.bot.id, name: self.settings.bot.nick}, id, function(lv){
 			if(reslvl === null) {
 				reslvl = lv;
 			} else {
@@ -104,13 +110,13 @@ API.prototype.getUserLevel = function(channel,name,callback) {
 }
 
 // gets the level of a user by token
-API.prototype.getLevel = function(channel, token, callback) {
+API.prototype.getLevel = function(channelObj, token, callback) {
 	var self = this;
 	if(!token || token === "") callback(0);
 	else {
-		self.db.getAuthUser(token, function(name){
-			self.getUserLevel(channel,name,function(level){
-				callback(level,name);
+		self.db.getAuthUser(token, function(name, id){
+			self.getUserLevel(channelObj,id,function(level){
+				callback(level,name,id);
 			});
 		});
 	}
