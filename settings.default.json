@@ -33,7 +33,7 @@
 	},
 	"discord": {
 		"client_id": "",
-		"token": "", // Discord access token
+		"token": ""
 	},
 	"pubsub": {
 		"server": "wss://pubsub-edge.twitch.tv/v1",
