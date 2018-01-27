@@ -746,5 +746,6 @@ logviewerApp.filter('aAnAccountType', function() {
 });
 
 logviewerApp.factory("logviewerSocket", function(socketFactory) {
-	return socketFactory();
+	var ioSocket = io("",{"transports": ["websocket"]});
+	return socketFactory(ioSocket);
 });

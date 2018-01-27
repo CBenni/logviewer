@@ -25,6 +25,10 @@ logviewerApp.controller("ChannelListController", function($rootScope, $scope, $h
 	var updateChannels = function(){
 		$http.get("/api/channels/").then(function(response) {
 			$scope.channels = response.data;
+			$scope.totalViewers = 0;
+			for(var i=0;i<$scope.channels.length;++i) {
+				$scope.totalViewers += $scope.channels[i].live || 0;
+			}
 		});
 	}
 	
@@ -35,6 +39,8 @@ logviewerApp.controller("ChannelListController", function($rootScope, $scope, $h
 		clearInterval(interval);
 	});
 	updateChannels();
+
+
 });
 
 logviewerApp.filter("orderChannels", function() {

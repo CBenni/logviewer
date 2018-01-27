@@ -340,7 +340,7 @@ API.prototype.checkStreams = function() {
 				// reset streams
 				for(let j=0;j<channelChunk.length;++j) self.streaming[channelChunk[j]] = false;
 				for(let j=0;j<data.streams.length;++j) {
-					self.streaming[data.streams[j].channel.name] = true;
+					self.streaming[data.streams[j].channel.name] = data.streams[j].viewers;
 				}
 			}).catch(function(error) {
 				winston.error("Couldnt load streams list: "+error);

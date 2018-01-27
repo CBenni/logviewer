@@ -88,8 +88,7 @@ function logviewerBot(settings, db, io) {
 		}
 		
 		if(self.timeouts[channel] && self.timeouts[channel][user]) {
-			var now = 
-			self.timeouts[channel][user] = undefined;
+			var now = self.timeouts[channel][user] = undefined;
 		}
 		if(self.oldtimeouts[channel] && self.oldtimeouts[channel][user]) self.oldtimeouts[channel][user] = undefined;
 		
@@ -126,7 +125,7 @@ function logviewerBot(settings, db, io) {
 	});
 
 	self.bot.on("USERNOTICE", function(data){
-		if(data[TAGS] && data[TAGS]["msg-id"]=="resub") {
+		if(data[TAGS] && (data[TAGS]["msg-id"]=="resub" || data[TAGS]["msg-id"]=="sub")) {
 			var time = Math.floor(Date.now()/1000);
 			var channel = data[PARAM].slice(1);
 			var text = data[TAGS]["system-msg"].replace(/\\s/g," ");
@@ -144,6 +143,31 @@ function logviewerBot(settings, db, io) {
 				io.to("logs-"+channel+"-"+sub+"-modlogs").emit("log-add", {id: id, time: time, nick: sub, text: irccmd});
 			});
 		}
+                else if(data[TAGS] && (data[TAGS]["msg-id"]=="subgift")) {
+                        var time = Math.floor(Date.now()/1000);
+                        var channel = data[PARAM].slice(1);
+                        var text = data[TAGS]["system-msg"].replace(/\\s/g," ");
+                        if(data[TRAILING]) text += " Message: "+data[TRAILING];
+                        var sub = data[TAGS]["login"];
+			var target = data[TAGS]["msg-param-recipient-user-name"];
+                        db.addLine(channel, "twitchnotify", "dtwitchnotify "+text, function(id) {
+                                var irccmd = `@display-name=twitchnotify;color=;subscriber=0;turbo=0;user-type=;emotes=;mod=0 :${sub}!${sub}@${sub}.tmi.twitch.tv PRIVMSG #${channel} :${text}`;
+                                io.to("logs-"+channel+"-twitchnotify").emit("log-add", {id: id, time: time, nick: "twitchnotify", text: irccmd});
+                                io.to("logs-"+channel+"-twitchnotify-modlogs").emit("log-add", {id: id, time: time, nick: "twitchnotify", text: irccmd});
+                        });
+                        db.updateStats(channel, "twitchnotify", {messages: 1});
+                        db.addLine(channel, sub, "dtwitchnotify "+text, function(id) {
+                                var irccmd = `@display-name=twitchnotify;color=;subscriber=0;turbo=0;user-type=;emotes=;mod=0 :${sub}!${sub}@${sub}.tmi.twitch.tv PRIVMSG #${channel} :${text}`;
+                                io.to("logs-"+channel+"-"+sub).emit("log-add", {id: id, time: time, nick: sub, text: irccmd});
+                                io.to("logs-"+channel+"-"+sub+"-modlogs").emit("log-add", {id: id, time: time, nick: sub, text: irccmd});
+                        });
+			db.addLine(channel, target, "dtwitchnotify "+text, function(id) {
+                                var irccmd = `@display-name=twitchnotify;color=;subscriber=0;turbo=0;user-type=;emotes=;mod=0 :${target}!${target}@${target}.tmi.twitch.tv PRIVMSG #${channel} :${text}`;
+                                io.to("logs-"+channel+"-"+target).emit("log-add", {id: id, time: time, nick: target, text: irccmd});
+                                io.to("logs-"+channel+"-"+target+"-modlogs").emit("log-add", {id: id, time: time, nick: target, text: irccmd});
+                        });
+                }
+
 	});
 
 	// Everything having to do with timeouts/bans
@@ -308,7 +332,7 @@ function logviewerBot(settings, db, io) {
 	function doReject(channel, user, command) {
 		command.time = Date.now();
 		command.modlog = {};
-		command.modlog[user] = "reject";
+		command.modlog[user] = command.moderation_action == "automod_rejected_mandatory" ? "drop": "reject";
 		db.addTimeout(channel, command.args[0], command.time, "dtwitchbot " + command.args[1], command.modlog, function(id){
 			console.log("added rejected message for channel="+channel+", user="+user+", id="+id+"!");
 			command.id = id;
@@ -369,15 +393,15 @@ function logviewerBot(settings, db, io) {
 		//@msg-id=msg_banned :tmi.twitch.tv NOTICE #frankerzbenni :You are permanently banned from talking in frankerzbenni.
 		let channel = data[PARAM].slice(1);
 		if(data[TAGS] && (data[TAGS]["msg-id"] === "room_mods" || data[TAGS]["msg-id"] === "no_mods")) {
-			let users = [];
+			let moderatorList = [];
 			if(data[TAGS]["msg-id"] === "room_mods") {
 				let m = /The moderators of this \w+ are: (.*)/.exec(data[TRAILING]);
-				users = m[1].match(/\w+/g);
+				moderatorList = m[1].match(/\w+/g) || [];
 			}
 			
 			
 			// check if the moderation status of the bot has changed
-			var ismodded = users.indexOf(self.nick) >= 0;
+			var ismodded = moderatorList.indexOf(self.nick) >= 0;
 			if(self.userlevels[channel] && ismodded * 5 != (self.userlevels[channel][self.nick] || 0)) {
 				// emit the moderation status changed event via ws
 				self.io.to("events-"+channel).emit("ismodded", ismodded);
@@ -393,13 +417,13 @@ function logviewerBot(settings, db, io) {
 			}
 			
 			let userlist = {};
-			for(let i=0;i<users.length;++i) {
-				userlist[users[i]] = 5;
+			for(let i=0;i<moderatorList.length;++i) {
+				userlist[moderatorList[i]] = 5;
 			}
 			
 				
 			self.userlevels[channel] = userlist;
-			self.emit("moderator-list-"+channel, users);
+			self.emit("moderator-list-"+channel, moderatorList);
 			
 			
 			if(Date.now() - lastSave > 60*1000) {
@@ -545,14 +569,6 @@ function logviewerBot(settings, db, io) {
 		}
 	});
 
-	fs.readFile("mods.json", "utf-8", function(err, data) {
-		if(err) {
-			winston.info("No mods.json found.")
-		} else {
-			self.userlevels = JSON.parse(data);
-		}
-	});
-
 	var currentchannel = 0;
 	var checkNextMods = function() {
 		if(self.channels.length > 0) {
@@ -575,17 +591,21 @@ function logviewerBot(settings, db, io) {
 			var command = JSON.parse(message.data.message).data;
 			winston.debug(command);
 			var user = command.created_by;
+			var automod_commands = ["approved_twitchbot_message","denied_twitchbot_message","approved_automod_message","denied_automod_message"];
 			if(command.moderation_action == "timeout") {
 				doTimeout(channel, user, command.args[0].toLowerCase(), command.args[1] || 600, command.args[2] || "", 0);
 			} else if(command.moderation_action == "ban") {
 				doTimeout(channel, user, command.args[0].toLowerCase(), Infinity, command.args[1] || "", 0);
 			} else if(command.moderation_action == "unban") {
+				if(!command.args || !command.args[0]) {
+					return winston.error("Badly formatted pubsub unban: ",command);
+				}
 				doUnban(channel, user, "unbanned", command.args[0].toLowerCase());
 			} else if(command.moderation_action == "untimeout") {
 				doUnban(channel, user, "untimed out", command.args[0].toLowerCase());
-			} else if(command.moderation_action == "twitchbot_rejected") {
+			} else if(command.moderation_action == "twitchbot_rejected" || command.moderation_action == "automod_rejected" || command.moderation_action == "automod_rejected_mandatory") {
 				doReject(channel, user, command);
-			} else if(command.moderation_action == "approved_twitchbot_message" || command.moderation_action == "denied_twitchbot_message") {
+			} else if(automod_commands.indexOf(command.moderation_action) >= 0) {
 				doModerate(channel, user, command);
 			} else {
 				var text = "/"+command.moderation_action;

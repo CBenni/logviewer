@@ -3,7 +3,7 @@ var events = require('events');
 var winston = require('winston');
 var parseIRCMessage = require("./messagecompressor").parseIRCMessage;
 
-var rx = /^(?:@([^ ]+) )?(?:[:](\S+) )?(\S+)(?: (?!:)(.+?))?(?: [:](.+))?$/;
+var rx = /^(?:@([^ ]+) )?(?:[:](\S+) )?(\S+)(?: (?!:)([^:]+?))?(?: [:](.*))?$/;
 var rx2 = /([^=;]+)=([^;]*)/g;
 var rx3 = /\r\n|\r|\n/;
 var STATE_V3 = 1

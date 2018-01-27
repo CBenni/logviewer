@@ -352,6 +352,7 @@ app.get('/api/channel/:channel', function(req, res, next) {
 		var channelname = req.params.channel.toLowerCase();
 		if(/^\w+$/.test(channelname)) {
 			API.getChannelObjAndLevel(channelname, req.query.token, function(error, channelObj, level, username) {
+				console.log("Got channel object and level", channelObj, level)
 				if(!channelObj) channelObj = {
 					name: channelname,
 					active: 0,
@@ -363,10 +364,14 @@ app.get('/api/channel/:channel', function(req, res, next) {
 					deletecomments: 10
 				}
 				// check if the logviewer bot is modded
+				let timeout = false;
 				bot.isModded(channelObj, function(isModded){
+					if(timeout) return;
+					timeout = true;
 					channelObj.isModded = isModded;
 					res.jsonp({"channel":channelObj,"me":{name:username, level:level, valid: !!username}});
 				});
+				setTimeout(()=>{if(timeout) return; timeout = true;channelObj.isModded=false;res.jsonp({"channel":channelObj,"me":{name:username, level:level, valid: !!username}});}, 1000)
 			});
 		} else {
 			res.status(400).jsonp({error: "Invalid channel name "+channelname});

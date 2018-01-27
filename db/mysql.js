@@ -107,6 +107,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		+")");
 		self.pool.query("CREATE TABLE IF NOT EXISTS users_"+channelObj.name+" ("
 			+"nick VARCHAR(32) NOT NULL PRIMARY KEY,"
+			+"id INT UNSIGNED NULL,"
 			+"messages INT UNSIGNED DEFAULT '0',"
 			+"timeouts INT DEFAULT '0',"
 			+"bans INT UNSIGNED DEFAULT '0',"
