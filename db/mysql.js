@@ -4,7 +4,8 @@ var winston = require('winston');
 module.exports = function MySQLDatabaseConnector(settings) {
 	var self = this;
 	// used for bulk inserts
-	self.insertConnection = mysql.createConnection({
+	self.insertPool = mysql.createPool({
+		connectionLimit: 100,
 		host: settings.host,
 		port: settings.port || 3306,
 		user: settings.user,
@@ -12,20 +13,6 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		password: settings.password,
 		charset: "utf8mb4_unicode_ci"
 	});
-
-	self.insertConnection.on("connect", ()=>{
-		self.insertConnection.beginTransaction(err => {
-			if(err) winston.error("Error creating transaction: " + err);
-		})
-		setInterval(() => {
-			self.insertConnection.commit(err => {
-				if(err) winston.error("Error comitting transaction: " + err);
-			})
-			self.insertConnection.beginTransaction(err => {
-				if(err) winston.error("Error creating transaction: " + err);
-			})
-		}, 1000);
-	})
 
 	// used for everything else
 	self.pool = mysql.createPool({
@@ -209,7 +196,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	}
 	self.addLine = function(channel, nick, message, callback) {
 		// we use the pool for this instead of the pool
-		self.insertConnection.query("INSERT INTO ?? (time,nick,text) VALUES (?,?,?)",["chat_"+channel, Math.floor(Date.now()/1000), nick, message], function(error, result) {
+		self.insertPool.query("INSERT INTO ?? (time,nick,text) VALUES (?,?,?)",["chat_"+channel, Math.floor(Date.now()/1000), nick, message], function(error, result) {
 			if(error) {
 				winston.error("addLine: Could not insert! "+error);
 				return;
@@ -220,7 +207,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	
 	self.addModLog = function(channel, nick, message, modlog, callback) {
 		// we use the pool for this instead of the pool
-		self.insertConnection.query("INSERT INTO ?? (time,nick,text,modlog) VALUES (?,?,?,?)",["chat_"+channel, Math.floor(Date.now()/1000), nick, message, modlog?JSON.stringify(modlog):null], function(error, result) {
+		self.insertPool.query("INSERT INTO ?? (time,nick,text,modlog) VALUES (?,?,?,?)",["chat_"+channel, Math.floor(Date.now()/1000), nick, message, modlog?JSON.stringify(modlog):null], function(error, result) {
 			if(error) {
 				winston.error("addModLog: Could not insert! "+error);
 				return;
@@ -230,7 +217,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	}
 	
 	self.addTimeout = function(channel, nick, time, message, modlog, callback) {
-		self.insertConnection.query("INSERT INTO ?? (time,nick,text,modlog) VALUES (?,?,?,?)",["chat_"+channel, Math.floor(time/1000), nick, message,JSON.stringify(modlog)], function(error, result){
+		self.insertPool.query("INSERT INTO ?? (time,nick,text,modlog) VALUES (?,?,?,?)",["chat_"+channel, Math.floor(time/1000), nick, message,JSON.stringify(modlog)], function(error, result){
 			if(error) {
 				winston.error("addTimeout: Could not insert! "+error);
 				return;
@@ -462,7 +449,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		+")" */
 	self.adminLog = function(channel, user, action, key, data) {
 		var d = Math.floor(Date.now()/1000);
-		self.insertConnection.query("INSERT INTO adminlog(time,channel,user,action,name,data) VALUES (?,?,?,?,?,?)", [d,channel,user,action,key,data]);
+		self.insertPool.query("INSERT INTO adminlog(time,channel,user,action,name,data) VALUES (?,?,?,?,?,?)", [d,channel,user,action,key,data]);
 	}
 	
 	self.getEvents = function(channel, limit, callback) {
@@ -532,7 +519,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	self.pool.on('error', function(err) {
 		winston.error(err);
 	});
-	self.insertConnection.on('error', function(err) {
+	self.insertPool.on('error', function(err) {
 		winston.error(err);
 	});
 }
