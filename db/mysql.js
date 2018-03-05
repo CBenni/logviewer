@@ -148,6 +148,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	});
 
 	self.ensureTablesExist = function (channelObj) {
+		winston.debug("Ensuring tables exist for channel: ",channelObj);
 		getChatShard(channelObj.name).query("CREATE TABLE IF NOT EXISTS chat_" + channelObj.name + " ("
 			+ "id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,"
 			+ "time BIGINT UNSIGNED NOT NULL,"
@@ -317,7 +318,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			return new Promise((resolve, reject) => {
 				shard.query(query, variables, (err, result) => {
 					if (err && shardID == getChatShardId(channel)) {
-						winston.error("getLogsByNick: Select failed! " + err);
+						winston.error("queryLogsFromAllShards: Select failed from shard "+shardID+"! " + err);
 						reject(err);
 					}
 					parseModLogs(result);
