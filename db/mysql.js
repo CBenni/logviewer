@@ -30,6 +30,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		pool.on('connection', function (connection) {
 			winston.info(`Pool for shard ${shardID} (${shard.host}:${shard.port||3306}) created!`);
 		});
+		return pool;
 	})
 
 	function getChatShardId(channelName) {
