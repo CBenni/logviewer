@@ -16,15 +16,19 @@ function hashCode(str) {
 module.exports = function MySQLDatabaseConnector(settings) {
 	var self = this;
 	// used for bulk inserts
-	self.insertPools = _.map(settings.shards, shard => {
-		return mysql.createPool({
+	self.insertPools = _.map(settings.shards, (shard, shardID) => {
+		const pool = mysql.createPool({
 			connectionLimit: shard.poolSize || 100,
 			host: shard.host,
 			port: shard.port || 3306,
 			user: shard.user,
 			database: shard.database,
 			password: shard.password,
+			acquireTimeout: 10000,
 			charset: "utf8mb4_unicode_ci"
+		});
+		pool.on('connection', function (connection) {
+			winston.info(`Pool for shard ${shardID} (${shard.host}:${shard.port||3306}) created!`);
 		});
 	})
 
