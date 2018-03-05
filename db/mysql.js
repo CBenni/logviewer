@@ -148,7 +148,6 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	});
 
 	self.ensureTablesExist = function (channelObj) {
-		console.log("Ensuring tables exist for:", channelObj)
 		getChatShard(channelObj.name).query("CREATE TABLE IF NOT EXISTS chat_" + channelObj.name + " ("
 			+ "id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,"
 			+ "time BIGINT UNSIGNED NOT NULL,"
@@ -158,7 +157,9 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			+ "INDEX (nick, time),"
 			+ "INDEX (time),"
 			+ "INDEX (modlog(1), id DESC)"
-			+ ")");
+			+ ")", function(error) {
+				if(error) winston.error(error);
+			});
 		self.pool.query("CREATE TABLE IF NOT EXISTS users_" + channelObj.name + " ("
 			+ "nick VARCHAR(32) NOT NULL PRIMARY KEY,"
 			+ "id INT UNSIGNED NULL,"
@@ -168,7 +169,9 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			+ "level INT DEFAULT '0',"
 			+ "INDEX (messages DESC),"
 			+ "INDEX (level DESC)"
-			+ ")");
+			+ ")", function(error) {
+				if(error) winston.error(error);
+			});
 	}
 
 	self.getChannels = function (callback) {
