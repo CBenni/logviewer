@@ -642,7 +642,7 @@ logviewerBot.prototype.joinChannel = function(channelObj) {
 	self.channels.push(channelObj);
 	self.bot.send("JOIN #"+channelObj.name);
 	self.bot.send("PRIVMSG #"+channelObj.name+" :.mods");
-	self.db.ensureTablesExist(channelObj.name);
+	self.db.ensureTablesExist(channelObj);
 	self.id2channelObj[channelObj.id] = channelObj;
 	self.name2channelObj[channelObj.name] = channelObj;
 }
