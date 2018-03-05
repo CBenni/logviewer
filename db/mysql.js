@@ -159,7 +159,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			+ "INDEX (time),"
 			+ "INDEX (modlog(1), id DESC)"
 			+ ")", function(error) {
-				if(error) winston.error(error);
+				if(error) winston.error("Could not create table for channel "+channelObj.name+" in shard "+getChatShardId(channelObj.name)+": ", error);
 			});
 		self.pool.query("CREATE TABLE IF NOT EXISTS users_" + channelObj.name + " ("
 			+ "nick VARCHAR(32) NOT NULL PRIMARY KEY,"
