@@ -24,7 +24,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			user: shard.user,
 			database: shard.database,
 			password: shard.password,
-			acquireTimeout: 1000000,
+			acquireTimeout: 10000000,
 			charset: "utf8mb4_unicode_ci"
 		});
 		pool.on('connection', function (connection) {
@@ -67,6 +67,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		user: settings.shards[0].user,
 		database: settings.shards[0].database,
 		password: settings.shards[0].password,
+		acquireTimeout: 10000000,
 		charset: "utf8mb4_unicode_ci"
 	});
 
