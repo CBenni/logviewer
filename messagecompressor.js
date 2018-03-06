@@ -1,3 +1,4 @@
+var _ = require("lodash");
 var winston = require('winston');
 
 var TAGS = 1
@@ -44,6 +45,20 @@ function compressEmotes(emotes) {
 		}
 	}
 	return res;
+}
+
+function offsetEmotes(emotes, distance) {
+	var res = "";
+	return _.map(emotes.split("/"), emoteInfo => {
+		let [emoteID, emotePositions] = emoteInfo.split(":");
+		emotePositions = _.map(emotePositions.split(","), emotePosition => {
+			let [start, end] = emotePosition.split("-");
+			start = parseInt(start)+distance;
+			end = parseInt(end)+distance;
+			return start+'-'+end;
+		});
+		return `${emoteID}:${emotePositions.join(",")}`
+	}).join("/");
 }
 
 function decompressEmotes(emotes) {
@@ -209,9 +224,11 @@ function parseIRCMessage(message) {
 }
 
 module.exports = {
-	compressMessage: compressMessage,
-	decompressMessage: decompressMessage,
-	parseIRCMessage: parseIRCMessage
+	compressMessage,
+	decompressMessage,
+	compressEmotes,
+	offsetEmotes,
+	parseIRCMessage
 };
 
 

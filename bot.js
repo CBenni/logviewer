@@ -171,10 +171,17 @@ function logviewerBot(settings, db, io) {
 			if(data[TAGS]["msg-param-ritual-name"] == "new_chatter") {
 				const user = data[TAGS]['login'];
 				let text = data[TAGS]['system-msg'].replace(/\\s/g," ");
-				if (data[TRAILING]) text += " Message: " + data[TRAILING];
+				let emoteOffset = text.length;
+				if (data[TRAILING]) {
+					text += " Message: ";
+					emoteOffset = text.length;
+					text += data[TRAILING];
+				}
 				db.updateStats(channel, user, { messages: 1 });
-				db.addLine(channel, user, "djtv " + text, function (id) {
-					const irccmd = `@display-name=jtv;color=;subscriber=0;turbo=0;user-type=;emotes=;mod=0;new-user=1 :${user}!${user}@${user}.tmi.twitch.tv PRIVMSG #${channel} :${text}`;
+				const offsetEmotes = data[TAGS]['emotes'] ? messagecompressor.offsetEmotes(data[TAGS]['emotes'], emoteOffset) : "";
+				const compressedEmotes = data[TAGS]['emotes'] ? messagecompressor.compressEmotes(offsetEmotes) : "";
+				db.addLine(channel, user, `djtv;e${compressedEmotes} ${text}`, function (id) {
+					const irccmd = `@display-name=jtv;color=;subscriber=0;turbo=0;user-type=;emotes=${offsetEmotes};mod=0;new-user=1 :${user}!${user}@${user}.tmi.twitch.tv PRIVMSG #${channel} :${text}`;
 					io.to("logs-" + channel + "-" + sub).emit("log-add", { id: id, time: time, nick: user, text: irccmd });
 					io.to("logs-" + channel + "-" + sub + "-modlogs").emit("log-add", { id: id, time: time, nick: user, text: irccmd });
 				});
