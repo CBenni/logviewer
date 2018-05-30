@@ -47,13 +47,18 @@ function logviewerBot(settings, db, io) {
 		self.bot.send("PASS " + oauth);
 		self.bot.send("NICK " + settings.bot.nick);
 		db.getChannels(function (channels) {
-			for (var i = 0; i < channels.length; ++i) {
-				self.joinChannel(channels[i]);
-				if (channels[i].modlogs == "1") {
-					winston.debug("Channel " + channels[i].name + " has mod logs enabled");
-					self.enableModLogs(channels[i]);
+			var i = 0;
+			function joinBatch() {
+				for(let j=0; j < 1000 && i < channels.length; ++j) {
+					self.joinChannel(channels[i]);
+					if (channels[i].modlogs == "1") {
+						self.enableModLogs(channels[i]);
+					}
+					i++;
 				}
+				if(i < channels.length) setTimeout(joinBatch, 1);
 			}
+			joinBatch();
 		});
 		winston.info("Connected!");
 	});

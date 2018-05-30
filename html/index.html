@@ -70,6 +70,12 @@
 </div>
 <ui-view></ui-view>
 
+<div class="gdpr" ng-if="show_gdpr">
+This page uses cookies to provide functionality and analytics. By using this page, you consent to the use of cookies. Please note the updated privacy section in the "TOS" section found at the bottom of the page for more information.
+<md-button class="md-primary md-raised" ng-click="hide_gdpr()">OK</md-button>
+</div>
+
+
 <script>
 var settings = null;
 function getGlobalSettings(data) {

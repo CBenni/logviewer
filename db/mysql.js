@@ -24,7 +24,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			user: shard.user,
 			database: shard.database,
 			password: shard.password,
-			acquireTimeout: 10000000,
+			acquireTimeout: 100000000,
 			charset: "utf8mb4_unicode_ci"
 		});
 		pool.on('connection', function (connection) {
@@ -154,7 +154,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	});
 
 	self.ensureTablesExist = function (channelObj) {
-		winston.debug("Ensuring tables exist for channel: ",channelObj);
+		//winston.debug("Ensuring tables exist for channel: ",channelObj);
 		getChatShard(channelObj.name).query("CREATE TABLE IF NOT EXISTS chat_" + channelObj.name + " ("
 			+ "id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,"
 			+ "time BIGINT UNSIGNED NOT NULL,"
