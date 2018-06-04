@@ -250,7 +250,6 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	}
 	self.addLine = function (channel, nick, message, callback) {
 		getChatIncrement(channel).then(id=>{
-			console.log("Inserting into chat shard", getChatShard(channel).name, "with increment", id);
 			getChatShard(channel).query("INSERT INTO ?? (id,time,nick,text) VALUES (?,?,?,?)", ["chat_" + channel, id,Math.floor(Date.now() / 1000), nick, message], function (error, result) {
 				if (error) {
 					winston.error("addLine: Could not insert into "+channel+"! " + error, message);
@@ -263,7 +262,6 @@ module.exports = function MySQLDatabaseConnector(settings) {
 
 	self.addModLog = function (channel, nick, message, modlog, callback) {
 		getChatIncrement(channel).then(id=>{
-			console.log("Inserting into chat shard", getChatShard(channel).name, "with increment", id);
 			getChatShard(channel).query("INSERT INTO ?? (id,time,nick,text,modlog) VALUES (?,?,?,?,?)", ["chat_" + channel, id, Math.floor(Date.now() / 1000), nick, message, modlog ? JSON.stringify(modlog) : null], function (error, result) {
 				if (error) {
 					winston.error("addLine: Could not insert into "+channel+"! " + error, message);
