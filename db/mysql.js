@@ -168,7 +168,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			+ "INDEX (time),"
 			+ "INDEX (modlog(1), id DESC)"
 			+ ")", function(error) {
-				if(error) winston.error("Could not create table for channel "+channelObj.name+" in shard "+getChatShardId(channelObj.name)+": ", error);
+				if(error) winston.error("Could not create table for channel "+channelObj.name+" in shard "+getChatShard(channelObj.name).name+": ", error);
 			});
 		self.pool.query("CREATE TABLE IF NOT EXISTS users_" + channelObj.name + " ("
 			+ "nick VARCHAR(32) NOT NULL PRIMARY KEY,"
@@ -583,7 +583,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		winston.error("Error in unsharded pool: ", err);
 	});
 	_.each(self.pools, shard => shard.on('error', function (err) {
-		winston.error("Error in sharded pool: ", err);
+		winston.error("Error in shard "+shard.name+":", err);
 	}));
 }
 
