@@ -30,7 +30,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		});
 		pool.name = shard.name;
 		pool.on('connection', function (connection) {
-			winston.info(`Pool for shard ${shardID} (${shard.host}:${shard.port||3306}) created!`);
+			winston.info(`Pool for shard ${shard.name} (${shard.host}:${shard.port||3306}) created!`);
 		});
 		if(!shard.readOnly) self.insertPools.push(pool);
 		return pool;
