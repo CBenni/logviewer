@@ -16,7 +16,8 @@ function hashCode(str) {
 module.exports = function MySQLDatabaseConnector(settings) {
 	var self = this;
 	// used for bulk inserts
-	self.insertPools = _.map(settings.shards, (shard, shardID) => {
+	self.insertPools = [];
+	self.pools = _.map(settings.shards, (shard, shardID) => {
 		const pool = mysql.createPool({
 			connectionLimit: shard.poolSize || 100,
 			host: shard.host,
@@ -27,9 +28,11 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			acquireTimeout: 100000000,
 			charset: "utf8mb4_unicode_ci"
 		});
+		pool.name = shard.name;
 		pool.on('connection', function (connection) {
 			winston.info(`Pool for shard ${shardID} (${shard.host}:${shard.port||3306}) created!`);
 		});
+		if(!shard.readOnly) self.insertPools.push(pool);
 		return pool;
 	})
 
@@ -50,7 +53,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			});
 		}
 		else {
-			const incrementorPromise = queryLogsFromAllShards(channelName, "SELECT id FROM ?? ORDER BY id DESC LIMIT 1",["chat_"+channelName],1,"id").then(results=>{
+			const incrementorPromise = queryLogsFromAllShards(channelName, "SELECT id FROM ?? ORDER BY id DESC LIMIT 1",["chat_"+channelName],1000,"id","after").then(results=>{
 				chatIncrementors[channelName] = (_.max(_.map(results, result => result.id)) || 0)+1;
 				return chatIncrementors[channelName];
 			})
@@ -247,9 +250,10 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	}
 	self.addLine = function (channel, nick, message, callback) {
 		getChatIncrement(channel).then(id=>{
+			console.log("Inserting into chat shard", getChatShard(channel).name, "with increment", id);
 			getChatShard(channel).query("INSERT INTO ?? (id,time,nick,text) VALUES (?,?,?,?)", ["chat_" + channel, id,Math.floor(Date.now() / 1000), nick, message], function (error, result) {
 				if (error) {
-					winston.error("addLine: Could not insert! " + error);
+					winston.error("addLine: Could not insert into "+channel+"! " + error, message);
 					return;
 				}
 				if (callback) callback(result.insertId);
@@ -259,9 +263,10 @@ module.exports = function MySQLDatabaseConnector(settings) {
 
 	self.addModLog = function (channel, nick, message, modlog, callback) {
 		getChatIncrement(channel).then(id=>{
+			console.log("Inserting into chat shard", getChatShard(channel).name, "with increment", id);
 			getChatShard(channel).query("INSERT INTO ?? (id,time,nick,text,modlog) VALUES (?,?,?,?,?)", ["chat_" + channel, id, Math.floor(Date.now() / 1000), nick, message, modlog ? JSON.stringify(modlog) : null], function (error, result) {
 				if (error) {
-					winston.error("addModLog: Could not insert! " + error);
+					winston.error("addLine: Could not insert into "+channel+"! " + error, message);
 					return;
 				}
 				if (callback) callback(result.insertId);
@@ -319,12 +324,12 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		}
 	}
 
-	function queryLogsFromAllShards(channel, query, variables, limit, order) {
-		return Promise.all(_.map(self.insertPools, (shard, shardID) => {
+	function queryLogsFromAllShards(channel, query, variables, limit, order, direction) {
+		return Promise.all(_.map(self.pools, (shard, shardID) => {
 			return new Promise((resolve, reject) => {
 				shard.query(query, variables, (err, result) => {
-					if (err && shardID == getChatShardId(channel)) {
-						winston.error("queryLogsFromAllShards: Select failed from shard "+shardID+"! " + err);
+					if (err && shard === getChatShard(channel)) {
+						winston.error("queryLogsFromAllShards: Select failed from shard "+shard.name+"! " + err);
 						reject(err);
 					}
 					parseModLogs(result);
@@ -333,12 +338,13 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			});
 		})).then(results => {
 			// flatten, order and limit
-			return _.sortBy(_.flatten(results), [order]).slice(-limit);
+			if(direction === "before") return _.sortBy(_.flatten(results), [order]).slice(-limit);
+			else return _.sortBy(_.flatten(results), [order]).slice(0, limit);
 		});
 	}
 
 	self.getLogsByNick = function (channel, nick, limit, modlogs, callback) {
-		queryLogsFromAllShards(channel, "SELECT id,time,nick,text" + (modlogs ? ",modlog" : "") + " FROM ?? WHERE nick=? ORDER BY time DESC LIMIT ?", ["chat_" + channel, nick, limit],limit,"time").then(results => {
+		queryLogsFromAllShards(channel, "SELECT id,time,nick,text" + (modlogs ? ",modlog" : "") + " FROM ?? WHERE nick=? ORDER BY time DESC LIMIT ?", ["chat_" + channel, nick, limit],limit,"time","before").then(results => {
 			callback(results);
 		})
 	}
@@ -349,13 +355,13 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		// before
 		if (before > 0) {
 			if (nick) {
-				queryLogsFromAllShards(channel, "SELECT id,time,nick,text" + (modlogs ? ",modlog" : "") + " FROM ?? WHERE nick=? AND id < ? ORDER BY id DESC LIMIT ?", ["chat_" + channel, nick, id, before], before, "id")
+				queryLogsFromAllShards(channel, "SELECT id,time,nick,text" + (modlogs ? ",modlog" : "") + " FROM ?? WHERE nick=? AND id < ? ORDER BY id DESC LIMIT ?", ["chat_" + channel, nick, id, before], before, "id", "before")
 				.then(results =>{
 					beforeRes = results;
 					if (afterRes !== null) callback(beforeRes, afterRes);
 				})
 			} else {
-				queryLogsFromAllShards(channel, "SELECT id,time,nick,text" + (modlogs ? ",modlog" : "") + " FROM ?? WHERE id < ? ORDER BY id DESC LIMIT ?", ["chat_" + channel, id, before], before, "id")
+				queryLogsFromAllShards(channel, "SELECT id,time,nick,text" + (modlogs ? ",modlog" : "") + " FROM ?? WHERE id < ? ORDER BY id DESC LIMIT ?", ["chat_" + channel, id, before], before, "id", "before")
 				.then(results =>{
 					beforeRes = results;
 					if (afterRes !== null) callback(beforeRes, afterRes);
@@ -365,13 +371,13 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		// after
 		if (after > 0) {
 			if (nick) {
-				queryLogsFromAllShards(channel, "SELECT id,time,nick,text" + (modlogs ? ",modlog" : "") + " FROM ?? WHERE nick=? AND id > ? ORDER BY id ASC LIMIT ?", ["chat_" + channel, nick, id, after], after, "id")
+				queryLogsFromAllShards(channel, "SELECT id,time,nick,text" + (modlogs ? ",modlog" : "") + " FROM ?? WHERE nick=? AND id > ? ORDER BY id ASC LIMIT ?", ["chat_" + channel, nick, id, after], after, "id", "after")
 				.then(results =>{
 					afterRes = results;
 					if (beforeRes !== null) callback(beforeRes, afterRes);
 				})
 			} else {
-				queryLogsFromAllShards(channel, "SELECT id,time,nick,text" + (modlogs ? ",modlog" : "") + " FROM ?? WHERE id > ? ORDER BY id ASC LIMIT ?", ["chat_" + channel, id, after], after, "id")
+				queryLogsFromAllShards(channel, "SELECT id,time,nick,text" + (modlogs ? ",modlog" : "") + " FROM ?? WHERE id > ? ORDER BY id ASC LIMIT ?", ["chat_" + channel, id, after], after, "id", "after")
 				.then(results =>{
 					afterRes = results;
 					if (beforeRes !== null) callback(beforeRes, afterRes);
@@ -388,7 +394,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		var afterRes = null;
 		// before
 		if (before > 0) {
-			queryLogsFromAllShards(channel, "SELECT id,time,nick,text" + (modlogs ? ",modlog" : "") + " FROM ?? WHERE time < ? ORDER BY time DESC LIMIT ?", ["chat_" + channel, time, before], before, "time")
+			queryLogsFromAllShards(channel, "SELECT id,time,nick,text" + (modlogs ? ",modlog" : "") + " FROM ?? WHERE time < ? ORDER BY time DESC LIMIT ?", ["chat_" + channel, time, before], before, "time", "before")
 			.then(results =>{
 				beforeRes = results;
 				if (afterRes !== null) callback(beforeRes, afterRes);
@@ -396,7 +402,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		} else { beforeRes = []; }
 		// after
 		if (after > 0) {
-			queryLogsFromAllShards(channel, "SELECT id,time,nick,text" + (modlogs ? ",modlog" : "") + " FROM ?? WHERE time >= ? ORDER BY time ASC LIMIT ?", ["chat_" + channel, time, after], after, "time")
+			queryLogsFromAllShards(channel, "SELECT id,time,nick,text" + (modlogs ? ",modlog" : "") + " FROM ?? WHERE time >= ? ORDER BY time ASC LIMIT ?", ["chat_" + channel, time, after], after, "time", "after")
 			.then(results =>{
 				afterRes = results;
 				if (beforeRes !== null) callback(beforeRes, afterRes);
@@ -578,7 +584,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 	self.pool.on('error', function (err) {
 		winston.error("Error in unsharded pool: ", err);
 	});
-	_.each(self.insertPools, shard => shard.on('error', function (err) {
+	_.each(self.pools, shard => shard.on('error', function (err) {
 		winston.error("Error in sharded pool: ", err);
 	}));
 }
