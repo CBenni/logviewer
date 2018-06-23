@@ -200,7 +200,7 @@
 											</md-button>
 										</div>
 									</div>
-									<div class="text" flex="none" ng-hide="editingComment == comment.id" ng-bind-html="comment.text | linkify"></div>
+									<div class="text" flex="none" ng-hide="editingComment == comment.id" ng-bind-html="comment.text | linky"></div>
 									<div class="comment-editing" flex="none" ng-if="editingComment == comment.id">
 										<md-input-container class="nobottom notop">
 											<textarea ng-model="comment.text"></textarea>
