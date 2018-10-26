@@ -1,7 +1,7 @@
 #main {
 	float: left;
 	width: 100%;
-	min-height: calc(100% - 50px);
+	min-height: calc(100% - 77px);
 }
 
 #main.largecolumn {
@@ -232,7 +232,7 @@ div[ng-include] {
 .rightbutton {
 	float: right;
 	margin: 0;
-	padding 0;
+	padding: 0;
 }
 
 .closedialog {
@@ -310,4 +310,9 @@ img.logo {
 
 .leftpad {
 	padding-left: 8px;
+}
+
+.notice {
+	padding: 4px;
+	background-color: #E0E0A0;
 }
