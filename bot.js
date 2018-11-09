@@ -454,7 +454,9 @@ function logviewerBot(settings, db, io) {
 			if (Date.now() - lastSave > 60 * 1000) {
 				// write to file every minute
 				lastSave = Date.now();
-				fs.writeFile("mods.json", JSON.stringify(self.userlevels), "utf-8");
+				fs.writeFile("mods.json", JSON.stringify(self.userlevels), "utf-8", err => {
+					if(err) winston.error("Error writing mods file:",err)
+				});
 			}
 		} else if (data[TAGS] && data[TAGS]["msg-id"] === "msg_banned") {
 			// we were banned from the channel, leave it.
