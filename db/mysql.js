@@ -284,26 +284,77 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		})
 	}
 
+	let statUpdates = {};
+	let duplicateUpdates = 0;
+	let totalUpdates = 0;
 	self.updateStats = function (channel, nick, values) {
-		var changes = "";
-		var params = { nick: nick };
-		if (values.timeouts) {
-			changes += " timeouts = timeouts + " + parseInt(values.timeouts);
-			params.timeouts = values.timeouts;
+		totalUpdates++;
+		const key = channel+""+nick;
+		if(statUpdates[key]) {
+			if (values.timeouts) statUpdates[key].values.timeouts = (statUpdates[key].timeouts | 0) + values.timeouts | 0;
+			if (values.bans) statUpdates[key].values.bans = (statUpdates[key].bans | 0) + values.bans | 0;
+			if (values.messages) statUpdates[key].values.messages = (statUpdates[key].messages | 0) + values.messages | 0;
+			duplicateUpdates++;
+		} else {
+			statUpdates[key] = {channel: channel, nick: nick, values: values};
 		}
-		if (values.bans) {
-			if (changes) changes += ",";
-			changes += " bans = bans + " + parseInt(values.bans);
-			params.bans = values.bans;
-		}
-		if (values.messages) {
-			if (changes) changes += ",";
-			changes += " messages = messages + " + parseInt(values.messages);
-			params.messages = values.messages;
-		}
-		self.pool.query("INSERT INTO ?? SET ? ON DUPLICATE KEY UPDATE" + changes, ["users_" + channel, params], function (error, result) {
-			if (error) winston.error(error);
+	}
+
+	setInterval(function () {
+		self.pool.getConnection(function(err, connection) {
+			if(err) {
+				winston.error(err);
+				return;
+			}
+			connection.beginTransaction(function(err) {
+				if(err) {
+					winston.error(err);
+					return;
+				}
+				winston.info("Running stats update with "+duplicateUpdates+"/"+totalUpdates+"duplicates.");
+				const updates = statUpdates;
+				statUpdates = {};
+				totalUpdates = 0;
+				duplicateUpdates = 0;
+				const updateKeys = Object.keys(updates);
+				Promise.all(updateKeys.map(key=>{
+					const update = updates[key];
+					return performStatsUpdate(connection, update.channel, update.nick, update.values);
+				})).then(()=>{
+					winston.info("Finished status update");
+					connection.commit(function(err2) {
+						winston.error(err2);
+					})
+				})
+			})
 		});
+	}, 60 * 1000);
+
+	function performStatsUpdate(connection, channel, nick, values) {
+		return new Promise((resolve, reject) => {
+			var changes = "";
+			var params = { nick: nick };
+			if (values.timeouts) {
+				changes += " timeouts = timeouts + " + parseInt(values.timeouts);
+				params.timeouts = values.timeouts;
+			}
+			if (values.bans) {
+				if (changes) changes += ",";
+				changes += " bans = bans + " + parseInt(values.bans);
+				params.bans = values.bans;
+			}
+			if (values.messages) {
+				if (changes) changes += ",";
+				changes += " messages = messages + " + parseInt(values.messages);
+				params.messages = values.messages;
+			}
+			connection.query("INSERT INTO ?? SET ? ON DUPLICATE KEY UPDATE" + changes, ["users_" + channel, params], function (error, result) {
+				if (error) {
+					winston.error(error);
+				}
+				return resolve(); // yes, yes, we resolve always, because what is an error even.
+			});
+		})
 	};
 
 	self.updateTimeout = function (channel, nick, id, time, message, modlog) {
