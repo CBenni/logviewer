@@ -180,7 +180,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			+ "INDEX (messages DESC),"
 			+ "INDEX (level DESC)"
 			+ ")", function(error) {
-				if(error) winston.error(error);
+				if(error) winston.error("Could not create user table for channel "+channelObj.name, error);
 			});
 	}
 
