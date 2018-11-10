@@ -46,20 +46,22 @@ function logviewerBot(settings, db, io) {
 		if (!oauth.startsWith("oauth:")) oauth = "oauth:" + oauth;
 		self.bot.send("PASS " + oauth);
 		self.bot.send("NICK " + settings.bot.nick);
-		db.getChannels(function (channels) {
-			var i = 0;
-			function joinBatch() {
-				for(let j=0; j < 1000 && i < channels.length; ++j) {
-					self.joinChannel(channels[i]);
-					if (channels[i].modlogs == "1") {
-						self.enableModLogs(channels[i]);
+		setTimeout(()=>{
+			db.getChannels(function (channels) {
+				var i = 0;
+				function joinBatch() {
+					for(let j=0; j < 1000 && i < channels.length; ++j) {
+						self.joinChannel(channels[i]);
+						if (channels[i].modlogs == "1") {
+							self.enableModLogs(channels[i]);
+						}
+						i++;
 					}
-					i++;
+					if(i < channels.length) setTimeout(joinBatch, 10);
 				}
-				if(i < channels.length) setTimeout(joinBatch, 1);
-			}
-			joinBatch();
-		});
+				joinBatch();
+			});
+		}, 10000)
 		winston.info("Connected!");
 	});
 
@@ -662,7 +664,7 @@ logviewerBot.prototype.findChannelObj = function (channel) {
 }
 
 logviewerBot.prototype.joinChannel = function (channelObj) {
-	winston.info("Joining channel " + JSON.stringify(channelObj));
+	// winston.info("Joining channel " + JSON.stringify(channelObj));
 	var self = this;
 	if (self.findChannelObj(channelObj)) return;
 	self.channels.push(channelObj);
