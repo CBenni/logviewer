@@ -662,7 +662,7 @@ logviewerBot.prototype.findChannelObj = function (channel) {
 }
 
 logviewerBot.prototype.joinChannel = function (channelObj) {
-	winston.info("Joining channel " + JSON.stringify(channelObj));
+	// winston.info("Joining channel " + JSON.stringify(channelObj));
 	var self = this;
 	if (self.findChannelObj(channelObj)) return;
 	self.channels.push(channelObj);
