@@ -22,7 +22,7 @@ function IRCBot(host, port) {
 			winston.warn("Tried to send newline character!");
 			return;
 		}
-		winston.debug("--> "+data);
+		// winston.debug("--> "+data);
 		self.client.write(data+'\n');
 	}
 	
