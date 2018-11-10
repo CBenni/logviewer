@@ -329,7 +329,7 @@ module.exports = function MySQLDatabaseConnector(settings) {
 			statUpdates = {};
 			totalUpdates = 0;
 			duplicateUpdates = 0;
-			const updateKeys = Object.keys(updates);
+			const updateKeys = Object.keys(updates).sort();
 			const promises = Promise.all(updateKeys.map(key=>{
 				const update = updates[key];
 				return performStatsUpdate(self.userStatsConnection, update.channel, update.nick, update.values);
