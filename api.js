@@ -32,7 +32,7 @@ API.prototype.twitchGet = function(url, headers, token) {
 	headers = headers || {};
 	headers["Client-ID"] = this.settings.auth.client_id;
 	if(token) headers["Authorization"] = "OAuth "+token;
-	console.log("Getting "+url);
+	// console.log("Getting "+url);
 	return new Promise((r,j)=>{
 		request.get({url: url, headers: headers}, function (error, response, body) {
 			if(error) j(error, response);

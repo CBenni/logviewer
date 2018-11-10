@@ -284,9 +284,9 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		})
 	}
 
-	let statUpdates = {};
-	let duplicateUpdates = 0;
-	let totalUpdates = 0;
+	var statUpdates = {};
+	var duplicateUpdates = 0;
+	var totalUpdates = 0;
 	self.updateStats = function (channel, nick, values) {
 		totalUpdates++;
 		const key = channel+""+nick;
@@ -317,14 +317,13 @@ module.exports = function MySQLDatabaseConnector(settings) {
 				totalUpdates = 0;
 				duplicateUpdates = 0;
 				const updateKeys = Object.keys(updates);
-				Promise.all(updateKeys.map(key=>{
+				const promises = Promise.all(updateKeys.map(key=>{
 					const update = updates[key];
 					return performStatsUpdate(connection, update.channel, update.nick, update.values);
-				})).then(()=>{
-					winston.info("Finished status update");
-					connection.commit(function(err2) {
-						winston.error(err2);
-					})
+				}))
+				winston.info("Finished status update");
+				connection.commit(function(err2) {
+					winston.error(err2);
 				})
 			})
 		});

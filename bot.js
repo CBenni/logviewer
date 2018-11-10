@@ -347,8 +347,8 @@ function logviewerBot(settings, db, io) {
 		var emittedMsg = { id: command.id, time: Math.floor(command.time / 1000), nick: user, text: irccmd };
 		io.to("logs-" + channel + "-" + user).emit(type, emittedMsg);
 		emittedMsg.modlog = command.modlog;
-		console.log("Emitting " + JSON.stringify(emittedMsg));
-		console.log("to logs-" + channel + "-" + user + "-modlogs")
+		// console.log("Emitting " + JSON.stringify(emittedMsg));
+		// console.log("to logs-" + channel + "-" + user + "-modlogs")
 		io.to("logs-" + channel + "-" + user + "-modlogs").emit(type, emittedMsg);
 	}
 
@@ -361,7 +361,7 @@ function logviewerBot(settings, db, io) {
 		command.modlog = {};
 		command.modlog[user] = command.moderation_action == "automod_rejected_mandatory" ? "drop" : "reject";
 		db.addTimeout(channel, command.args[0], command.time, "dtwitchbot " + command.args[1], command.modlog, function (id) {
-			console.log("added rejected message for channel=" + channel + ", user=" + user + ", id=" + id + "!");
+			// console.log("added rejected message for channel=" + channel + ", user=" + user + ", id=" + id + "!");
 			command.id = id;
 			emitRejectedMessage("log-add", channel, command);
 			if (command.dirty) {
