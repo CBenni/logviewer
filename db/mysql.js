@@ -74,6 +74,23 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		charset: "utf8mb4_unicode_ci"
 	});
 
+	self.userStatsConnection = mysql.createConnection({
+		host: settings.shards[0].host,
+		port: settings.shards[0].port || 3306,
+		user: settings.shards[0].user,
+		database: settings.shards[0].database,
+		password: settings.shards[0].password,
+		acquireTimeout: 10000000,
+		charset: "utf8mb4_unicode_ci"
+	})
+	self.userStatsConnection.connect(function(err) {
+		if (err) {
+			winston.error(err);
+			return;
+		}
+		winston.info("User stats connection created.");
+	});
+
 	self.pool.getConnection(function (err, connection) {
 		if (err) {
 			winston.error('Error connecting to MySQL database: ' + err.stack);
@@ -300,34 +317,33 @@ module.exports = function MySQLDatabaseConnector(settings) {
 		}
 	}
 
-	setInterval(function () {
-		self.pool.getConnection(function(err, connection) {
+	function scheduledUserStatsUpdate() {
+		self.userStatsConnection.beginTransaction(function(err) {
 			if(err) {
 				winston.error(err);
 				return;
 			}
-			connection.beginTransaction(function(err) {
-				if(err) {
-					winston.error(err);
-					return;
-				}
-				winston.info("Running stats update with "+duplicateUpdates+"/"+totalUpdates+"duplicates.");
-				const updates = statUpdates;
-				statUpdates = {};
-				totalUpdates = 0;
-				duplicateUpdates = 0;
-				const updateKeys = Object.keys(updates);
-				const promises = Promise.all(updateKeys.map(key=>{
-					const update = updates[key];
-					return performStatsUpdate(connection, update.channel, update.nick, update.values);
-				}))
-				winston.info("Finished status update");
-				connection.commit(function(err2) {
-					winston.error(err2);
-				})
+			winston.info("Running stats update with "+duplicateUpdates+"/"+totalUpdates+" duplicates.");
+			const startTime = Date.now();
+			const updates = statUpdates;
+			statUpdates = {};
+			totalUpdates = 0;
+			duplicateUpdates = 0;
+			const updateKeys = Object.keys(updates);
+			const promises = Promise.all(updateKeys.map(key=>{
+				const update = updates[key];
+				return performStatsUpdate(self.userStatsConnection, update.channel, update.nick, update.values);
+			}))
+			winston.info("Committing status update after ",(Date.now() - startTime) / 1000.0, "seconds");
+			self.userStatsConnection.commit(function(err2) {
+				winston.info("Finished status update in ",(Date.now() - startTime) / 1000.0, "seconds");
+				setTimeout(scheduledUserStatsUpdate, 60 * 1000)
+				if(err2) winston.error(err2);
 			})
-		});
-	}, 60 * 1000);
+		})
+	};
+
+	setTimeout(scheduledUserStatsUpdate, 60 * 1000)
 
 	function performStatsUpdate(connection, channel, nick, values) {
 		return new Promise((resolve, reject) => {
