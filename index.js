@@ -272,7 +272,7 @@ app.get('/api/login', function(req, res, next) {
 				res.end("Error getting access token: "+httpResponse.statusCode+"\r\n"+err);
 			} else {
 				var token = JSON.parse(body).access_token;
-				API.twitchGet("https://api.twitch.tv/kraken/", {}, token).then((body2, res) => {
+				API.twitchGet("https://api.twitch.tv/kraken/", {}, token).then((body2) => {
 					var auth = body2.token;
 					if(auth.valid) {
 						generateToken(res, auth.user_name, function(){
