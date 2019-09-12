@@ -272,31 +272,26 @@ app.get('/api/login', function(req, res, next) {
 				res.end("Error getting access token: "+httpResponse.statusCode+"\r\n"+err);
 			} else {
 				var token = JSON.parse(body).access_token;
-				request.get({
-					url: "https://api.twitch.tv/kraken/?oauth_token="+token+"&client_id="+settings.auth.client_id
-				},function(e,r,body2){
-					if(e || body2 === undefined || !r || r.statusCode != 200) {
-						if(r) {
-							winston.error("Error getting oauth token: "+r.statusCode+"\r\n"+e);
-							res.end("Error getting oauth token: "+r.statusCode+"\r\n"+e);
-						} else {
-							winston.error("Error getting oauth token: \r\n"+e);
-						}
+				API.twitchGet("https://api.twitch.tv/kraken/", {}, token).then((body2, res) => {
+					var auth = body2.token;
+					if(auth.valid) {
+						generateToken(res, auth.user_name, function(){
+							res.redirect(url.parse(req.query.state).path);
+						});
 					} else {
-						var auth = JSON.parse(body2).token;
-						if(auth.valid) {
-							generateToken(res, auth.user_name, function(){
-								res.redirect(url.parse(req.query.state).path);
-							});
-						} else {
-							res.status(500).end("Invalid token");
-						}
+						res.status(500).end("Invalid token");
 					}
+				}).catch((err, res) => {
+					winston.error("Error getting oauth token: "+res.statusCode+"\r\n"+e);
+					res.end("Error getting oauth token: "+res.statusCode+"\r\n"+e);
 				});
 			}
 		}
 		request.post({
 				url: 'https://api.twitch.tv/kraken/oauth2/token',
+				headers: {
+					"accept": "application/vnd.twitchtv.v5+json"
+				},
 				form: {
 					client_id: settings.auth.client_id,
 					client_secret: settings.auth.client_secret,
@@ -482,26 +477,16 @@ function getChannelID(channelname, callback) {
 		callback(null, knownChannels[channelname]);
 		return;
 	}
-	request.get({
-		url: "https://api.twitch.tv/kraken/channels/"+channelname+"?client_id="+settings.auth.client_id
-	},function(e,r,body){
-		if(e) {
-			winston.error(e);
-			callback(e);
-		} else if(body === undefined) {
-			winston.error("Error: "+r.statusCode);
-			callback("Error: "+r.statusCode);
-		} else {
-			try {
-				var id = JSON.parse(body)._id;
-				knownChannels[channelname] = id;
-				callback(null, id);
-			} catch(e) {
-				winston.error("Error: "+e+" in getChannelID("+channelname+").");
-				if(callback) callback(e);
-			}
+	API.twitchGet("https://api.twitch.tv/kraken/channels/"+channelname).then((body, res)=>{
+		try {
+			var id = body._id;
+			knownChannels[channelname] = id;
+			callback(null, id);
+		} catch(e) {
+			winston.error("Error: "+e+" in getChannelID("+channelname+").");
+			if(callback) callback(e);
 		}
-	}, function(error){
+	}).catch((error, res) => {
 		winston.error("Couldnt load "+channelname+"'s channel ID.\nError: "+error);
 		if(callback) callback(error);
 	});

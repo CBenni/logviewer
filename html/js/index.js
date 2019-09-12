@@ -86,7 +86,12 @@ app.controller("mainctrl", function($rootScope,$scope,$http,$location,$cookies,$
 	
 	// preload the global emotes
 	$rootScope.globalEmotes = new Promise((r,j)=>{
-		$http.get("https://api.twitch.tv/kraken/chat/emoticon_images?emotesets=0,33,457&client_id="+settings.auth.client_id, {cache: true}).then(function(result) {
+		$http({
+			method: "GET", 
+			url: "https://api.twitch.tv/kraken/chat/emoticon_images?emotesets=0,33,457&client_id="+settings.auth.client_id, 
+			cache: true, 
+			headers: { "accept": "application/vnd.twitchtv.v5+json" }
+		}).then(function(result) {
 			var allemotes = [];
 			var emotesets = Object.keys(result.data.emoticon_sets);
 			// flatten response

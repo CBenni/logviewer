@@ -51,8 +51,8 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	
 	var getProfilePic = function(nick) {
 		if($scope.profilePics[nick] === undefined) {
-			ttvapi("https://api.twitch.tv/kraken/channels/"+nick).then(function(response) {
-				$scope.profilePics[nick] = response.data.logo || "https://robohash.org/"+nick+"?set=set3";
+			ttvapi("https://api.twitch.tv/kraken/users/?login="+nick).then(function(response) {
+				$scope.profilePics[nick] = response.data.users[0].logo || "https://robohash.org/"+nick+"?set=set3";
 			});
 		}
 	}
@@ -436,8 +436,8 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	}
 	
 	var ttvapi = function(endpoint, params) {
-		if(params) return $http.jsonp(endpoint+"/?callback=JSON_CALLBACK&client_id="+settings.auth.client_id+"&"+params);
-		else return $http.jsonp(endpoint+"/?callback=JSON_CALLBACK&client_id="+settings.auth.client_id);
+		if(params) return $http.json(endpoint+"/client_id="+settings.auth.client_id+"&"+params, { headers: { "accept": "application/vnd.twitchtv.v5+json" } });
+		else return $http.json(endpoint+"/?callback=JSON_CALLBACK&client_id="+settings.auth.client_id, { headers: { "accept": "application/vnd.twitchtv.v5+json" } });
 	}
 	
 	$http.get("/api/badges/"+$scope.channel+"/").then(function(response){
@@ -446,7 +446,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	
 	var getVideos = function (offset) {
 		// get past broadcasts
-		ttvapi("https://api.twitch.tv/kraken/channels/"+$scope.channelsettings.name+"/videos", "limit=100&broadcasts=true&offset="+offset).then(function(response){
+		ttvapi("https://api.twitch.tv/kraken/channels/"+$scope.channelsettings.id+"/videos", "limit=100&broadcasts=true&offset="+offset).then(function(response){
 			var count = response.data.videos.length;
 			for(var i=0;i<count;++i) {
 				var video = response.data.videos[i];
@@ -466,7 +466,7 @@ logviewerApp.controller("ChannelController", function($scope, $http, $stateParam
 	
 	var getHighlights = function (offset) {
 		// get highlights
-		ttvapi("https://api.twitch.tv/kraken/channels/"+$scope.channelsettings.name+"/videos", "limit=100&offset="+offset).then(function(response){
+		ttvapi("https://api.twitch.tv/kraken/channels/"+$scope.channelsettings.id+"/videos", "limit=100&offset="+offset).then(function(response){
 			var count = response.data.videos.length;
 			for(var i=0;i<count;++i) {
 				var video = response.data.videos[i];

@@ -31,6 +31,7 @@ function absMinMax(){
 API.prototype.twitchGet = function(url, headers, token) {
 	headers = headers || {};
 	headers["Client-ID"] = this.settings.auth.client_id;
+	headers["Accept"] = "application/vnd.twitchtv.v5+json"
 	if(token) headers["Authorization"] = "OAuth "+token;
 	// console.log("Getting "+url);
 	return new Promise((r,j)=>{
@@ -335,7 +336,7 @@ API.prototype.checkStreams = function() {
 		// iterate 100 channels at once
 		var chunkSize = 100;
 		for(let i=0;i<channels.length;i+=chunkSize) {
-			let channelChunk = channels.slice(i,i+chunkSize).map((x)=>x.name);
+			let channelChunk = channels.slice(i,i+chunkSize).map((x)=>x.id);
 			self.twitchGet("https://api.twitch.tv/kraken/streams?limit=100&channel="+channelChunk.join(",")).then(function(data){
 				// reset streams
 				for(let j=0;j<channelChunk.length;++j) self.streaming[channelChunk[j]] = false;
